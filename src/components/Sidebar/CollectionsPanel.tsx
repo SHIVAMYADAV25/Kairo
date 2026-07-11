@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Search, Plus, Globe, UploadCloud, ChevronRight, ChevronDown, Download } from "lucide-react";
+import { Search, Plus, Globe, ChevronRight, ChevronDown, Download } from "lucide-react";
 import { useTabStore } from "@/stores/tabStore";
 import { createEmptyTab } from "@/lib/factories";
 
