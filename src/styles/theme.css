@@ -1,0 +1,92 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ---------------------------------------------------------------- */
+/* Theme tokens. Swapping `data-theme` / `data-opaque` on <html>    */
+/* is all that's needed to re-theme instantly (no re-render).       */
+/* ---------------------------------------------------------------- */
+:root[data-theme="dark"] {
+  --bg-base: #0A0A0A;
+  --bg-panel: #111111;
+  --bg-elevated: #1a1a1e;
+  --bg-hover: #202024;
+  --border: #262629;
+  --text-primary: #e4e4e7;
+  --text-secondary: #a1a1aa;
+  --text-muted: #6b6b70;
+  --text-muted1 : #312C22;
+  --accent: #f5820d;
+  --accent-hover: #ff9a2e;
+}
+
+:root[data-theme="dark"][data-opaque="false"] {
+  --bg-panel: rgba(19, 19, 22, 0.85);
+  --bg-elevated: rgba(26, 26, 30, 0.85);
+}
+
+:root[data-theme="light"] {
+  --bg-base: #ffffff;
+  --bg-panel: #f7f7f8;
+  --bg-elevated: #ffffff;
+  --bg-hover: #eeeeef;
+  --border: #e2e2e4;
+  --text-primary: #18181b;
+  --text-secondary: #52525b;
+  --text-muted: #a1a1aa;
+  --accent: #f5820d;
+  --accent-hover: #d96f08;
+}
+
+/* Independently adjustable font sizes, persisted via settings store */
+:root {
+  --font-sidebar: 15px;
+  --font-request: 13px;
+  --font-response: 14px;
+  --font-mono: "JetBrains Mono", Consolas, monospace;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+  background: var(--bg-base);
+  color: var(--text-primary);
+  font-family: Inter, -apple-system, "Segoe UI", sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+/* thin scrollbars, matches Postman-like tools */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* Resizable split-pane handle */
+.resize-handle {
+  position: relative;
+  flex: 0 0 4px;
+  cursor: col-resize;
+  background: transparent;
+}
+.resize-handle:hover,
+.resize-handle.dragging {
+  background: var(--accent);
+}
+.resize-handle.horizontal {
+  cursor: row-resize;
+}
