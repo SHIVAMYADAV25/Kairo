@@ -3,8 +3,10 @@ import clsx from "clsx";
 import { ChevronDown, Save, Send } from "lucide-react";
 import type { HttpMethod, RequestTab } from "@/types";
 import { useTabStore } from "@/stores/tabStore";
+import { useCollectionStore } from "@/stores/collectionStore";
 import { api } from "@/lib/api";
 import { useEnvironmentStore } from "@/stores/environmentStore";
+import { SaveRequestModal } from "./SaveRequestModal";
 
 const METHODS: HttpMethod[] = ["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"];
 
@@ -24,7 +26,9 @@ interface Props {
 
 export function UrlBar({ tab }: Props) {
   const [methodOpen, setMethodOpen] = useState(false);
-  const { updateRequest, setLoading, setResponse, setError } = useTabStore();
+  const [saveModalOpen, setSaveModalOpen] = useState(false);
+  const { updateRequest, setLoading, setResponse, setError, markSaved, markUnsaved } = useTabStore();
+  const upsertRequestInCache = useCollectionStore((s) => s.upsertRequestInCache);
   const activeEnvironmentId = useEnvironmentStore((s) => s.activeEnvironmentId);
 
   const handleSend = async () => {
@@ -59,8 +63,30 @@ export function UrlBar({ tab }: Props) {
     }
   };
 
-  const handleSave = async () => {
-    await api.requests.save(tab.request).catch(console.error);
+  // Save behavior mirrors Postman: a request that already lives in a
+  // collection just re-saves in place; a brand-new/unsaved request opens a
+  // "Save Request" dialog so the person picks a name + destination folder
+  // instead of silently saving with collectionId = null (the previous
+  // behavior, which meant it could never show up in the Collections tree).
+  const handleSaveClick = () => {
+    if (tab.requestId && tab.request.collectionId) {
+      api.requests.save(tab.request).then(upsertRequestInCache, console.error);
+      return;
+    }
+    setSaveModalOpen(true);
+  };
+
+  const handleConfirmSave = async (name: string, collectionId: string) => {
+    const requestToSave = { ...tab.request, name, collectionId, id: tab.request.id };
+    try {
+      const saved = await api.requests.save(requestToSave);
+      upsertRequestInCache(saved);
+      markSaved(tab.id, saved.id, saved.name, collectionId);
+      markUnsaved(tab.id, false);
+      setSaveModalOpen(false);
+    } catch (e) {
+      console.error(e);
+    }
   };
 
   return (
@@ -105,7 +131,7 @@ export function UrlBar({ tab }: Props) {
       />
 
       <button
-        onClick={handleSave}
+        onClick={handleSaveClick}
         className="flex items-center gap-1.5 rounded-md border border-border bg-bg-elevated px-3 py-2 text-[13px] text-text-secondary hover:bg-bg-hover"
       >
         <Save size={14} /> Save
@@ -118,6 +144,13 @@ export function UrlBar({ tab }: Props) {
       >
         <Send size={14} /> {tab.isLoading ? "Sending..." : "Send"}
       </button>
+
+      <SaveRequestModal
+        open={saveModalOpen}
+        initialName={tab.request.name === "New Request" ? tab.title : tab.request.name}
+        onCancel={() => setSaveModalOpen(false)}
+        onConfirm={handleConfirmSave}
+      />
     </div>
   );
 }

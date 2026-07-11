@@ -4,6 +4,7 @@ import { Upload, X, FileCode } from "lucide-react";
 import type { BodyType, RequestBody, RequestTab } from "@/types";
 import { useTabStore } from "@/stores/tabStore";
 import { KeyValueTable } from "./KeyValueTable";
+import { FormDataTable } from "./FormDataTable";
 
 const MonacoEditor = lazy(() => import("@monaco-editor/react"));
 
@@ -95,9 +96,10 @@ export function BodyTab({ tab }: Props) {
         )}
 
         {body.type === "form-data" && (
-          <div className="p-4 text-text-muted text-[13px]">
-            Form Data editor (text/file fields) — same table UX as Params/Headers, plus a per-row type toggle.
-          </div>
+          <FormDataTable
+            rows={body.formData ?? []}
+            onChange={(rows) => setBody({ formData: rows })}
+          />
         )}
 
         {body.type === "binary" && (

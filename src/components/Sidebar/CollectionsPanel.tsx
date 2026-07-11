@@ -1,19 +1,26 @@
-import { useState } from "react";
-import { Search, Plus, Globe, ChevronRight, ChevronDown, Download } from "lucide-react";
+import { useEffect, useState } from "react";
+import {
+  Search,
+  Plus,
+  Globe,
+  ChevronRight,
+  ChevronDown,
+  Download,
+  Folder,
+  FolderPlus,
+  FilePlus,
+  Pencil,
+  Trash2,
+  MoreVertical,
+  Loader2,
+} from "lucide-react";
 import { useTabStore } from "@/stores/tabStore";
-import { createEmptyTab } from "@/lib/factories";
-
-// Placeholder shape until wired to `api.collections.list()` + `api.requests.listByCollection()`
-interface TreeRequest {
-  id: string;
-  name: string;
-  method: string;
-}
-interface TreeCollection {
-  id: string;
-  name: string;
-  requests: TreeRequest[];
-}
+import { useCollectionStore } from "@/stores/collectionStore";
+import { createTabFromRequest } from "@/lib/factories";
+import { ContextMenu, type ContextMenuItem } from "@/components/common/ContextMenu";
+import { PromptModal } from "@/components/common/PromptModal";
+import { api } from "@/lib/api";
+import type { ApiRequest, Collection } from "@/types";
 
 const METHOD_COLOR: Record<string, string> = {
   GET: "text-method-get",
@@ -21,25 +28,84 @@ const METHOD_COLOR: Record<string, string> = {
   PUT: "text-method-put",
   PATCH: "text-method-patch",
   DELETE: "text-method-delete",
+  HEAD: "text-method-head",
+  OPTIONS: "text-method-options",
 };
+
+type PromptState =
+  | { kind: "new-root-collection" }
+  | { kind: "new-subcollection"; parentId: string }
+  | { kind: "rename-collection"; collection: Collection }
+  | { kind: "rename-request"; request: ApiRequest }
+  | null;
 
 export function CollectionsPanel() {
   const [query, setQuery] = useState("");
-  const [collections, setCollections] = useState<TreeCollection[]>([]);
-  const [expanded, setExpanded] = useState<Record<string, boolean>>({});
-  const openTab = useTabStore((s) => s.openTab);
+  const [menu, setMenu] = useState<{ x: number; y: number; items: ContextMenuItem[] } | null>(null);
+  const [prompt, setPrompt] = useState<PromptState>(null);
 
-  const toggle = (id: string) => setExpanded((e) => ({ ...e, [id]: !e[id] }));
+  const {
+    collections,
+    expanded,
+    requestsByCollection,
+    loadingCollectionIds,
+    load,
+    loaded,
+    toggleExpand,
+    createCollection,
+    renameCollection,
+    deleteCollection,
+    createRequestIn,
+    deleteRequest,
+    renameRequest,
+  } = useCollectionStore();
 
-  const handleNewCollection = () => {
-    const name = window.prompt("Collection name");
-    if (!name) return;
-    setCollections((c) => [...c, { id: crypto.randomUUID(), name, requests: [] }]);
+  const { tabs, openTab, setActiveTab } = useTabStore();
+
+  useEffect(() => {
+    if (!loaded) load().catch(console.error);
+  }, [loaded, load]);
+
+  const openRequest = (request: ApiRequest) => {
+    const existing = tabs.find((t) => t.requestId === request.id);
+    if (existing) {
+      setActiveTab(existing.id);
+    } else {
+      openTab(createTabFromRequest(request));
+    }
   };
 
-  const filtered = collections.filter((c) =>
-    c.name.toLowerCase().includes(query.toLowerCase())
-  );
+  const roots = collections
+    .filter((c) => c.parentId === null)
+    .sort((a, b) => a.position - b.position);
+
+  const matchesQuery = (c: Collection) =>
+    !query || c.name.toLowerCase().includes(query.toLowerCase());
+
+  const handleImportUrl = async () => {
+    const url = window.prompt("Paste a collection URL (Postman/OpenAPI export link)");
+    if (!url) return;
+    try {
+      await api.import.fromUrl(url);
+      await load();
+    } catch (e) {
+      console.error(e);
+      window.alert("Import failed — check the console for details.");
+    }
+  };
+
+  const handleImportFile = async () => {
+    try {
+      const { open } = await import("@tauri-apps/plugin-dialog");
+      const selected = await open({ multiple: false, filters: [{ name: "Collection", extensions: ["json"] }] });
+      if (typeof selected === "string") {
+        await api.import.fromFile(selected);
+        await load();
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  };
 
   return (
     <div className="flex h-full flex-col" style={{ fontSize: "var(--font-sidebar)" }}>
@@ -54,7 +120,7 @@ export function CollectionsPanel() {
           />
         </div>
         <button
-          onClick={handleNewCollection}
+          onClick={() => setPrompt({ kind: "new-root-collection" })}
           className="rounded-md p-1.5 text-text-secondary hover:bg-bg-hover"
           title="New Collection"
         >
@@ -63,66 +129,297 @@ export function CollectionsPanel() {
       </div>
 
       <div className="flex-1 overflow-y-auto p-2">
-        {filtered.length === 0 ? (
+        {roots.length === 0 ? (
           <div className="mt-6 text-center text-text-muted">No collections yet</div>
         ) : (
-          filtered.map((c) => (
-            <div key={c.id} className="mb-1">
-              <button
-                onClick={() => toggle(c.id)}
-                className="flex w-full items-center gap-1.5 rounded-md px-2 py-1.5 text-left text-text-primary hover:bg-bg-hover"
-              >
-                {expanded[c.id] ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
-                <span className="truncate">{c.name}</span>
-              </button>
-              {expanded[c.id] && (
-                <div className="ml-4 border-l border-border pl-2">
-                  {c.requests.map((r) => (
-                    <button
-                      key={r.id}
-                      onClick={() => openTab(createEmptyTab())}
-                      className="flex w-full items-center gap-2 rounded-md px-2 py-1 text-left hover:bg-bg-hover"
-                    >
-                      <span className={`w-10 shrink-0 text-[11px] font-semibold ${METHOD_COLOR[r.method] ?? ""}`}>
-                        {r.method}
-                      </span>
-                      <span className="truncate text-text-secondary">{r.name}</span>
-                    </button>
-                  ))}
-                  {c.requests.length === 0 && (
-                    <div className="py-1 text-[12px] text-text-muted">No requests</div>
-                  )}
-                </div>
-              )}
-            </div>
-          ))
+          roots
+            .filter(matchesQuery)
+            .map((c) => (
+              <CollectionNode
+                key={c.id}
+                collection={c}
+                depth={0}
+                collections={collections}
+                expanded={expanded}
+                requestsByCollection={requestsByCollection}
+                loadingCollectionIds={loadingCollectionIds}
+                toggleExpand={toggleExpand}
+                openRequest={openRequest}
+                onContextMenu={setMenu}
+                onCreateSubcollection={(parentId) => setPrompt({ kind: "new-subcollection", parentId })}
+                onRename={(collection) => setPrompt({ kind: "rename-collection", collection })}
+                onDeleteCollection={(id) => {
+                  if (window.confirm("Delete this collection and everything inside it?")) {
+                    deleteCollection(id).catch(console.error);
+                  }
+                }}
+                onNewRequest={(collectionId) => {
+                  createRequestIn(collectionId)
+                    .then((req) => openRequest(req))
+                    .catch(console.error);
+                }}
+                onDeleteRequest={(collectionId, requestId) => {
+                  if (window.confirm("Delete this request?")) {
+                    deleteRequest(collectionId, requestId).catch(console.error);
+                  }
+                }}
+                onRenameRequest={(request) => setPrompt({ kind: "rename-request", request })}
+              />
+            ))
         )}
       </div>
 
       <div className="space-y-1.5 border-t border-border p-2">
-  <button
-    type="button"
-    onClick={handleNewCollection}
-    className="flex w-full items-center border-none gap-2 rounded-md py-2 pl-3 text-accent font-medium text-sm hover:bg-[#3d2413]"
-  >
-    <Plus size={15} /> New Collection
-  </button>
+        <button
+          type="button"
+          onClick={() => setPrompt({ kind: "new-root-collection" })}
+          className="flex w-full items-center border-none gap-2 rounded-md py-2 pl-3 text-accent font-medium text-sm hover:bg-[#3d2413]"
+        >
+          <Plus size={15} /> New Collection
+        </button>
 
-  <button
-    type="button"
-    className="flex w-full items-center gap-2 rounded-md border border-[#6a3919] bg-[#1d140e] py-2 pl-3 text-accent font-medium text-sm hover:bg-[#28190e]"
-  >
-    <Globe size={15} /> Import from URL
-  </button>
+        <button
+          type="button"
+          onClick={handleImportUrl}
+          className="flex w-full items-center gap-2 rounded-md border border-[#6a3919] bg-[#1d140e] py-2 pl-3 text-accent font-medium text-sm hover:bg-[#28190e]"
+        >
+          <Globe size={15} /> Import from URL
+        </button>
 
+        <button
+          type="button"
+          onClick={handleImportFile}
+          className="flex w-full items-center gap-2 py-2 pl-3 text-text-secondary hover:text-text-primary text-xs"
+        >
+          <Download size={14} /> Import from file
+        </button>
+      </div>
 
-  <button
-    type="button"
-    className="flex w-full items-center gap-2 py-2 pl-3 text-text-secondary hover:text-text-primary text-xs"
-  >
-    <Download size={14} /> Import from file
-  </button>
-</div>
+      {menu && <ContextMenu x={menu.x} y={menu.y} items={menu.items} onClose={() => setMenu(null)} />}
+
+      <PromptModal
+        open={prompt?.kind === "new-root-collection"}
+        title="New Collection"
+        label="Collection name"
+        confirmLabel="Create"
+        onCancel={() => setPrompt(null)}
+        onConfirm={(name) => {
+          createCollection(name, null).catch(console.error);
+          setPrompt(null);
+        }}
+      />
+      <PromptModal
+        open={prompt?.kind === "new-subcollection"}
+        title="New Folder"
+        label="Folder name"
+        confirmLabel="Create"
+        onCancel={() => setPrompt(null)}
+        onConfirm={(name) => {
+          if (prompt?.kind === "new-subcollection") {
+            createCollection(name, prompt.parentId).catch(console.error);
+          }
+          setPrompt(null);
+        }}
+      />
+      <PromptModal
+        open={prompt?.kind === "rename-collection"}
+        title="Rename Collection"
+        label="Collection name"
+        confirmLabel="Save"
+        initialValue={prompt?.kind === "rename-collection" ? prompt.collection.name : ""}
+        onCancel={() => setPrompt(null)}
+        onConfirm={(name) => {
+          if (prompt?.kind === "rename-collection") {
+            renameCollection(prompt.collection.id, name).catch(console.error);
+          }
+          setPrompt(null);
+        }}
+      />
+      <PromptModal
+        open={prompt?.kind === "rename-request"}
+        title="Rename Request"
+        label="Request name"
+        confirmLabel="Save"
+        initialValue={prompt?.kind === "rename-request" ? prompt.request.name : ""}
+        onCancel={() => setPrompt(null)}
+        onConfirm={(name) => {
+          if (prompt?.kind === "rename-request") {
+            renameRequest(prompt.request, name).catch(console.error);
+          }
+          setPrompt(null);
+        }}
+      />
     </div>
+  );
+}
+
+interface NodeProps {
+  collection: Collection;
+  depth: number;
+  collections: Collection[];
+  expanded: Record<string, boolean>;
+  requestsByCollection: Record<string, ApiRequest[]>;
+  loadingCollectionIds: Record<string, boolean>;
+  toggleExpand: (id: string) => void;
+  openRequest: (r: ApiRequest) => void;
+  onContextMenu: (menu: { x: number; y: number; items: ContextMenuItem[] } | null) => void;
+  onCreateSubcollection: (parentId: string) => void;
+  onRename: (collection: Collection) => void;
+  onDeleteCollection: (id: string) => void;
+  onNewRequest: (collectionId: string) => void;
+  onDeleteRequest: (collectionId: string, requestId: string) => void;
+  onRenameRequest: (request: ApiRequest) => void;
+}
+
+function CollectionNode(props: NodeProps) {
+  const {
+    collection,
+    depth,
+    collections,
+    expanded,
+    requestsByCollection,
+    loadingCollectionIds,
+    toggleExpand,
+    openRequest,
+    onContextMenu,
+    onCreateSubcollection,
+    onRename,
+    onDeleteCollection,
+    onNewRequest,
+    onDeleteRequest,
+    onRenameRequest,
+  } = props;
+
+  const isOpen = !!expanded[collection.id];
+  const isLoading = !!loadingCollectionIds[collection.id];
+  const requests = requestsByCollection[collection.id] ?? [];
+  const subCollections = collections
+    .filter((c) => c.parentId === collection.id)
+    .sort((a, b) => a.position - b.position);
+
+  const openMenu = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    onContextMenu({
+      x: e.clientX,
+      y: e.clientY,
+      items: [
+        { label: "Add Request", icon: <FilePlus size={13} />, onClick: () => onNewRequest(collection.id) },
+        { label: "Add Folder", icon: <FolderPlus size={13} />, onClick: () => onCreateSubcollection(collection.id) },
+        { label: "Rename", icon: <Pencil size={13} />, onClick: () => onRename(collection), separatorBefore: true },
+        {
+          label: "Delete",
+          icon: <Trash2 size={13} />,
+          onClick: () => onDeleteCollection(collection.id),
+          danger: true,
+        },
+      ],
+    });
+  };
+
+  return (
+    <div className="mb-0.5">
+      <div
+        className="group flex w-full items-center gap-1 rounded-md py-1.5 pr-1 text-left text-text-primary hover:bg-bg-hover"
+        style={{ paddingLeft: 8 + depth * 14 }}
+        onContextMenu={openMenu}
+      >
+        <button onClick={() => toggleExpand(collection.id)} className="flex flex-1 items-center gap-1.5 overflow-hidden">
+          {isOpen ? <ChevronDown size={14} className="shrink-0" /> : <ChevronRight size={14} className="shrink-0" />}
+          <Folder size={14} className="shrink-0 text-accent/80" />
+          <span className="truncate">{collection.name}</span>
+          {isLoading && <Loader2 size={12} className="shrink-0 animate-spin text-text-muted" />}
+        </button>
+        <button
+          onClick={openMenu}
+          className="shrink-0 rounded p-1 text-text-muted opacity-0 hover:bg-bg-elevated group-hover:opacity-100"
+          title="More actions"
+        >
+          <MoreVertical size={13} />
+        </button>
+      </div>
+
+      {isOpen && (
+        <div className="border-l border-border" style={{ marginLeft: 14 + depth * 14 }}>
+          {subCollections.map((sc) => (
+            <CollectionNode key={sc.id} {...props} collection={sc} depth={depth + 1} />
+          ))}
+
+          {requests.map((r) => (
+            <RequestRow
+              key={r.id}
+              request={r}
+              depth={depth}
+              onOpen={() => openRequest(r)}
+              onDelete={() => onDeleteRequest(collection.id, r.id)}
+              onRename={() => onRenameRequest(r)}
+              onContextMenu={onContextMenu}
+            />
+          ))}
+
+          {!isLoading && requests.length === 0 && subCollections.length === 0 && (
+            <div className="py-1 pl-4 text-[12px] text-text-muted">Empty</div>
+          )}
+
+          <button
+            onClick={() => onNewRequest(collection.id)}
+            className="flex items-center gap-1.5 py-1 pl-4 text-[12px] text-text-muted hover:text-accent"
+            style={{ paddingLeft: 12 + depth * 0 }}
+          >
+            <FilePlus size={12} /> Add request
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function RequestRow({
+  request,
+  depth,
+  onOpen,
+  onDelete,
+  onRename,
+  onContextMenu,
+}: {
+  request: ApiRequest;
+  depth: number;
+  onOpen: () => void;
+  onDelete: () => void;
+  onRename: () => void;
+  onContextMenu: (menu: { x: number; y: number; items: ContextMenuItem[] } | null) => void;
+}) {
+  return (
+    <button
+      onClick={onOpen}
+      onContextMenu={(e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        onContextMenu({
+          x: e.clientX,
+          y: e.clientY,
+          items: [
+            { label: "Open", icon: <FilePlus size={13} />, onClick: onOpen },
+            { label: "Rename", icon: <Pencil size={13} />, onClick: onRename },
+            { label: "Delete", icon: <Trash2 size={13} />, onClick: onDelete, danger: true, separatorBefore: true },
+          ],
+        });
+      }}
+      className="group flex w-full items-center gap-2 rounded-md py-1 pr-2 text-left hover:bg-bg-hover"
+      style={{ paddingLeft: 12 + depth * 14 }}
+    >
+      <span className={`w-10 shrink-0 text-[11px] font-semibold ${METHOD_COLOR[request.method] ?? ""}`}>
+        {request.method}
+      </span>
+      <span className="flex-1 truncate text-text-secondary">{request.name}</span>
+      <Trash2
+        size={12}
+        className="shrink-0 text-text-muted opacity-0 hover:text-status-error group-hover:opacity-100"
+        onClick={(e) => {
+          e.stopPropagation();
+          onDelete();
+        }}
+      />
+    </button>
   );
 }

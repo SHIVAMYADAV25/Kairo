@@ -14,6 +14,7 @@ interface TabState {
 
   updateRequest: (id: string, patch: Partial<ApiRequest>) => void;
   markUnsaved: (id: string, unsaved: boolean) => void;
+  markSaved: (id: string, requestId: string, title: string, collectionId: string) => void;
 
   setLoading: (id: string, loading: boolean) => void;
   setResponse: (id: string, response: ApiResponse | null) => void;
@@ -72,6 +73,21 @@ export const useTabStore = create<TabState>((set, get) => ({
 
   markUnsaved: (id, unsaved) =>
     set((s) => ({ tabs: s.tabs.map((t) => (t.id === id ? { ...t, isUnsaved: unsaved } : t)) })),
+
+  markSaved: (id, requestId, title, collectionId) =>
+    set((s) => ({
+      tabs: s.tabs.map((t) =>
+        t.id === id
+          ? {
+              ...t,
+              requestId,
+              title,
+              isUnsaved: false,
+              request: { ...t.request, id: requestId, name: title, collectionId },
+            }
+          : t
+      ),
+    })),
 
   setLoading: (id, loading) =>
     set((s) => ({ tabs: s.tabs.map((t) => (t.id === id ? { ...t, isLoading: loading } : t)) })),

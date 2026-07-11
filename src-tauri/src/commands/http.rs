@@ -31,17 +31,36 @@ pub async fn execute_request(
     let request = payload.request.clone();
     eprintln!("[execute_request] START {:?} {}", request.method, request.url);
 
-    // 1. Environment variable substitution ({{BASE_URL}}, {{TOKEN}}, ...)
-    let env_vars = if let Some(env_id) = &payload.environment_id {
+    // 1. Load the active environment's variables, then run the pre-request
+    //    script BEFORE substitution — a script that calls
+    //    `pm.environment.set("token", "...")` needs its change to actually
+    //    apply to the request that follows, not run after the fact (which
+    //    is the order this used to be in, silently making pre-request
+    //    scripts unable to affect anything but console output).
+    let mut env_vars = if let Some(env_id) = &payload.environment_id {
         storage::environments::get_variables(&pool, env_id).map_err(|e| e.to_string())?
     } else {
         HashMap::new()
     };
+    let vars_before = env_vars.clone();
+
+    if !request.scripts.pre_request.trim().is_empty() {
+        run_pre_request_script(&request.scripts.pre_request, &mut env_vars)
+            .map_err(|e| e.to_string())?;
+    }
+
+    // 2. `{{VAR}}` substitution using the (possibly script-updated) variables.
     let request = substitute_vars_in_request(request, &env_vars);
 
-    // 2. Pre-request script (sandboxed QuickJS, no Node dependency)
-    if !request.scripts.pre_request.trim().is_empty() {
-        run_pre_request_script(&request.scripts.pre_request).map_err(|e| e.to_string())?;
+    // If the pre-request script changed or added any variables, persist them
+    // back to the active environment so later requests (and the Environments
+    // panel) see the update too — mirrors Postman's environment persistence.
+    if let Some(env_id) = &payload.environment_id {
+        if env_vars != vars_before {
+            if let Err(e) = storage::environments::merge_variables(&pool, env_id, &env_vars) {
+                eprintln!("[execute_request] failed to persist env var changes: {e}");
+            }
+        }
     }
 
     // 3. Build and send the request, capturing per-phase timing.
@@ -243,8 +262,65 @@ fn apply_body(builder: reqwest::RequestBuilder, body: &RequestBody) -> reqwest::
             }
             builder
         }
-        // "form-data" multipart construction elided here for brevity — same
-        // shape as url-encoded but built with `reqwest::multipart::Form`.
+        "form-data" => {
+            let fields = body.form_data.clone().unwrap_or_default();
+            let mut form = reqwest::multipart::Form::new();
+            for field in fields.into_iter().filter(|f| f.enabled && !f.key.is_empty()) {
+                match field.field_type.as_str() {
+                    "file" => {
+                        let path = std::path::Path::new(&field.value);
+                        match std::fs::read(path) {
+                            Ok(bytes) => {
+                                let file_name = path
+                                    .file_name()
+                                    .map(|n| n.to_string_lossy().to_string())
+                                    .unwrap_or_else(|| "file".to_string());
+                                let mime = guess_mime(&file_name);
+                                let part = reqwest::multipart::Part::bytes(bytes)
+                                    .file_name(file_name)
+                                    .mime_str(mime)
+                                    .unwrap_or_else(|_| reqwest::multipart::Part::bytes(Vec::new()));
+                                form = form.part(field.key.clone(), part);
+                            }
+                            Err(e) => {
+                                eprintln!(
+                                    "[execute_request] form-data file '{}' for field '{}' could not be read: {e}",
+                                    field.value, field.key
+                                );
+                            }
+                        }
+                    }
+                    _ => {
+                        form = form.text(field.key.clone(), field.value.clone());
+                    }
+                }
+            }
+            // reqwest sets the multipart/form-data content-type + boundary
+            // header automatically when `.multipart()` is used.
+            builder.multipart(form)
+        }
         _ => builder,
+    }
+}
+
+/// Minimal extension → MIME lookup so uploaded files carry a sane
+/// Content-Type instead of always falling back to octet-stream. Covers the
+/// common cases; anything unrecognized still uploads fine as binary data.
+fn guess_mime(file_name: &str) -> &'static str {
+    let ext = file_name.rsplit('.').next().unwrap_or("").to_lowercase();
+    match ext.as_str() {
+        "json" => "application/json",
+        "png" => "image/png",
+        "jpg" | "jpeg" => "image/jpeg",
+        "gif" => "image/gif",
+        "webp" => "image/webp",
+        "svg" => "image/svg+xml",
+        "pdf" => "application/pdf",
+        "txt" => "text/plain",
+        "csv" => "text/csv",
+        "html" | "htm" => "text/html",
+        "xml" => "application/xml",
+        "zip" => "application/zip",
+        _ => "application/octet-stream",
     }
 }

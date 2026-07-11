@@ -11,7 +11,7 @@ const MIGRATION_001: &str = include_str!("migrations/001_init.sql");
 /// single lock — this is a meaningful chunk of the "feel fast" requirement.
 pub fn init_pool(app_data_dir: PathBuf) -> anyhow::Result<DbPool> {
     std::fs::create_dir_all(&app_data_dir)?;
-    let db_path = app_data_dir.join("requestkit.db");
+    let db_path = app_data_dir.join("kiaro.db");
     println!("Database path: {}", db_path.display());
 
     let manager = SqliteConnectionManager::file(db_path).with_init(|conn| {

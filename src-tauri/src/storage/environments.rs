@@ -69,6 +69,40 @@ pub fn set_active(pool: &DbPool, id: &str) -> anyhow::Result<()> {
     Ok(())
 }
 
+/// Persists variable changes made by a pre-request script's
+/// `pm.environment.set(key, value)` calls. Existing keys get their value
+/// updated in place; brand-new keys are appended as new (enabled) rows. This
+/// intentionally only ever adds/updates — it never removes a variable the
+/// script didn't touch, so a script that only sets one var can't silently
+/// wipe the rest of the environment.
+pub fn merge_variables(
+    pool: &DbPool,
+    environment_id: &str,
+    vars: &HashMap<String, String>,
+) -> anyhow::Result<()> {
+    let conn = pool.get()?;
+    let existing = get_variable_rows(&conn, environment_id)?;
+    let mut max_position: i32 = existing.len() as i32 - 1;
+
+    for (key, value) in vars {
+        if let Some(row) = existing.iter().find(|r| &r.key == key) {
+            if &row.value != value {
+                conn.execute(
+                    "UPDATE env_vars SET value = ?1 WHERE id = ?2",
+                    params![value, row.id],
+                )?;
+            }
+        } else {
+            max_position += 1;
+            conn.execute(
+                "INSERT INTO env_vars (id, environment_id, key, value, enabled, position) VALUES (?1,?2,?3,?4,1,?5)",
+                params![Uuid::new_v4().to_string(), environment_id, key, value, max_position],
+            )?;
+        }
+    }
+    Ok(())
+}
+
 /// Used by the HTTP executor to resolve `{{VAR}}` at request time — a plain
 /// HashMap keeps substitution O(1) per variable instead of round-tripping
 /// through the full `Environment` struct.

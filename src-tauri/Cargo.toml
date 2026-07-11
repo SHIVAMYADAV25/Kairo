@@ -25,7 +25,7 @@ tokio = { version = "1", features = ["rt-multi-thread", "macros", "time"] }
 # HTTP execution — hyper gives us low-level access to connect/TTFB timing that
 # a browser fetch() can never expose. reqwest wraps it with a friendly API and
 # connection pooling for when we don't need per-phase timing precision.
-reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls", "cookies", "gzip", "brotli", "deflate", "stream"] }
+reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls", "cookies", "gzip", "brotli", "deflate", "stream", "multipart"] }
 hyper = { version = "1", features = ["client", "http1", "http2"] }
 
 # Storage

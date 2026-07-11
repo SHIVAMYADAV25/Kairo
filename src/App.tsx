@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { BarChart3, PanelBottomOpen } from "lucide-react";
 import { IconRail, type SidebarPanel } from "@/components/Sidebar/IconRail";
 import { Sidebar } from "@/components/Sidebar/Sidebar";
 import { EnvironmentSelector } from "@/components/Sidebar/EnvironmentSelector";
@@ -17,13 +18,17 @@ export default function App() {
   const [sidebarPanel, setSidebarPanel] = useState<SidebarPanel>("collections");
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [perfOpen, setPerfOpen] = useState(true);
-  const [perfHistory, setPerfHistory] = useState<number[]>([]);
+  const [responseOpen, setResponseOpen] = useState(true);
+  // Keyed by tab id so switching tabs never mixes one request's timing
+  // history with another's (previously this was a single global array).
+  const [perfHistoryByTab, setPerfHistoryByTab] = useState<Record<string, number[]>>({});
 
   const { tabs, activeTabId, openTab } = useTabStore();
   const { settings, hydrate, update } = useSettingsStore();
   const loadEnvironments = useEnvironmentStore((s) => s.load);
 
   const activeTab = tabs.find((t) => t.id === activeTabId) ?? null;
+  const perfHistory = activeTab ? perfHistoryByTab[activeTab.id] ?? [] : [];
 
   useEffect(() => {
     hydrate();
@@ -34,8 +39,16 @@ export default function App() {
 
   useEffect(() => {
     if (activeTab?.response) {
-      setPerfHistory((h) => [...h.slice(-9), activeTab.response!.timing.totalMs]);
+      const id = activeTab.id;
+      const ms = activeTab.response.timing.totalMs;
+      setPerfHistoryByTab((h) => ({ ...h, [id]: [...(h[id] ?? []).slice(-9), ms] }));
+      // A response landing is exactly the moment a closed Performance/Response
+      // panel is most useful — surface it automatically instead of making
+      // the person hunt for a way to reopen it.
+      setPerfOpen(true);
+      setResponseOpen(true);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab?.response]);
 
   return (
@@ -111,26 +124,30 @@ export default function App() {
                   })
                 }
               />
-              <div
-                style={{ height: settings.panelSizes.responseViewerHeight }}
-                className="shrink-0 overflow-hidden"
-              >
-                <ResponseViewer tab={activeTab} />
-              </div>
-              <ResizeHandle
-                direction="vertical"
-                onResize={(d) =>
-                  update({
-                    panelSizes: {
-                      ...settings.panelSizes,
-                      responseViewerHeight: Math.max(
-                        160,
-                        settings.panelSizes.responseViewerHeight + d
-                      ),
-                    },
-                  })
-                }
-              />
+              {responseOpen && (
+                <>
+                  <div
+                    style={{ height: settings.panelSizes.responseViewerHeight }}
+                    className="shrink-0 overflow-hidden"
+                  >
+                    <ResponseViewer tab={activeTab} onClose={() => setResponseOpen(false)} />
+                  </div>
+                  <ResizeHandle
+                    direction="vertical"
+                    onResize={(d) =>
+                      update({
+                        panelSizes: {
+                          ...settings.panelSizes,
+                          responseViewerHeight: Math.max(
+                            160,
+                            settings.panelSizes.responseViewerHeight + d
+                          ),
+                        },
+                      })
+                    }
+                  />
+                </>
+              )}
               {/* Absorbs leftover vertical space to maintain independent heights */}
               <div className="min-h-0 flex-1 overflow-auto bg-bg-base" />
             </>
@@ -179,6 +196,28 @@ export default function App() {
         <span className="flex items-center gap-1.5">
           <span className="h-1.5 w-1.5 rounded-full bg-status-success" /> Ready
         </span>
+        <div className="flex items-center gap-1">
+          {/* Reopen affordances for panels the user closed — fix #3: previously
+              closing Performance had no way back short of restarting the app. */}
+          {!responseOpen && (
+            <button
+              onClick={() => setResponseOpen(true)}
+              className="flex items-center gap-1 rounded px-2 py-0.5 text-text-muted hover:bg-bg-hover hover:text-text-primary"
+              title="Reopen Response panel"
+            >
+              <PanelBottomOpen size={12} /> Response
+            </button>
+          )}
+          {!perfOpen && (
+            <button
+              onClick={() => setPerfOpen(true)}
+              className="flex items-center gap-1 rounded px-2 py-0.5 text-text-muted hover:bg-bg-hover hover:text-text-primary"
+              title="Reopen Performance panel"
+            >
+              <BarChart3 size={12} /> Performance
+            </button>
+          )}
+        </div>
         <span>Rust · Tauri · v0.1.0</span>
       </div>
 

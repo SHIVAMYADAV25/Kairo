@@ -76,17 +76,83 @@ body,
   background: transparent;
 }
 
-/* Resizable split-pane handle */
+/* Resizable split-pane handle.
+   The hit-area stays a few px wide for a comfortable drag target, but a thin
+   1px line is always visible via ::after so the boundary between panels is
+   never ambiguous — it just brightens/turns accent-colored on hover/drag. */
 .resize-handle {
   position: relative;
-  flex: 0 0 4px;
+  flex: 0 0 5px;
   cursor: col-resize;
   background: transparent;
+  z-index: 5;
 }
-.resize-handle:hover,
-.resize-handle.dragging {
+.resize-handle::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  transform: translateX(-50%);
+  background: var(--border);
+  transition: background 0.12s ease, width 0.12s ease;
+}
+.resize-handle.horizontal::after {
+  left: 0;
+  right: 0;
+  top: 50%;
+  bottom: auto;
+  width: auto;
+  height: 1px;
+  transform: translateY(-50%);
+}
+.resize-handle:hover::after,
+.resize-handle.dragging::after {
   background: var(--accent);
+  width: 2px;
+}
+.resize-handle.horizontal:hover::after,
+.resize-handle.horizontal.dragging::after {
+  width: auto;
+  height: 2px;
+}
+.resize-handle.dragging {
+  background: rgba(245, 130, 13, 0.08);
 }
 .resize-handle.horizontal {
   cursor: row-resize;
+}
+
+/* Performance panel "satisfaction" animations (fix #4) */
+@keyframes perf-pop-in {
+  0% { opacity: 0; transform: scale(0.85); }
+  60% { opacity: 1; transform: scale(1.04); }
+  100% { opacity: 1; transform: scale(1); }
+}
+@keyframes perf-success-ring {
+  0% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.45); }
+  100% { box-shadow: 0 0 0 18px rgba(34, 197, 94, 0); }
+}
+@keyframes perf-bar-grow {
+  from { transform: scaleY(0); }
+  to { transform: scaleY(1); }
+}
+@keyframes perf-badge-in {
+  0% { opacity: 0; transform: translateY(4px) scale(0.9); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+.perf-gauge-pop {
+  animation: perf-pop-in 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.perf-success-ring {
+  animation: perf-success-ring 0.9s ease-out;
+  border-radius: 9999px;
+}
+.perf-bar {
+  transform-origin: bottom;
+  animation: perf-bar-grow 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.perf-badge {
+  animation: perf-badge-in 0.3s ease-out;
 }

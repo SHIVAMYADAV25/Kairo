@@ -7,17 +7,22 @@ import type { Environment } from "@/types";
 interface Props {
   open: boolean;
   onClose: () => void;
+  initialSelectedId?: string | null;
 }
 
-export function EnvironmentsModal({ open, onClose }: Props) {
+export function EnvironmentsModal({ open, onClose, initialSelectedId = null }: Props) {
   const { environments, activeEnvironmentId, load, create, update, remove, setActive } =
     useEnvironmentStore();
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [draft, setDraft] = useState<Environment | null>(null);
 
   useEffect(() => {
-    if (open) load().catch(() => {});
-  }, [open, load]);
+    if (open) {
+      load().catch(() => {});
+      setSelectedId(initialSelectedId);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, initialSelectedId]);
 
   useEffect(() => {
     const found = environments.find((e) => e.id === selectedId);

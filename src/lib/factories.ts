@@ -39,3 +39,19 @@ export function createEmptyTab(): RequestTab {
     error: null,
   };
 }
+
+/** Builds a tab for a request that's already saved in a collection (fix #1:
+ * clicking a request in the Collections tree needs to open *that* request,
+ * fully hydrated and marked as saved — not a blank "New Request" tab). */
+export function createTabFromRequest(request: ApiRequest): RequestTab {
+  return {
+    id: uid(),
+    requestId: request.id,
+    title: request.name,
+    isUnsaved: false,
+    request,
+    response: null,
+    isLoading: false,
+    error: null,
+  };
+}

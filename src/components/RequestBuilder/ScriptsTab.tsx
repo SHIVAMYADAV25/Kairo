@@ -51,8 +51,8 @@ export function ScriptsTab({ tab }: Props) {
       </div>
       <div className="border-t border-border p-2 text-[11px] text-text-muted">
         {section === "pre-request"
-          ? 'e.g. console.log("Before request")'
-          : 'e.g. pm.test("Status is 200", () => pm.expect(pm.response.status).to.eql(200))'}
+          ? 'e.g. pm.environment.set("token", "abc123") — runs before the request is sent and before {{VAR}} substitution, so the new value is used immediately.'
+          : 'e.g. pm.test("Status is 200", () => pm.expect(pm.response.status).to.eql(200)) — runs after the response comes back.'}
       </div>
     </div>
   );
