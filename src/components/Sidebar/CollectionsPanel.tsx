@@ -40,6 +40,7 @@ type PromptState =
   | null;
 
 export function CollectionsPanel() {
+  console.log("COLLECTIONS PANEL v2 LOADED");
   const [query, setQuery] = useState("");
   const [menu, setMenu] = useState<{ x: number; y: number; items: ContextMenuItem[] } | null>(null);
   const [prompt, setPrompt] = useState<PromptState>(null);
@@ -58,6 +59,8 @@ export function CollectionsPanel() {
     createRequestIn,
     deleteRequest,
     renameRequest,
+    lastError,
+    clearError,
   } = useCollectionStore();
 
   const { tabs, openTab, setActiveTab } = useTabStore();
@@ -109,6 +112,14 @@ export function CollectionsPanel() {
 
   return (
     <div className="flex h-full flex-col" style={{ fontSize: "var(--font-sidebar)" }}>
+      {lastError && (
+        <div className="flex items-start gap-2 border-b border-status-error/30 bg-status-error/10 p-2 text-[12px] text-status-error">
+          <span className="flex-1 break-words">{lastError}</span>
+          <button onClick={clearError} className="shrink-0 font-semibold hover:opacity-70">
+            ✕
+          </button>
+        </div>
+      )}
       <div className="flex items-center gap-2 border-b border-border p-3">
         <div className="relative flex-1">
           <Search size={14} className="absolute left-2 top-1/2 -translate-y-1/2 text-text-muted" />
@@ -204,8 +215,10 @@ export function CollectionsPanel() {
         confirmLabel="Create"
         onCancel={() => setPrompt(null)}
         onConfirm={(name) => {
-          createCollection(name, null).catch(console.error);
           setPrompt(null);
+          createCollection(name, null).catch(() => {
+            /* lastError is already set inside the store; the banner below shows it. */
+          });
         }}
       />
       <PromptModal
@@ -216,9 +229,12 @@ export function CollectionsPanel() {
         onCancel={() => setPrompt(null)}
         onConfirm={(name) => {
           if (prompt?.kind === "new-subcollection") {
-            createCollection(name, prompt.parentId).catch(console.error);
+            const parentId = prompt.parentId;
+            setPrompt(null);
+            createCollection(name, parentId).catch(() => {});
+          } else {
+            setPrompt(null);
           }
-          setPrompt(null);
         }}
       />
       <PromptModal

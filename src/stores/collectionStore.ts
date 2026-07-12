@@ -3,6 +3,25 @@ import type { ApiRequest, Collection } from "@/types";
 import { api } from "@/lib/api";
 import { createEmptyRequest } from "@/lib/factories";
 
+/** Tauri command errors come back as whatever the Rust side's `Err(String)`
+ * was — sometimes that's a plain string, sometimes (with some tauri/serde
+ * versions) it's wrapped in an object. Normalize so the UI always has
+ * something readable to show instead of "[object Object]". */
+function describeError(e: unknown, fallback: string): string {
+  if (typeof e === "string") return e;
+  if (e instanceof Error) return e.message;
+  if (e && typeof e === "object") {
+    const anyE = e as Record<string, unknown>;
+    if (typeof anyE.message === "string") return anyE.message;
+    try {
+      return JSON.stringify(e);
+    } catch {
+      /* fall through */
+    }
+  }
+  return fallback;
+}
+
 interface CollectionState {
   collections: Collection[];
   // Requests are loaded lazily per-collection (that's the shape the backend
@@ -12,6 +31,11 @@ interface CollectionState {
   loadingCollectionIds: Record<string, boolean>;
   expanded: Record<string, boolean>;
   loaded: boolean;
+  // Surfaced in the UI (CollectionsPanel renders this as a dismissible
+  // banner) instead of only going to console.error — that was the actual
+  // reason "nothing happens" when collection creation failed silently.
+  lastError: string | null;
+  clearError: () => void;
 
   load: () => Promise<void>;
   toggleExpand: (id: string) => void;
@@ -36,10 +60,21 @@ export const useCollectionStore = create<CollectionState>((set, get) => ({
   loadingCollectionIds: {},
   expanded: {},
   loaded: false,
+  lastError: null,
+
+  clearError: () => set({ lastError: null }),
 
   load: async () => {
-    const collections = await api.collections.list();
-    set({ collections, loaded: true });
+    console.log("[collections] load()");
+    try {
+      const collections = await api.collections.list();
+      console.log("[collections] load() ->", collections.length, "collections");
+      set({ collections, loaded: true, lastError: null });
+    } catch (e) {
+      console.error("[collections] load() failed:", e);
+      set({ lastError: describeError(e, "Failed to load collections") });
+      throw e;
+    }
   },
 
   toggleExpand: (id) => {
@@ -60,12 +95,20 @@ export const useCollectionStore = create<CollectionState>((set, get) => ({
   },
 
   createCollection: async (name, parentId) => {
-    const collection = await api.collections.create(name, parentId);
-    set((s) => ({ collections: [...s.collections, collection] }));
-    if (parentId) {
-      set((s) => ({ expanded: { ...s.expanded, [parentId]: true } }));
+    console.log("[collections] createCollection() ->", { name, parentId });
+    try {
+      const collection = await api.collections.create(name, parentId);
+      console.log("[collections] createCollection() succeeded ->", collection);
+      set((s) => ({ collections: [...s.collections, collection], lastError: null }));
+      if (parentId) {
+        set((s) => ({ expanded: { ...s.expanded, [parentId]: true } }));
+      }
+      return collection;
+    } catch (e) {
+      console.error("[collections] createCollection() failed:", e);
+      set({ lastError: describeError(e, "Failed to create collection") });
+      throw e;
     }
-    return collection;
   },
 
   renameCollection: async (id, name) => {
