@@ -4,7 +4,17 @@ pub mod misc;
 
 pub use misc::{AppSettings, Collection, Environment, HistoryEntry};
 pub use request::{
-     ApiRequest, AuthConfig, HttpMethod,
-    KeyValuePair, RawBody, RequestBody, RequestSettings, ScriptsConfig,
+    ApiKeyAuth,
+    ApiRequest,
+    AuthConfig,
+    BasicAuth,
+    BearerAuth,
+    FormDataField,
+    HttpMethod,
+    KeyValuePair,
+    RawBody,
+    RequestBody,
+    RequestSettings,
+    ScriptsConfig,
 };
 pub use response::{ApiResponse, Cookie, TestResult, TimingBreakdown};
