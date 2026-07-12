@@ -1,12 +1,13 @@
 import { useState } from "react";
 import clsx from "clsx";
-import { ChevronDown, Save, Send } from "lucide-react";
+import { ChevronDown, Save, Send, Copy, Check } from "lucide-react";
 import type { HttpMethod, RequestTab } from "@/types";
 import { useTabStore } from "@/stores/tabStore";
 import { useCollectionStore } from "@/stores/collectionStore";
 import { api } from "@/lib/api";
 import { useEnvironmentStore } from "@/stores/environmentStore";
 import { SaveRequestModal } from "./SaveRequestModal";
+import { parseCurl, buildCurl } from "@/lib/curl";
 
 const METHODS: HttpMethod[] = ["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"];
 
@@ -27,18 +28,22 @@ interface Props {
 export function UrlBar({ tab }: Props) {
   const [methodOpen, setMethodOpen] = useState(false);
   const [saveModalOpen, setSaveModalOpen] = useState(false);
+  const [copied, setCopied] = useState(false);
   const { updateRequest, setLoading, setResponse, setError, markSaved, markUnsaved } = useTabStore();
   const upsertRequestInCache = useCollectionStore((s) => s.upsertRequestInCache);
-  const activeEnvironmentId = useEnvironmentStore((s) => s.activeEnvironmentId);
+  const { environments, activeEnvironmentId } = useEnvironmentStore();
+
+  const activeEnvVars = () => {
+    const env = environments.find((e) => e.id === activeEnvironmentId);
+    const vars: Record<string, string> = {};
+    if (env) for (const v of env.variables) if (v.enabled) vars[v.key] = v.value;
+    return vars;
+  };
 
   const handleSend = async () => {
     setLoading(tab.id, true);
     setError(tab.id, null);
     try {
-      // Client-side watchdog: the Rust side has its own request.settings.timeoutMs,
-      // but if something upstream of that (DNS resolution, TLS handshake stall,
-      // firewall silently dropping packets, etc.) hangs the invoke() promise
-      // itself, this guarantees the UI never gets stuck on "Sending..." forever.
       const watchdogMs = tab.request.settings.timeoutMs + 10_000;
       const response = await Promise.race([
         api.http.execute({
@@ -63,11 +68,6 @@ export function UrlBar({ tab }: Props) {
     }
   };
 
-  // Save behavior mirrors Postman: a request that already lives in a
-  // collection just re-saves in place; a brand-new/unsaved request opens a
-  // "Save Request" dialog so the person picks a name + destination folder
-  // instead of silently saving with collectionId = null (the previous
-  // behavior, which meant it could never show up in the Collections tree).
   const handleSaveClick = () => {
     if (tab.requestId && tab.request.collectionId) {
       api.requests.save(tab.request).then(upsertRequestInCache, console.error);
@@ -87,6 +87,31 @@ export function UrlBar({ tab }: Props) {
     } catch (e) {
       console.error(e);
     }
+  };
+
+  // Detects a pasted cURL command in the URL bar and, if it parses, replaces
+  // the *whole* request (method/url/headers/params/body/auth) instead of
+  // just dumping the raw text into the URL field.
+  const handlePaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
+    const text = e.clipboardData.getData("text");
+    const parsed = parseCurl(text);
+    if (!parsed) return; // not a curl command — let the normal paste happen
+    e.preventDefault();
+    updateRequest(tab.id, {
+      method: parsed.method,
+      url: parsed.url,
+      headers: parsed.headers,
+      params: parsed.params,
+      body: parsed.body,
+      auth: parsed.auth,
+    });
+  };
+
+  const handleCopyAsCurl = async () => {
+    const curl = buildCurl(tab.request, activeEnvVars());
+    await navigator.clipboard.writeText(curl);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1500);
   };
 
   return (
@@ -126,9 +151,19 @@ export function UrlBar({ tab }: Props) {
       <input
         value={tab.request.url}
         onChange={(e) => updateRequest(tab.id, { url: e.target.value })}
+        onPaste={handlePaste}
         placeholder="Enter URL or paste cURL..."
         className="flex-1 rounded-md border border-border bg-bg-elevated px-3 py-2 font-mono text-[13px] text-text-primary placeholder:text-text-muted  focus:outline-none"
       />
+
+      <button
+        onClick={handleCopyAsCurl}
+        title="Copy as cURL"
+        className="flex items-center gap-1.5 rounded-md border border-border bg-bg-elevated px-3 py-2 text-[13px] text-text-secondary hover:bg-bg-hover"
+      >
+        {copied ? <Check size={14} className="text-status-success" /> : <Copy size={14} />}
+        {copied ? "Copied" : "cURL"}
+      </button>
 
       <button
         onClick={handleSaveClick}
