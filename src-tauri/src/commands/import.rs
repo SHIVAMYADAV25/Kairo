@@ -1,12 +1,8 @@
+use crate::commands::{openapi_parser, postman_parser};
 use crate::db::DbPool;
 use crate::models::Collection;
 use tauri::State;
 
-/// Downloads a collection definition (Postman Collection / OpenAPI / plain
-/// JSON) from a URL and imports it. The format-specific parsers
-/// (postman_parser.rs, openapi_parser.rs) are the natural next files to add
-/// here — this command is the stable entry point the frontend calls either
-/// way.
 #[tauri::command]
 pub async fn import_from_url(db: State<'_, DbPool>, url: String) -> Result<Collection, String> {
     let body = reqwest::get(&url)
@@ -31,22 +27,35 @@ pub async fn import_from_file(
 fn import_json_collection(db: &DbPool, raw: &str) -> Result<Collection, String> {
     let value: serde_json::Value = serde_json::from_str(raw).map_err(|e| e.to_string())?;
 
-    // Postman v2.1 collections use `info.name`; fall back to a generic name
-    // for OpenAPI (`info.title`) or plain JSON.
+    let is_openapi = value.get("openapi").is_some() || value.get("swagger").is_some();
+    let is_postman = value.get("item").is_some() && value.get("info").is_some();
+
+    if is_openapi {
+        let name = value
+            .get("info")
+            .and_then(|i| i.get("title"))
+            .and_then(|n| n.as_str())
+            .unwrap_or("Imported API")
+            .to_string();
+        return openapi_parser::import(db, &name, &value).map_err(|e| e.to_string());
+    }
+
+    if is_postman {
+        let name = value
+            .get("info")
+            .and_then(|i| i.get("name"))
+            .and_then(|n| n.as_str())
+            .unwrap_or("Imported Collection")
+            .to_string();
+        return postman_parser::import(db, &name, &value).map_err(|e| e.to_string());
+    }
+
+    // Unknown shape — fall back to an empty shell instead of hard-failing.
     let name = value
         .get("info")
         .and_then(|i| i.get("name").or_else(|| i.get("title")))
         .and_then(|n| n.as_str())
         .unwrap_or("Imported Collection")
         .to_string();
-
-    let collection =
-        crate::storage::collections::create(db, &name, None).map_err(|e| e.to_string())?;
-
-    // TODO: walk `value["item"]` (Postman) or `value["paths"]` (OpenAPI) and
-    // call `storage::requests::save` for each discovered request. Left as
-    // the next incremental slice — the collection shell is created and
-    // visible in the sidebar immediately either way.
-
-    Ok(collection)
+    crate::storage::collections::create(db, &name, None).map_err(|e| e.to_string())
 }

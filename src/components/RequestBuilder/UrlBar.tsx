@@ -189,3 +189,4 @@ export function UrlBar({ tab }: Props) {
     </div>
   );
 }
+
