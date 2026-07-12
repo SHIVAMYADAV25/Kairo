@@ -12,15 +12,14 @@ import { ResizeHandle } from "@/components/common/ResizeHandle";
 import { useTabStore } from "@/stores/tabStore";
 import { useSettingsStore } from "@/stores/settingsStore";
 import { useEnvironmentStore } from "@/stores/environmentStore";
-import { createEmptyTab } from "@/lib/factories";
+import { createEmptyTab, createTabFromPersisted } from "@/lib/factories";
+import { api } from "@/lib/api";
 
 export default function App() {
   const [sidebarPanel, setSidebarPanel] = useState<SidebarPanel>("collections");
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [perfOpen, setPerfOpen] = useState(true);
   const [responseOpen, setResponseOpen] = useState(true);
-  // Keyed by tab id so switching tabs never mixes one request's timing
-  // history with another's (previously this was a single global array).
   const [perfHistoryByTab, setPerfHistoryByTab] = useState<Record<string, number[]>>({});
 
   const { tabs, activeTabId, openTab } = useTabStore();
@@ -31,41 +30,52 @@ export default function App() {
   const perfHistory = activeTab ? perfHistoryByTab[activeTab.id] ?? [] : [];
 
   useEffect(() => {
-    hydrate();
-    loadEnvironments().catch(() => {});
-    if (tabs.length === 0) openTab(createEmptyTab());
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    (async () => {
+      await hydrate();
+      loadEnvironments().catch(() => {});
+
+      const { settings: s } = useSettingsStore.getState();
+      if (s.restoreLastSession) {
+        try {
+          const persisted = await api.tabs.listPersisted();
+          if (persisted.length > 0) {
+            for (const request of persisted) openTab(createTabFromPersisted(request));
+            return;
+          }
+        } catch {
+          /* backend not ready / first run */
+        }
+      }
+      if (useTabStore.getState().tabs.length === 0) openTab(createEmptyTab());
+    })();
   }, []);
 
-  // Tracks the last response we've already recorded per tab (by receivedAt),
-  // so switching tabs — which just changes which response `activeTab.response`
-  // *points at* — doesn't look like "a new response landed" and re-append the
-  // same timing into the chart over and over.
+  useEffect(() => {
+    const handle = setTimeout(() => {
+      api.tabs.persist(tabs.map((t) => t.request)).catch(() => {});
+    }, 800);
+    return () => clearTimeout(handle);
+  }, [tabs]);
+
   const recordedResponseRef = useRef<Record<string, string>>({});
 
   useEffect(() => {
     if (!activeTab?.response) return;
     const id = activeTab.id;
     const receivedAt = activeTab.response.receivedAt;
-    if (recordedResponseRef.current[id] === receivedAt) return; // already recorded, this fire is just a tab switch
+    if (recordedResponseRef.current[id] === receivedAt) return;
     recordedResponseRef.current[id] = receivedAt;
 
     const ms = activeTab.response.timing.totalMs;
     setPerfHistoryByTab((h) => ({ ...h, [id]: [...(h[id] ?? []).slice(-49), ms] }));
-    // A response landing is exactly the moment a closed Performance/Response
-    // panel is most useful — surface it automatically instead of making
-    // the person hunt for a way to reopen it.
     setPerfOpen(true);
     setResponseOpen(true);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab?.response, activeTab?.id]);
 
   return (
     <div className="flex h-screen w-screen flex-col overflow-hidden bg-bg-base text-text-primary">
-      {/* Title bar - Restructured layout to prevent items squeezing away */}
+      {/* Top Bar Navigation Dashboard Header */}
       <div className="flex items-center justify-between border-b border-border bg-bg-base px-4 py-1">
-        
-        {/* Left Side: Brand Logo & Subtitle (Guaranteed to stay in place) */}
         <div className="flex shrink-0 items-center gap-3">
           <span className="text-[15px] font-semibold tracking-wide">
             Web<span className="text-accent">RequestKit</span>
@@ -74,155 +84,85 @@ export default function App() {
             Fast. Lightweight. Rust-powered.
           </span>
         </div>
-
-        {/* Center: Tab Bar Wrapper (Takes up free middle room, safely masking horizontal scrolls) */}
         <div className="mx-4 flex-1 overflow-hidden">
           <TabBar />
         </div>
-
-        {/* Right Side: Environment Menu & App Settings (Guaranteed to stay visible) */}
         <div className="flex shrink-0 items-center">
           <EnvironmentSelector onOpenSettings={() => setSettingsOpen(true)} />
         </div>
       </div>
 
-      {/* Main App Workspace */}
+      {/* Main Internal Application Workspace Panels */}
       <div className="flex min-h-0 flex-1">
-        <IconRail
-          active={sidebarPanel}
-          onChange={setSidebarPanel}
-          onOpenSettings={() => setSettingsOpen(true)}
-        />
+        <IconRail active={sidebarPanel} onChange={setSidebarPanel} onOpenSettings={() => setSettingsOpen(true)} />
 
-        <div
-          style={{ width: settings.panelSizes.sidebarWidth }}
-          className="shrink-0 border-r border-border bg-bg-panel"
-        >
+        <div style={{ width: settings.panelSizes.sidebarWidth }} className="shrink-0 border-r border-border bg-bg-panel">
           <Sidebar panel={sidebarPanel} />
         </div>
         <ResizeHandle
           direction="horizontal"
           onResize={(d) =>
-            update({
-              panelSizes: {
-                ...settings.panelSizes,
-                sidebarWidth: Math.max(200, settings.panelSizes.sidebarWidth + d),
-              },
-            })
+            update({ panelSizes: { ...settings.panelSizes, sidebarWidth: Math.max(200, settings.panelSizes.sidebarWidth + d) } })
           }
         />
 
-        {/* Center: Request Builder over Response Viewer */}
+        {/* WORKSPACE MIDDLE STACK ROUTER PANEL VIEW */}
         <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
           {activeTab ? (
-            <>
+            <div className="flex flex-col h-full min-h-0 w-full overflow-hidden">
+              {/* Request Panel Section */}
               <div style={{ height: settings.panelSizes.requestEditorHeight }} className="shrink-0 overflow-hidden">
                 <RequestBuilder tab={activeTab} />
               </div>
               <ResizeHandle
                 direction="vertical"
                 onResize={(d) =>
-                  update({
-                    panelSizes: {
-                      ...settings.panelSizes,
-                      requestEditorHeight: Math.max(
-                        180,
-                        settings.panelSizes.requestEditorHeight + d
-                      ),
-                    },
-                  })
+                  update({ panelSizes: { ...settings.panelSizes, requestEditorHeight: Math.max(180, settings.panelSizes.requestEditorHeight + d) } })
                 }
               />
-              {responseOpen && (
-                <>
-                  <div
-                    style={{ height: settings.panelSizes.responseViewerHeight }}
-                    className="shrink-0 overflow-hidden"
-                  >
-                    <ResponseViewer tab={activeTab} onClose={() => setResponseOpen(false)} />
-                  </div>
-                  <ResizeHandle
-                    direction="vertical"
-                    onResize={(d) =>
-                      update({
-                        panelSizes: {
-                          ...settings.panelSizes,
-                          responseViewerHeight: Math.max(
-                            160,
-                            settings.panelSizes.responseViewerHeight + d
-                          ),
-                        },
-                      })
-                    }
-                  />
-                </>
+              
+              {/* Response Panel Section - Set to expand flex-1 to occupy remainder context */}
+              {responseOpen ? (
+                <div className="flex-1 min-h-0 overflow-hidden flex flex-col bg-[#0b0b0b]">
+                  <ResponseViewer tab={activeTab} onClose={() => setResponseOpen(false)} />
+                </div>
+              ) : (
+                <div className="flex-1 bg-bg-base" />
               )}
-              {/* Absorbs leftover vertical space to maintain independent heights */}
-              <div className="min-h-0 flex-1 overflow-auto bg-bg-base" />
-            </>
-          ) : (
-            <div className="flex h-full items-center justify-center text-text-muted">
-              No request open
             </div>
+          ) : (
+            <div className="flex h-full items-center justify-center text-text-muted">No request open</div>
           )}
         </div>
 
-        {/* Right: Performance Panel */}
         {perfOpen && (
           <>
             <ResizeHandle
               direction="horizontal"
               onResize={(d) =>
-                update({
-                  panelSizes: {
-                    ...settings.panelSizes,
-                    performancePanelWidth: Math.max(
-                      220,
-                      settings.panelSizes.performancePanelWidth - d
-                    ),
-                  },
-                })
+                update({ panelSizes: { ...settings.panelSizes, performancePanelWidth: Math.max(220, settings.panelSizes.performancePanelWidth - d) } })
               }
             />
-            <div
-              style={{ width: settings.panelSizes.performancePanelWidth }}
-              className="shrink-0 border-l border-border bg-bg-panel"
-            >
-              {activeTab && (
-                <PerformancePanel
-                  tab={activeTab}
-                  onClose={() => setPerfOpen(false)}
-                  history={perfHistory}
-                />
-              )}
+            <div style={{ width: settings.panelSizes.performancePanelWidth }} className="shrink-0 border-l border-border bg-bg-panel">
+              {activeTab && <PerformancePanel tab={activeTab} onClose={() => setPerfOpen(false)} history={perfHistory} />}
             </div>
           </>
         )}
       </div>
 
-      {/* Status Bar */}
+      {/* Footer System Status Metrics Bar */}
       <div className="flex items-center justify-between border-t border-border bg-bg-base px-3 py-1 text-[11px] text-text-muted">
         <span className="flex items-center gap-1.5">
           <span className="h-1.5 w-1.5 rounded-full bg-status-success" /> Ready
         </span>
         <div className="flex items-center gap-1">
-          {/* Reopen affordances for panels the user closed — fix #3: previously
-              closing Performance had no way back short of restarting the app. */}
           {!responseOpen && (
-            <button
-              onClick={() => setResponseOpen(true)}
-              className="flex items-center gap-1 rounded px-2 py-0.5 text-text-muted hover:bg-bg-hover hover:text-text-primary"
-              title="Reopen Response panel"
-            >
+            <button onClick={() => setResponseOpen(true)} className="flex items-center gap-1 rounded px-2 py-0.5 text-text-muted hover:bg-bg-hover hover:text-text-primary" title="Reopen Response panel">
               <PanelBottomOpen size={12} /> Response
             </button>
           )}
           {!perfOpen && (
-            <button
-              onClick={() => setPerfOpen(true)}
-              className="flex items-center gap-1 rounded px-2 py-0.5 text-text-muted hover:bg-bg-hover hover:text-text-primary"
-              title="Reopen Performance panel"
-            >
+            <button onClick={() => setPerfOpen(true)} className="flex items-center gap-1 rounded px-2 py-0.5 text-text-muted hover:bg-bg-hover hover:text-text-primary" title="Reopen Performance panel">
               <BarChart3 size={12} /> Performance
             </button>
           )}

@@ -1,8 +1,9 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect, useRef } from "react";
 import clsx from "clsx";
-import { Search, MousePointerClick, Braces } from "lucide-react";
+import { Search, Files, AlertCircle, ChevronDown } from "lucide-react";
 import type { ApiResponse } from "@/types";
 import { JsonTree } from "./JsonTree";
+import { useSettingsStore } from "@/stores/settingsStore";
 
 type ViewMode = "tree" | "raw";
 type Lang = "auto" | "json" | "xml" | "html" | "text";
@@ -11,123 +12,276 @@ interface Props {
   response: ApiResponse;
 }
 
+interface FloatingTooltip {
+  path: string;
+  x: number;
+  y: number;
+}
+
+function formatMarkup(source: string): string {
+  try {
+    let formatted = "";
+    let indent = "";
+    const reg = /(>)(<)(\/*)/g;
+    const xml = source.replace(reg, "$1\r\n$2$3");
+    let pad = 0;
+    
+    xml.split("\r\n").forEach((node) => {
+      let indentLevel = 0;
+      if (node.match(/.+<\/\w[^>]*>$/)) {
+        indentLevel = 0;
+      } else if (node.match(/^<\/\w/)) {
+        if (pad !== 0) pad -= 1;
+      } else if (node.match(/^<\w[^>]*[^\/]>.*$/)) {
+        indentLevel = 1;
+      } else {
+        indentLevel = 0;
+      }
+
+      indent = Array(pad).fill("  ").join("");
+      formatted += indent + node + "\r\n";
+      pad += indentLevel;
+    });
+    return formatted.trim();
+  } catch {
+    return source;
+  }
+}
+
 export function ResponseBodyTab({ response }: Props) {
+  const defaultJsonFormat = useSettingsStore((s) => s.settings.defaultJsonFormat);
+  const wordWrap = useSettingsStore((s) => s.settings.responseWordWrap);
+
   const [mode, setMode] = useState<ViewMode>("tree");
   const [search, setSearch] = useState("");
   const [lang, setLang] = useState<Lang>("auto");
-  const [pretty, setPretty] = useState(true);
+  const [pretty, setPretty] = useState(defaultJsonFormat !== "compact");
+  const [tooltip, setTooltip] = useState<FloatingTooltip | null>(null);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
-  const parsed = useMemo(() => {
+  useEffect(() => {
+    if (!tooltip) return;
+    const timer = setTimeout(() => {
+      setTooltip(null);
+    }, 1000);
+    return () => clearTimeout(timer);
+  }, [tooltip]);
+
+  useEffect(() => {
+    function clickAway(e: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setDropdownOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", clickAway);
+    return () => document.removeEventListener("mousedown", clickAway);
+  }, []);
+
+  const handleKeyClick = (pathArray: (string | number)[], event: React.MouseEvent) => {
+    let builtPath = "data";
+    pathArray.forEach((seg) => {
+      if (typeof seg === "number" || /^\d+$/.test(String(seg))) {
+        builtPath += `[${seg}]`;
+      } else if (/^[a-zA-Z_$][a-zA-Z0-9_$]*$/.test(String(seg))) {
+        builtPath += `.${seg}`;
+      } else {
+        builtPath += `["${String(seg).replace(/"/g, '\\"')}"]`;
+      }
+    });
+
+    if (navigator.clipboard?.writeText) {
+      navigator.clipboard.writeText(builtPath);
+    }
+
+    const rect = (event.currentTarget as HTMLElement).getBoundingClientRect();
+    const parentContainer = event.currentTarget.closest(".overflow-auto");
+    const parentRect = parentContainer?.getBoundingClientRect();
+
+    setTooltip({
+      path: builtPath,
+      x: rect.left - (parentRect?.left || 0) + 12,
+      y: rect.top - (parentRect?.top || 0) - 26 + (parentContainer?.scrollTop || 0),
+    });
+  };
+
+  const rawDisplay = useMemo(() => {
+    if (!pretty) return response.body;
+    try {
+      if (lang === "json" || lang === "auto") {
+        const parsed = JSON.parse(response.body);
+        return JSON.stringify(parsed, null, 2);
+      }
+      if (lang === "xml" || lang === "html") {
+        return formatMarkup(response.body);
+      }
+    } catch {}
+    return response.body;
+  }, [response.body, lang, pretty]);
+
+  const parsedJson = useMemo(() => {
+    if (lang === "xml" || lang === "html" || lang === "text") return null;
     try {
       return JSON.parse(response.body);
     } catch {
       return null;
     }
-  }, [response.body]);
+  }, [response.body, lang]);
 
-  const rawDisplay = useMemo(() => {
-    if (!pretty) return response.body;
-    if (parsed !== null) return JSON.stringify(parsed, null, 2);
-    return response.body;
-  }, [response.body, parsed, pretty]);
+  const lineCount = useMemo(() => {
+    return rawDisplay.split("\n").length;
+  }, [rawDisplay]);
 
   return (
-    <div className="flex h-full flex-col">
-      <div className="flex items-center gap-2 border-b border-border px-3 py-2">
-        <button
-          onClick={() => setMode("tree")}
-          className={clsx(
-            "rounded-md px-2.5 py-1 text-[12px]",
-            mode === "tree" ? "bg-accent text-black" : "text-text-secondary hover:bg-bg-hover"
-          )}
-        >
-          Tree
-        </button>
-        <button
-          onClick={() => setMode("raw")}
-          className={clsx(
-            "rounded-md px-2.5 py-1 text-[12px]",
-            mode === "raw" ? "bg-accent text-black" : "text-text-secondary hover:bg-bg-hover"
-          )}
-        >
-          View Raw
-        </button>
-      </div>
-
-      {mode === "tree" && (
-        <>
-          <div className="border-b border-border p-2">
-            <div className="relative">
-              <Search size={12} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-text-muted" />
-              <input
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search keys and values..."
-                className="w-full rounded-md border border-border bg-bg-elevated py-1.5 pl-7 pr-2 text-[12px] text-text-primary placeholder:text-text-muted focus:border-accent focus:outline-none"
-              />
-            </div>
-          </div>
-          <div className="space-y-1 border-b border-border px-3 py-1.5 text-[11px] text-text-muted">
-            <div className="flex items-center gap-1.5">
-              <MousePointerClick size={11} className="shrink-0 text-text-muted" />
-              Click any key to copy its JS path
-            </div>
-            <div className="flex items-center gap-1.5">
-              <Braces size={11} className="shrink-0 text-text-muted" />
-              <span>
-                Use <code className="text-accent">data</code> to reference the response body in
-                scripts, e.g. <code className="text-accent">data.users[0].name</code>
-              </span>
-            </div>
-          </div>
-          <div className="flex-1 overflow-auto p-2 font-mono text-[12px] leading-[1.5]">
-            {parsed !== null ? (
-              <JsonTree data={parsed} searchQuery={search} />
-            ) : (
-              <div className="whitespace-pre-wrap text-text-secondary">{response.body}</div>
-            )}
-          </div>
-        </>
-      )}
-
-      {mode === "raw" && (
-        <pre
-          className="flex-1 overflow-auto p-3 font-mono text-text-secondary"
-          style={{ fontSize: "var(--font-response)" }}
-        >
-          {rawDisplay}
-        </pre>
-      )}
-
-      <div className="flex items-center justify-between border-t border-border px-3 py-1.5 text-[11px] text-text-muted">
-        <select
-          value={lang}
-          onChange={(e) => setLang(e.target.value as Lang)}
-          className="rounded bg-transparent text-text-secondary focus:outline-none"
-        >
-          <option value="auto">Auto</option>
-          <option value="json">JSON</option>
-          <option value="xml">XML</option>
-          <option value="html">HTML</option>
-          <option value="text">Text</option>
-        </select>
-        <label className="flex items-center gap-1.5">
-          Prettify
+    <div className="flex h-full flex-col bg-[#0b0b0b] relative overflow-hidden">
+      {/* View Mode Header Options Bar */}
+      <div className="flex items-center border-b border-[#141414] px-3 h-[34px] shrink-0 bg-[#0b0b0b]">
+        <div className="flex items-center gap-1.5 bg-[#0e0e0e] p-0.5 rounded border border-[#161616]">
           <button
-            onClick={() => setPretty((p) => !p)}
+            onClick={() => setMode("tree")}
             className={clsx(
-              "relative h-4 w-7 rounded-full transition-colors",
-              pretty ? "bg-accent" : "bg-bg-elevated"
+              "text-[11px] font-medium px-2.5 py-0.5 rounded transition-all",
+              mode === "tree" 
+                ? "bg-[#181818] text-accent border border-[#242424]" 
+                : "text-[#7c7c7c] hover:text-[#aaaaaa] border border-transparent"
             )}
           >
-            <span
-              className={clsx(
-                "absolute top-0.5 h-3 w-3 rounded-full bg-white transition-transform",
-                pretty ? "translate-x-3.5" : "translate-x-0.5"
-              )}
-            />
+            Tree
           </button>
-        </label>
+          <button
+            onClick={() => setMode("raw")}
+            className={clsx(
+              "text-[11px] font-medium px-2.5 py-0.5 rounded transition-all",
+              mode === "raw" 
+                ? "bg-[#181818] text-accent border border-[#242424]" 
+                : "text-[#7c7c7c] hover:text-[#aaaaaa] border border-transparent"
+            )}
+          >
+            View Raw
+          </button>
+        </div>
+      </div>
+
+      {/* Main Internal Content Area (Locks scrolling here) */}
+      <div className="flex-1 overflow-auto min-h-0 bg-[#070707] relative select-text">
+        <div className="p-4">
+          {mode === "tree" && parsedJson !== null ? (
+            <div className="space-y-3">
+              <div className="relative w-full">
+                <Search size={12} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[#444444]" />
+                <input
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  placeholder="Search keys and values..."
+                  className="w-full rounded border border-[#161616] bg-[#0f0f0f] py-1 pl-8 pr-2 font-sans text-[11px] text-[#cccccc] placeholder:text-[#444444] focus:border-accent/40 focus:outline-none"
+                />
+              </div>
+
+              <div className="space-y-1 text-[10px] text-[#7c7c7c] font-sans tracking-wide select-none">
+                <div className="flex items-center gap-2">
+                  <Files size={12} className="text-[#444444] shrink-0" />
+                  <span>Click any key to copy its JS path</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <AlertCircle size={12} className="text-[#444444] shrink-0" />
+                  <span>
+                    Use <code className="text-accent font-mono font-light text-[9.5px]">data</code> to reference the response body in scripts, e.g. <code className="text-[#a1a1aa] font-mono font-light text-[9.5px]">data.users[0].name</code>
+                  </span>
+                </div>
+              </div>
+
+              <div className="font-mono text-[11px] pt-1.5 leading-[1.6] text-[#dedede] relative">
+                <JsonTree
+                  data={parsedJson}
+                  searchQuery={search}
+                  onKeyClick={handleKeyClick}
+                />
+              </div>
+            </div>
+          ) : (
+            <pre
+              className={clsx(
+                "font-mono text-[11px] leading-[1.6]",
+                parsedJson === null && lang !== "text" ? "text-[#cccccc]" : "text-[#22c55e]",
+                wordWrap ? "whitespace-pre-wrap" : "whitespace-pre"
+              )}
+            >
+              {rawDisplay}
+            </pre>
+          )}
+        </div>
+
+        {tooltip && (
+          <div
+            style={{ top: `${tooltip.y}px`, left: `${tooltip.x}px` }}
+            className="absolute z-50 pointer-events-none bg-[#111111] border border-[#222222] text-[#4ade80] px-2 py-0.5 rounded font-mono text-[11px] shadow-lg flex items-center gap-1 opacity-100 transition-opacity duration-150"
+          >
+            {tooltip.path}
+          </div>
+        )}
+      </div>
+
+      {/* FIXED BOTTOM UTILITY STATUS DOCK BAR */}
+      <div className="w-full flex items-center justify-between border-t border-[#141414] bg-[#0b0b0b] px-4 h-[28px] shrink-0 text-[11px] text-[#555555] font-sans font-medium select-none z-10">
+        <div className="relative inline-block text-left" ref={dropdownRef}>
+          <button
+            type="button"
+            onClick={() => setDropdownOpen(!dropdownOpen)}
+            className="flex items-center gap-1 bg-transparent text-[#666666] hover:text-[#aaaaaa] font-sans text-[11px] font-medium transition-colors focus:outline-none"
+          >
+            <span className="capitalize">{lang === "auto" ? "Auto" : lang.toUpperCase()}</span>
+            <ChevronDown size={11} className={clsx("transition-transform duration-150 text-[#555555]", dropdownOpen && "rotate-180")} />
+          </button>
+
+          {dropdownOpen && (
+            <div className="absolute left-0 bottom-full mb-1 w-24 rounded border border-[#161616] bg-[#0b0b0b] py-1 shadow-2xl z-50">
+              {(["auto", "json", "xml", "html", "text"] as Lang[]).map((option) => (
+                <button
+                  key={option}
+                  type="button"
+                  onClick={() => {
+                    setLang(option);
+                    setDropdownOpen(false);
+                  }}
+                  className={clsx(
+                    "w-full px-3 py-1 text-left font-sans text-[11px] transition-colors focus:outline-none",
+                    lang === option
+                      ? "bg-[#181818] text-accent font-medium"
+                      : "text-[#7c7c7c] hover:bg-[#111111] hover:text-[#aaaaaa]"
+                  )}
+                >
+                  {option === "auto" ? "Auto" : option.toUpperCase()}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+
+        <div className="flex items-center gap-4">
+          <span className="font-mono text-[#444444] text-[10px]">
+            Lines 1-{lineCount} of {lineCount}
+          </span>
+          <label className="flex items-center gap-2 cursor-pointer">
+            <span className="text-[#555555]">Prettify</span>
+            <button
+              type="button"
+              onClick={() => setPretty((p) => !p)}
+              className={clsx(
+                "relative inline-flex h-3.5 w-6 shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none",
+                pretty ? "bg-accent" : "bg-[#222222]"
+              )}
+            >
+              <span
+                className={clsx(
+                  "pointer-events-none inline-block h-2.5 w-2.5 transform rounded-full bg-white transition duration-200 ease-in-out mt-0.5",
+                  pretty ? "translate-x-3" : "translate-x-0.5"
+                )}
+              />
+            </button>
+          </label>
+          <span className="text-[#444444] font-mono text-[10px]">Spaces: 2</span>
+        </div>
       </div>
     </div>
   );

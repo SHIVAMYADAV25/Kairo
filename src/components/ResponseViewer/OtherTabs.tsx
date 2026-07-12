@@ -1,134 +1,192 @@
-import { Copy, Check, X } from "lucide-react";
+import clsx from "clsx";
+import { Check, X } from "lucide-react";
 import type { ApiResponse } from "@/types";
+import { useSettingsStore } from "@/stores/settingsStore";
+import { useMemo } from "react";
 
 export function ResponseHeadersTab({ response }: { response: ApiResponse }) {
   return (
-    <div className="overflow-auto p-2" style={{ fontSize: "var(--font-response)" }}>
-      {Object.entries(response.headers).map(([key, value]) => (
-        <div
-          key={key}
-          className="flex items-center justify-between gap-4 border-b border-border px-2 py-2"
-        >
-          <div className="min-w-0">
-            <div className="font-mono text-accent">{key}</div>
-            <div className="truncate font-mono text-text-secondary">{value}</div>
-          </div>
-          <button
-            onClick={() => navigator.clipboard?.writeText(value)}
-            className="shrink-0 text-text-muted hover:text-text-primary"
-          >
-            <Copy size={14} />
-          </button>
+    <div className="flex h-full flex-col bg-[#0b0b0b]">
+      {/* Scrollable headers viewport area */}
+      <div className="flex-1 overflow-auto custom-scrollbar min-h-0 bg-[#090909] p-4">
+        <div className="space-y-3 font-mono text-[11px] select-text">
+          {Object.entries(response.headers).map(([key, value]) => (
+            <div key={key} className="flex items-start gap-4 py-0.5 leading-[1.6]">
+              <div className="w-[180px] shrink-0 text-[#d97706] font-semibold break-all">
+                {key}
+              </div>
+              <div className="flex-1 text-[#cccccc] break-all whitespace-pre-wrap">
+                {value}
+              </div>
+            </div>
+          ))}
         </div>
-      ))}
+      </div>
+
+      {/* Fixed Bottom Status Utility Footer Line Block */}
+      <div className="flex items-center justify-between border-t border-[#141414] bg-[#0b0b0b] px-4 h-[28px] shrink-0 text-[11px] text-[#555555] font-sans font-medium select-none">
+        <div>
+          <span className="text-[#666666] uppercase font-bold text-[9px] tracking-wider">Auto</span>
+        </div>
+        <div className="flex items-center gap-4">
+          <span className="font-mono text-[#444444] text-[10px]">
+            Lines 1-{Object.keys(response.headers).length} of {Object.keys(response.headers).length}
+          </span>
+          <div className="flex items-center gap-2">
+            <span className="text-[#555555]">Prettify</span>
+            <div className="relative inline-flex h-3.5 w-6 shrink-0 bg-[#d97706] rounded-full">
+              <span className="inline-block h-2.5 w-2.5 transform rounded-full bg-white translate-x-3 mt-0.5" />
+            </div>
+          </div>
+          <span className="text-[#444444] font-mono text-[10px]">Spaces: 2</span>
+        </div>
+      </div>
     </div>
   );
 }
 
 export function ResponseCookiesTab({ response }: { response: ApiResponse }) {
   if (response.cookies.length === 0) {
-    return <div className="p-6 text-center text-text-muted">No cookies set by this response</div>;
+    return (
+      <div className="flex h-full items-center justify-center bg-[#090909] text-[#555555] font-sans text-[11px]">
+        No cookies set by this response
+      </div>
+    );
   }
+
   return (
-    <div className="overflow-auto" style={{ fontSize: "var(--font-response)" }}>
-      <table className="w-full text-left">
-        <thead>
-          <tr className="border-b border-border text-[11px] uppercase text-text-muted">
-            <th className="px-3 py-2">Name</th>
-            <th className="px-3 py-2">Value</th>
-            <th className="px-3 py-2">Domain</th>
-            <th className="px-3 py-2">Path</th>
-            <th className="px-3 py-2">Expires</th>
-          </tr>
-        </thead>
-        <tbody>
-          {response.cookies.map((c, i) => (
-            <tr key={i} className="border-b border-border">
-              <td className="px-3 py-2 font-mono text-text-primary">{c.name}</td>
-              <td className="px-3 py-2 font-mono text-text-secondary">{c.value}</td>
-              <td className="px-3 py-2 text-text-secondary">{c.domain}</td>
-              <td className="px-3 py-2 text-text-secondary">{c.path}</td>
-              <td className="px-3 py-2 text-text-secondary">{c.expires ?? "Session"}</td>
+    <div className="flex h-full flex-col bg-[#0b0b0b]">
+      <div className="flex-1 overflow-auto custom-scrollbar min-h-0 bg-[#090909]">
+        <table className="w-full text-left font-sans text-[11px] border-collapse">
+          <thead>
+            <tr className="border-b border-[#141414] bg-[#0b0b0b]/50 text-[10px] uppercase font-semibold text-[#555555] sticky top-0 backdrop-blur-sm">
+              <th className="px-4 py-2">Name</th>
+              <th className="px-4 py-2">Value</th>
+              <th className="px-4 py-2">Domain</th>
+              <th className="px-4 py-2">Path</th>
+              <th className="px-4 py-2">Expires</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody className="divide-y divide-[#141414]/40 text-[#cccccc]">
+            {response.cookies.map((c, i) => (
+              <tr key={i} className="hover:bg-[#111111]/40 transition-colors">
+                <td className="px-4 py-2 font-mono text-[#d97706] font-medium break-all">{c.name}</td>
+                <td className="px-4 py-2 font-mono text-[#cccccc] break-all">{c.value}</td>
+                <td className="px-4 py-2 text-[#888888]">{c.domain}</td>
+                <td className="px-4 py-2 text-[#888888]">{c.path}</td>
+                <td className="px-4 py-2 text-[#666666]">{c.expires ?? "Session"}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      <div className="flex items-center justify-between border-t border-[#141414] bg-[#0b0b0b] px-4 h-[28px] shrink-0 text-[11px] text-[#555555] font-sans font-medium select-none">
+        <span className="font-mono text-[#444444] text-[10px]">Cookies: {response.cookies.length}</span>
+      </div>
     </div>
   );
 }
 
 export function ResponseTestsTab({ response }: { response: ApiResponse }) {
-  if (response.testResults.length === 0) {
-    return <div className="p-6 text-center text-text-muted">No tests ran for this request</div>;
+  if (!response.testResults || response.testResults.length === 0) {
+    return (
+      <div className="flex h-full items-center justify-center bg-[#090909] text-[#555555] font-sans text-[11px]">
+        No tests ran for this request
+      </div>
+    );
   }
   const passed = response.testResults.filter((t) => t.passed).length;
   return (
-    <div className="p-3" style={{ fontSize: "var(--font-response)" }}>
-      <div className="mb-3 text-text-secondary">
-        {passed}/{response.testResults.length} passed
-      </div>
-      {response.testResults.map((t, i) => (
-        <div key={i} className="flex items-center gap-2 py-1">
-          {t.passed ? (
-            <Check size={15} className="text-status-success" />
-          ) : (
-            <X size={15} className="text-status-error" />
-          )}
-          <span className={t.passed ? "text-text-primary" : "text-status-error"}>{t.name}</span>
+    <div className="flex h-full flex-col bg-[#0b0b0b]">
+      <div className="flex-1 overflow-auto custom-scrollbar min-h-0 bg-[#090909] p-4 space-y-3 font-sans text-[11px]">
+        <div className="text-[#888888] font-medium">
+          {passed} / {response.testResults.length} metrics passed
         </div>
-      ))}
+        <div className="space-y-2">
+          {response.testResults.map((t, i) => (
+            <div key={i} className="flex items-center gap-2.5 py-1 px-2 rounded bg-[#111111]/40 border border-[#1a1a1a]/40">
+              {t.passed ? (
+                <Check size={13} className="text-[#22c55e] shrink-0" />
+              ) : (
+                <X size={13} className="text-[#f84b4b] shrink-0" />
+              )}
+              <span className={t.passed ? "text-[#cccccc]" : "text-[#f84b4b] font-medium"}>{t.name}</span>
+            </div>
+          ))}
+        </div>
+      </div>
     </div>
   );
 }
 
 export function ResponseRawTab({ response }: { response: ApiResponse }) {
+  const wordWrap = useSettingsStore((s) => s.settings.responseWordWrap);
   const rawHttp = `HTTP/1.1 ${response.status} ${response.statusText}
 ${Object.entries(response.headers)
   .map(([k, v]) => `${k}: ${v}`)
   .join("\n")}
 
 ${response.body}`;
+
+  const lineCount = useMemo(() => rawHttp.split("\n").length, [rawHttp]);
+
   return (
-    <pre
-      className="h-full overflow-auto whitespace-pre-wrap p-3 font-mono text-text-secondary"
-      style={{ fontSize: "var(--font-response)" }}
-    >
-      {rawHttp}
-    </pre>
+    <div className="flex h-full flex-col bg-[#0b0b0b]">
+      <div className="flex-1 overflow-auto custom-scrollbar min-h-0 bg-[#090909] p-4">
+        <pre
+          className={clsx(
+            "font-mono text-[11px] text-[#22c55e] leading-[1.6] select-text",
+            wordWrap ? "whitespace-pre-wrap" : "whitespace-pre"
+          )}
+        >
+          {rawHttp}
+        </pre>
+      </div>
+
+      <div className="flex items-center justify-between border-t border-[#141414] bg-[#0b0b0b] px-4 h-[28px] shrink-0 text-[11px] text-[#555555] font-sans font-medium select-none">
+        <span className="text-[#666666] font-bold text-[9px] tracking-wider uppercase">Raw HTTP</span>
+        <span className="font-mono text-[#444444] text-[10px]">Lines 1-{lineCount} of {lineCount}</span>
+      </div>
+    </div>
   );
 }
 
 export function ResponsePreviewTab({ response }: { response: ApiResponse }) {
-  const ct = response.contentType.toLowerCase();
-  if (ct.includes("html")) {
-    return (
-      <iframe
-        title="preview"
-        className="h-full w-full bg-white"
-        srcDoc={response.body}
-        sandbox=""
-      />
-    );
-  }
-  if (ct.includes("image")) {
-    return (
-      <div className="flex h-full items-center justify-center p-4">
-        <img src={`data:${ct};base64,${btoa(response.body)}`} alt="response preview" />
-      </div>
-    );
-  }
-  if (ct.includes("json")) {
-    return (
-      <pre className="h-full overflow-auto p-3 font-mono text-text-secondary">
+  const ct = response.contentType?.toLowerCase() || "";
+  
+  return (
+    <div className="flex h-full flex-col bg-[#0b0b0b]">
+      <div className="flex-1 bg-[#090909] min-h-0 overflow-hidden">
         {(() => {
-          try {
-            return JSON.stringify(JSON.parse(response.body), null, 2);
-          } catch {
-            return response.body;
+          if (ct.includes("html")) {
+            return <iframe title="preview" className="h-full w-full bg-white invert grayscale" srcDoc={response.body} sandbox="" />;
           }
+          if (ct.includes("image")) {
+            return (
+              <div className="flex h-full items-center justify-center p-4">
+                <img className="max-h-full object-contain rounded border border-[#1a1a1a]" src={`data:${ct};base64,${btoa(response.body)}`} alt="response preview" />
+              </div>
+            );
+          }
+          if (ct.includes("json")) {
+            let prettyJson = response.body;
+            try {
+              prettyJson = JSON.stringify(JSON.parse(response.body), null, 2);
+            } catch {}
+            return (
+              <div className="h-full overflow-auto custom-scrollbar p-4">
+                <pre className="font-mono text-[11px] text-[#cccccc] leading-[1.6]">{prettyJson}</pre>
+              </div>
+            );
+          }
+          return (
+            <div className="flex h-full items-center justify-center text-[#555555] font-sans text-[11px]">
+              No preview available for this content type ({ct})
+            </div>
+          );
         })()}
-      </pre>
-    );
-  }
-  return <div className="p-6 text-center text-text-muted">No preview available for this content type</div>;
+      </div>
+    </div>
+  );
 }

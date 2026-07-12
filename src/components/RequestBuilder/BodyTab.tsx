@@ -1,6 +1,6 @@
 import { lazy, Suspense } from "react";
 import clsx from "clsx";
-import { Upload, X, FileCode } from "lucide-react";
+import { X, FileCode } from "lucide-react";
 import type { BodyType, RequestBody, RequestTab } from "@/types";
 import { useTabStore } from "@/stores/tabStore";
 import { KeyValueTable } from "./KeyValueTable";
@@ -28,6 +28,19 @@ export function BodyTab({ tab }: Props) {
   const setBody = (patch: Partial<RequestBody>) =>
     updateRequest(tab.id, { body: { ...body, ...patch } });
 
+  // Reusable theme definition logic for Monaco components
+  const handleEditorWillMount = (monaco: any) => {
+    monaco.editor.defineTheme("custom-dark", {
+      base: "vs-dark",
+      inherit: true,
+      rules: [],
+      colors: {
+        "editor.background": "#141414",
+        "editor.lineHighlightBackground": "#141414",
+      },
+    });
+  };
+
   return (
     <div className="flex h-full flex-col">
       {/* Pill buttons styled precisely matching image layout */}
@@ -40,7 +53,7 @@ export function BodyTab({ tab }: Props) {
               "rounded-md px-3.5 py-1 text-[11px] font-normal tracking-wide transition-all",
               body.type === bt.id
                 ? "bg-[#F54900] text-[#FDFFFF] font-semibold"
-                : "bg-[#1a1a1a] text-[#a3a3a3] border-none  hover:bg-[#262626] hover:text-text-primary"
+                : "bg-[#1a1a1a] text-[#a3a3a3] border-none hover:bg-[#262626] hover:text-text-primary"
             )}
           >
             {bt.label}
@@ -56,36 +69,64 @@ export function BodyTab({ tab }: Props) {
         )}
 
         {body.type === "json" && (
-          <Suspense fallback={<div className="p-4 text-text-muted">Loading editor…</div>}>
-            <MonacoEditor
-              height="100%"
-              language="json"
-              theme="vs-dark"
-              value={body.json ?? '{\n  \n}'}
-              onChange={(v) => setBody({ json: v ?? "" })}
-              options={{
-                minimap: { enabled: false },
-                fontSize: 13,
-                scrollBeyondLastLine: false,
-                automaticLayout: true,
-              }}
-            />
-          </Suspense>
+          <div className="w-full h-[260px] rounded-lg border border-neutral-800/40 bg-[#141414] overflow-hidden p-2.5 transition-all">
+            <Suspense fallback={<div className="p-4 text-neutral-500 text-[13px]">Loading editor…</div>}>
+              <MonacoEditor
+                height="100%"
+                language="json"
+                theme="custom-dark"
+                value={body.json ?? "{\n  \n}"}
+                onChange={(v) => setBody({ json: v ?? "" })}
+                beforeMount={handleEditorWillMount}
+                options={{
+                  minimap: { enabled: false },
+                  fontSize: 13,
+                  lineNumbersMinChars: 3,
+                  scrollBeyondLastLine: false,
+                  automaticLayout: true,
+                  renderLineHighlight: "none",
+                  scrollbar: {
+                    vertical: "hidden",
+                    horizontal: "hidden",
+                  },
+                  overviewRulerBorder: false,
+                  hideCursorInOverviewRuler: true,
+                  matchBrackets: "always",
+                }}
+              />
+            </Suspense>
+          </div>
         )}
 
         {body.type === "raw" && (
-          <Suspense fallback={<div className="p-4 text-text-muted">Loading editor…</div>}>
-            <MonacoEditor
-              height="100%"
-              language={body.raw?.language ?? "text"}
-              theme="vs-dark"
-              value={body.raw?.content ?? ""}
-              onChange={(v) =>
-                setBody({ raw: { content: v ?? "", language: body.raw?.language ?? "text" } })
-              }
-              options={{ minimap: { enabled: false }, fontSize: 13, automaticLayout: true }}
-            />
-          </Suspense>
+          <div className="w-full h-[260px] rounded-lg border border-neutral-800/40 bg-[#141414] overflow-hidden p-2.5 transition-all">
+            <Suspense fallback={<div className="p-4 text-neutral-500 text-[13px]">Loading editor…</div>}>
+              <MonacoEditor
+                height="100%"
+                language={body.raw?.language ?? "text"}
+                theme="custom-dark"
+                value={body.raw?.content ?? ""}
+                onChange={(v) =>
+                  setBody({ raw: { content: v ?? "", language: body.raw?.language ?? "text" } })
+                }
+                beforeMount={handleEditorWillMount}
+                options={{
+                  minimap: { enabled: false },
+                  fontSize: 13,
+                  lineNumbersMinChars: 3,
+                  scrollBeyondLastLine: false,
+                  automaticLayout: true,
+                  renderLineHighlight: "none",
+                  scrollbar: {
+                    vertical: "hidden",
+                    horizontal: "hidden",
+                  },
+                  overviewRulerBorder: false,
+                  hideCursorInOverviewRuler: true,
+                }}
+              />
+            </Suspense>
+          </div>
         )}
 
         {body.type === "url-encoded" && (
@@ -103,18 +144,32 @@ export function BodyTab({ tab }: Props) {
         )}
 
         {body.type === "binary" && (
-          <div className="flex h-full items-center justify-center p-8 bg-bg-base">
+          <div className="flex h-full min-h-[260px] items-center justify-center p-4 bg-transparent select-none">
             {!body.binaryFilePath ? (
-              <label className="group flex h-full w-full max-w-2xl cursor-pointer flex-col items-center justify-center rounded-lg border border-dashed border-border/60 bg-[#0d0d0d] px-6 py-10 text-center transition-all hover:border-accent/40 hover:bg-[#121212]">
-                <div className="flex flex-col items-center justify-center">
-                  <Upload className="mb-4 h-8 w-8 text-text-muted/40 transition-colors group-hover:text-accent/60" />
-                  <p className="mb-4 text-[13px] text-text-secondary">
-                    Select a binary file to upload
-                  </p>
-                  <span className="rounded bg-[#f97316] px-4 py-2 text-[12px] font-medium text-black shadow transition-all hover:bg-[#ea580c]">
-                    Select a file
-                  </span>
+              <label className="flex flex-col items-center justify-center text-center cursor-pointer group">
+                <div className="mb-4 text-neutral-500 transition-colors group-hover:text-neutral-400">
+                  <svg
+                    className="w-10 h-10 stroke-[1.25]"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5"
+                    />
+                  </svg>
                 </div>
+
+                <p className="mb-4 text-[13px] tracking-wide text-neutral-500 font-normal">
+                  Select a binary file to upload
+                </p>
+
+                <span className="rounded bg-[#F54900] px-4 py-1.5 text-[12px] font-semibold text-[#FDFFFF] shadow-sm tracking-wide hover:bg-[#e04300] transition-colors">
+                  Select a file
+                </span>
+
                 <input
                   type="file"
                   onChange={(e) => setBody({ binaryFilePath: e.target.files?.[0]?.name ?? "" })}
@@ -122,26 +177,28 @@ export function BodyTab({ tab }: Props) {
                 />
               </label>
             ) : (
-              <div className="flex w-full max-w-md items-center justify-between rounded-lg border border-border/30 bg-[#111111] p-4 shadow-sm">
+              <div className="flex w-full max-w-md items-center justify-between rounded border border-neutral-800 bg-[#141414] px-4 py-3 shadow-md">
                 <div className="flex min-w-0 items-center gap-3">
-                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-accent/10 text-accent">
-                    <FileCode size={18} />
+                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded bg-[#F54900]/10 text-[#F54900]">
+                    <FileCode size={16} />
                   </div>
                   <div className="flex flex-col min-w-0">
-                    <span className="truncate text-[13px] font-medium text-text-primary">
+                    <span className="truncate text-[13px] font-medium text-neutral-200">
                       {body.binaryFilePath}
                     </span>
-                    <span className="text-[11px] text-text-muted">Ready to transport</span>
+                    <span className="text-[11px] text-neutral-500 tracking-wide mt-0.5">
+                      Ready to transport
+                    </span>
                   </div>
                 </div>
 
                 <button
                   type="button"
                   onClick={() => setBody({ binaryFilePath: "" })}
-                  className="ml-4 flex h-7 w-7 items-center justify-center rounded-md text-text-muted/60 transition-colors hover:bg-bg-hover hover:text-status-error"
+                  className="ml-4 flex h-6 w-6 items-center justify-center rounded text-neutral-500 transition-colors hover:bg-neutral-800 hover:text-red-400"
                   title="Clear selected file"
                 >
-                  <X size={15} />
+                  <X size={14} />
                 </button>
               </div>
             )}
