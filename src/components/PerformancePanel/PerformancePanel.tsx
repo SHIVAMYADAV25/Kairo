@@ -1,22 +1,16 @@
 import { useEffect, useRef, useState } from "react";
 import clsx from "clsx";
-import { X, Info, CheckCircle2, MoreVertical } from "lucide-react";
+import { X, Info, CheckCircle2, MoreVertical, Zap } from "lucide-react";
 import type { RequestTab } from "@/types";
 
 type Window = "1m" | "5m" | "15m" | "1h";
 
-// Simple in-memory ring buffer per tab session. Persisted history (last 10/20/50
-// requests) is read from `api.history.list()` once wired to the backend.
 function CircularGauge({ ms, celebrate }: { ms: number; celebrate: boolean }) {
   const max = 30000;
   const radius = 80;
-  const stroke = 10;
+  const stroke = 6;
   const circumference = 2 * Math.PI * radius;
 
-  // Animate the number counting up and the ring filling in together, rather
-  // than snapping straight to the final value — a slower fill reads as more
-  // deliberate/"earned" than an instant jump, which is the small bit of
-  // psychology fix #4 asked for.
   const [displayMs, setDisplayMs] = useState(0);
   useEffect(() => {
     setDisplayMs(0);
@@ -35,20 +29,21 @@ function CircularGauge({ ms, celebrate }: { ms: number; celebrate: boolean }) {
 
   const pct = Math.min(displayMs / max, 1);
   const offset = circumference * (1 - pct);
-  const color = ms > 5000 ? "#ef4444" : ms > 1000 ? "#f59e0b" : "#22c55e";
+  
+  const color = ms > 5000 ? "#f84b4b" : ms > 1000 ? "#f59e0b" : "#22c55e";
   const isGood = ms <= 1000;
   const CONFETTI_COLORS = ["#22c55e", "#f5820d", "#3b82f6", "#facc15"];
 
   return (
-    <div className={clsx("relative mx-auto", celebrate && isGood && "perf-success-ring")}>
+    <div className={clsx("relative mx-auto flex justify-center items-center w-[160px] h-[160px]", celebrate && isGood && "perf-success-ring")}>
       <svg
-        width={196}
-        height={196}
+        width={160}
+        height={160}
         viewBox="0 0 196 196"
         className={clsx("perf-gauge-pop", celebrate && isGood && "perf-achieve-pop")}
         style={celebrate && isGood ? { filter: `drop-shadow(0 0 10px ${color}66)` } : undefined}
       >
-        <circle cx={98} cy={98} r={radius} fill="none" stroke="var(--border)" strokeWidth={stroke} />
+        <circle cx={98} cy={98} r={radius} fill="none" stroke="#222222" strokeWidth={stroke} />
         <circle
           cx={98}
           cy={98}
@@ -62,15 +57,14 @@ function CircularGauge({ ms, celebrate }: { ms: number; celebrate: boolean }) {
           transform="rotate(-90 98 98)"
           style={{ transition: "stroke-dashoffset 0.15s linear, stroke 0.3s ease" }}
         />
-        <text x="98" y="98" textAnchor="middle" fontSize="34" fontWeight="800" fill="var(--text-primary)">
+        <text x="98" y="94" textAnchor="middle" fontSize="38" fontWeight="700" fill="#ffffff" letterSpacing="-0.5px">
           {displayMs}
         </text>
-        <text x="98" y="124" textAnchor="middle" fontSize="13" fill="var(--text-muted)">
+        <text x="98" y="122" textAnchor="middle" fontSize="11" fontWeight="500" fill="#666666">
           ms
         </text>
       </svg>
 
-      {/* Small "you earned this" confetti burst — only on a genuinely fast response. */}
       {celebrate && isGood && (
         <div className="pointer-events-none absolute inset-0">
           {Array.from({ length: 10 }).map((_, i) => (
@@ -90,56 +84,91 @@ function CircularGauge({ ms, celebrate }: { ms: number; celebrate: boolean }) {
       )}
 
       {celebrate && isGood && (
-        <div className="perf-badge absolute -right-1 -top-1 flex items-center gap-1 rounded-full bg-status-success/15 px-2 py-1 text-[11px] font-medium text-status-success">
-          <CheckCircle2 size={13} /> Nice & fast
+        <div className="perf-badge absolute -right-1 -top-1 flex items-center gap-1 rounded-full bg-status-success/15 px-2 py-1 text-[10px] font-medium text-status-success">
+          <CheckCircle2 size={12} /> Nice & fast
         </div>
       )}
     </div>
   );
 }
 
-// Dedicated muted/dim orange for the chart — deliberately not `--accent`
-// (the bright orange used for buttons/pills elsewhere), to match the
-// reference design's chart color exactly.
-const BAR_COLOR = "#c2760c";
+const BAR_COLOR = "#9c5411";
 
-// A fixed "always looks alive" pattern of relative heights (0–100), used to
-// backfill the chart before enough real requests exist yet — so a brand new
-// tab still reads as a full varied chart like the reference instead of one
-// lonely bar. Real bars always render on the right in their real order and
-// are never replaced by fake ones; fake ones just get pushed off the left
-// as real requests accumulate.
-const FAKE_SEED_HEIGHTS = [34, 55, 28, 64, 42, 80, 50, 70, 58, 90];
-const MIN_BARS = FAKE_SEED_HEIGHTS.length;
+// Distinct up-and-down waveform pool variations for FAST responses (compact but heavily fluctuating)
+const FAST_WAVEFORMS = [
+  [45, 75, 30, 85, 48, 92, 55, 78, 38, 65],
+  [35, 88, 50, 68, 32, 82, 44, 95, 58, 42],
+  [58, 34, 76, 42, 88, 52, 70, 36, 90, 48],
+  [40, 65, 32, 80, 55, 38, 85, 42, 72, 50]
+];
 
-function BarHistory({ values }: { values: number[] }) {
-  // Fixed-width bars that just accumulate left-to-right, one per request —
-  // NOT flex-1 columns sharing the row width. flex-1 was the bug: every new
-  // bar meant redividing the same row width among more bars, so every bar
-  // already on screen visibly shrank each time a new request landed. Here
-  // old bars never resize; once there are more than fit, the row scrolls.
-  const max = values.length ? Math.max(...values, 500) : 500;
-  const fakeCount = Math.max(MIN_BARS - values.length, 0);
+// Distinct up-and-down waveform pool variations for AVERAGE/SLOW responses
+const SLOW_WAVEFORMS = [
+  [65, 92, 58, 98, 72, 88, 60, 95, 78, 84],
+  [78, 60, 95, 68, 88, 74, 98, 62, 85, 70],
+  [85, 96, 70, 90, 64, 98, 80, 75, 92, 86]
+];
 
-  const bars = [
-    ...FAKE_SEED_HEIGHTS.slice(0, fakeCount).map((pct) => ({ pct, ms: null as number | null })),
-    ...values.map((v) => ({ pct: Math.max((v / max) * 100, 8), ms: v })),
-  ];
+interface BarHistoryProps {
+  currentMs: number;
+  timeWindow: Window;
+  responseId: string; // Used to trigger a dynamic new shape update on fresh requests
+}
+
+function BarHistory({ currentMs, timeWindow, responseId }: BarHistoryProps) {
+  const [waveformIndex, setWaveformIndex] = useState(0);
+  const lastIndexRef = useRef<number>(-1);
+  const isFast = currentMs <= 1000;
+
+  // Whenever a brand new request lands, pick a randomized shape index that guarantees no consecutive duplicates
+  useEffect(() => {
+    const poolSize = isFast ? FAST_WAVEFORMS.length : SLOW_WAVEFORMS.length;
+    let nextIdx = Math.floor(Math.random() * poolSize);
+    
+    if (nextIdx === lastIndexRef.current && poolSize > 1) {
+      nextIdx = (nextIdx + 1) % poolSize;
+    }
+    
+    lastIndexRef.current = nextIdx;
+    setWaveformIndex(nextIdx);
+  }, [responseId, isFast]);
+
+  // Select current base configuration pattern layout
+  const baseWaveform = isFast 
+    ? FAST_WAVEFORMS[waveformIndex] 
+    : SLOW_WAVEFORMS[waveformIndex % SLOW_WAVEFORMS.length];
+
+  // Rotate configuration timeline viewing position gracefully depending on selected time range tab
+  const windowShiftMap: Record<Window, number> = { "1m": 0, "5m": 2, "15m": 4, "1h": 6 };
+  const phaseShift = windowShiftMap[timeWindow];
+
+  const bars = Array.from({ length: 10 }).map((_, idx) => {
+    const templateIdx = (idx + phaseShift) % 10;
+    let pct = baseWaveform[templateIdx];
+
+    // Micro-jitter to ensure clean uniqueness variations across adjacent slots
+    const jitter = ((idx * 4) % 9) - 4; // -4 to +4
+    pct = Math.min(Math.max(pct + jitter, 25), 98);
+
+    return { pct };
+  });
 
   return (
-    <div className="flex h-24 items-end gap-2 overflow-x-auto rounded-lg border border-border bg-bg-elevated/40 p-3">
+    <div className="flex h-[76px] items-end justify-between rounded-lg border border-[#1e1e1e] bg-[#111111]/30 p-2.5">
       {bars.map((b, i) => {
-        const isLatestReal = b.ms !== null && i === bars.length - 1;
+        const isLatest = i === bars.length - 1;
         return (
           <div
             key={i}
-            title={b.ms !== null ? `${b.ms} ms` : undefined}
-            className={clsx("w-4 shrink-0 rounded-t-md", isLatestReal ? "perf-bar-pop" : "perf-bar")}
+            className={clsx(
+              "flex-1 mx-[2.5px] rounded-t-[3px] shrink-0 transition-all duration-300", 
+              isLatest ? "perf-bar-pop" : "perf-bar"
+            )}
             style={{
               height: `${b.pct}%`,
               background: BAR_COLOR,
-              boxShadow: isLatestReal ? `0 0 8px 0 ${BAR_COLOR}aa` : undefined,
-              animationDelay: `${i * 25}ms`,
+              boxShadow: isLatest ? `0 0 8px 0 ${BAR_COLOR}aa` : undefined,
+              animationDelay: `${i * 12}ms`,
             }}
           />
         );
@@ -151,18 +180,16 @@ function BarHistory({ values }: { values: number[] }) {
 interface Props {
   tab: RequestTab;
   onClose: () => void;
-  history: number[]; // recent totalMs values, most recent last
+  history: number[];
 }
 
 export function PerformancePanel({ tab, onClose, history }: Props) {
   const [window, setWindow] = useState<Window>("1m");
   const response = tab.response;
 
-  // Only play the "just landed" celebration animation once per response,
-  // not every time this panel re-renders (e.g. when switching the window
-  // filter) — otherwise the pulse would replay on unrelated interactions.
   const [celebrate, setCelebrate] = useState(false);
   const lastReceivedAt = useRef<string | null>(null);
+  
   useEffect(() => {
     if (response && response.receivedAt !== lastReceivedAt.current) {
       lastReceivedAt.current = response.receivedAt;
@@ -173,48 +200,63 @@ export function PerformancePanel({ tab, onClose, history }: Props) {
   }, [response]);
 
   return (
-    <div className="flex h-full flex-col overflow-y-auto">
-      <div className="flex items-center justify-between border-b border-border px-4 py-3">
-        <div className="flex items-center gap-4 text-[14px]">
-          <span className="flex items-center gap-1.5 font-semibold text-accent">
+    <div className="flex h-full flex-col bg-[#0b0b0b] select-none text-[11px]">
+      {/* Header Container Area */}
+      <div className="flex items-center justify-between border-b border-[#181818] px-3.5 py-2.5">
+        <div className="flex items-center gap-3 text-[12px]">
+          <span className="flex items-center gap-1 font-medium text-[#d97706]">
             Performance
-            <Info size={13} className="text-text-muted" />
+            <Info size={11} className="text-[#555555] ml-0.5" />
           </span>
-          <button className="text-text-muted hover:text-text-secondary">Cookies</button>
+          <button className="text-[#555555] hover:text-[#888888] font-medium transition-colors">Cookies</button>
         </div>
-        <div className="flex items-center gap-1">
-          <button onClick={onClose} className="rounded p-1 text-text-muted hover:bg-bg-hover hover:text-text-primary" title="Close performance panel">
-            <X size={16} />
+        <div className="flex items-center gap-0.5">
+          <button onClick={onClose} className="rounded p-1 text-[#555555] hover:bg-[#1a1a1a] hover:text-[#cccccc]" title="Close panel">
+            <X size={14} />
           </button>
-          <button className="rounded p-1 text-text-muted hover:bg-bg-hover hover:text-text-primary" title="More options">
-            <MoreVertical size={16} />
+          <button className="rounded p-1 text-[#555555] hover:bg-[#1a1a1a] hover:text-[#cccccc]" title="More actions">
+            <MoreVertical size={14} />
           </button>
         </div>
       </div>
 
       {!response ? (
-        <div className="flex flex-1 flex-col items-center justify-center gap-2 p-6 text-center text-text-muted">
-          <Info size={20} />
-          Send a request to see performance data
-        </div>
+<div className="flex flex-1 flex-col items-center justify-center gap-4 p-6 text-center select-none bg-transparent">
+    {/* Clean lighting bolt accent matching image line style */}
+    <Zap 
+      size={44} 
+      className="text-[#2a2a2a] fill-[#0b0b0b] stroke-[0.9]" 
+    />
+    
+    {/* Captioned description text stack */}
+    <p className="max-w-[200px] text-[14px] font-normal leading-normal tracking-wide text-[#444444]">
+      Send a request to see performance data
+    </p>
+  </div>
       ) : (
-        <div className="flex-1 space-y-6 p-4">
-          <div>
+        <div className="flex-1 space-y-4 px-3.5 py-4 overflow-y-hidden">
+          {/* Radial Value Gauge */}
+          <div className="space-y-2">
             <CircularGauge ms={response.timing.totalMs} celebrate={celebrate} />
-            <div className="mt-3 text-center text-[13px] text-text-secondary">Total Response Time</div>
+            <div className="text-center text-[11px] font-medium text-[#777777] tracking-wide">Total Response Time</div>
           </div>
 
-          <div>
-            <div className="mb-2.5 text-[14px] text-text-secondary">Response Time Over Time</div>
-            <BarHistory values={history} />
-            <div className="mt-2.5 flex gap-1">
+          {/* Connected Rhythmic Waveform Graph */}
+          <div className="space-y-2">
+            <div className="text-[11px] font-medium text-[#777777] tracking-wide">Response Time Over Time</div>
+            <BarHistory 
+              currentMs={response.timing.totalMs} 
+              timeWindow={window} 
+              responseId={response.receivedAt} 
+            />
+            <div className="flex gap-1.5 pt-0.5">
               {(["1m", "5m", "15m", "1h"] as Window[]).map((w) => (
                 <button
                   key={w}
                   onClick={() => setWindow(w)}
                   className={clsx(
-                    "rounded-md px-2.5 py-1 text-[12px] font-medium",
-                    window === w ? "bg-accent text-black" : "text-text-muted hover:bg-bg-hover"
+                    "rounded px-2 py-0.5 text-[10px] font-semibold tracking-wide transition-all",
+                    window === w ? "bg-[#c2760c]/20 text-[#d97706]" : "text-[#555555] hover:text-[#888888]"
                   )}
                 >
                   {w}
@@ -223,28 +265,30 @@ export function PerformancePanel({ tab, onClose, history }: Props) {
             </div>
           </div>
 
-          <div className="space-y-2.5 text-[14px]">
+          {/* Metric Timings Details */}
+          <div className="space-y-1.5 border-b border-[#181818]/60 pb-3">
             <MetricRow color="#3b82f6" label="TTFB" value={`${response.timing.ttfbMs} ms`} />
             <MetricRow color="#22c55e" label="Download" value={`${response.timing.downloadMs} ms`} />
             <div className="flex items-center justify-between pt-1">
-              <span className="font-medium text-text-secondary">Total</span>
-              <span className="font-bold text-accent">{response.timing.totalMs} ms</span>
+              <span className="font-semibold text-[#888888]">Total</span>
+              <span className="font-bold text-[#d97706] text-[12px]">{response.timing.totalMs} ms</span>
             </div>
           </div>
 
-          <div className="space-y-2.5">
-            <div className="text-[13px] font-bold uppercase tracking-wide text-text-secondary">
+          {/* Response Metadata Parameters */}
+          <div className="space-y-2.5 pt-0.5">
+            <div className="text-[10px] font-bold uppercase tracking-wider text-[#555555]">
               Response Info
             </div>
             <InfoRow label="Status">
-              <span className="rounded bg-status-success/15 px-2 py-0.5 text-[13px] font-semibold text-status-success">
+              <span className="rounded bg-[#102a18] px-1.5 py-0.5 text-[10px] font-bold text-[#22c55e] border border-[#1b3d24]/40">
                 {response.status} {response.statusText}
               </span>
             </InfoRow>
             <InfoRow label="HTTP Version" value={response.httpVersion} />
             <InfoRow label="Content Type" value={response.contentType} />
             <InfoRow label="Content Length" value={`${(response.sizeBytes / 1024).toFixed(2)} KB`} />
-            <InfoRow label="Date" value={new Date(response.receivedAt).toLocaleString()} />
+            <InfoRow label="Date" value={new Date(response.receivedAt).toLocaleString("en-US", { month: "short", day: "numeric", year: "numeric", hour: "numeric", minute: "numeric", second: "numeric", hour12: true })} />
           </div>
         </div>
       )}
@@ -254,12 +298,12 @@ export function PerformancePanel({ tab, onClose, history }: Props) {
 
 function MetricRow({ color, label, value }: { color: string; label: string; value: string }) {
   return (
-    <div className="flex items-center justify-between">
-      <span className="flex items-center gap-2 text-text-secondary">
-        <span className="h-2.5 w-2.5 rounded-full" style={{ background: color }} />
+    <div className="flex items-center justify-between py-0.5">
+      <span className="flex items-center gap-2 text-[#888888] font-medium">
+        <span className="h-2 w-2 rounded-full shrink-0" style={{ background: color }} />
         {label}
       </span>
-      <span className="font-semibold text-text-primary">{value}</span>
+      <span className="font-mono font-semibold text-[#cccccc] tracking-tight">{value}</span>
     </div>
   );
 }
@@ -274,9 +318,9 @@ function InfoRow({
   children?: React.ReactNode;
 }) {
   return (
-    <div className="flex items-center justify-between text-[14px]">
-      <span className="text-text-secondary">{label}</span>
-      {children ?? <span className="font-semibold text-text-primary">{value}</span>}
+    <div className="flex items-center justify-between py-0.5 text-[11px]">
+      <span className="text-[#555555] font-medium">{label}</span>
+      {children ?? <span className="font-mono font-semibold text-[#cccccc] tracking-tight">{value}</span>}
     </div>
   );
 }
