@@ -5,7 +5,7 @@ import { api } from "@/lib/api";
 const DEFAULT_SETTINGS: AppSettings = {
   theme: "dark",
   opaqueMode: true,
-  fontSizes: { sidebar: 15, request: 13, response: 14 },
+  fontSizes: { sidebar: 15, request: 13, response: 12 },
   panelSizes: {
     sidebarWidth: 260,
     requestEditorHeight: 340,

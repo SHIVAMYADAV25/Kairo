@@ -3,6 +3,7 @@ use super::response::ApiResponse;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct Collection {
     pub id: String,
     pub name: String,
@@ -66,7 +67,7 @@ impl Default for AppSettings {
         Self {
             theme: "dark".into(),
             opaque_mode: true,
-            font_sizes: FontSizes { sidebar: 15, request: 13, response: 14 },
+            font_sizes: FontSizes { sidebar: 15, request: 13, response: 12 },
             panel_sizes: PanelSizes {
                 sidebar_width: 260,
                 request_editor_height: 340,

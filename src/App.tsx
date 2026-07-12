@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { BarChart3, PanelBottomOpen } from "lucide-react";
 import { IconRail, type SidebarPanel } from "@/components/Sidebar/IconRail";
 import { Sidebar } from "@/components/Sidebar/Sidebar";
@@ -37,19 +37,28 @@ export default function App() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Tracks the last response we've already recorded per tab (by receivedAt),
+  // so switching tabs — which just changes which response `activeTab.response`
+  // *points at* — doesn't look like "a new response landed" and re-append the
+  // same timing into the chart over and over.
+  const recordedResponseRef = useRef<Record<string, string>>({});
+
   useEffect(() => {
-    if (activeTab?.response) {
-      const id = activeTab.id;
-      const ms = activeTab.response.timing.totalMs;
-      setPerfHistoryByTab((h) => ({ ...h, [id]: [...(h[id] ?? []).slice(-9), ms] }));
-      // A response landing is exactly the moment a closed Performance/Response
-      // panel is most useful — surface it automatically instead of making
-      // the person hunt for a way to reopen it.
-      setPerfOpen(true);
-      setResponseOpen(true);
-    }
+    if (!activeTab?.response) return;
+    const id = activeTab.id;
+    const receivedAt = activeTab.response.receivedAt;
+    if (recordedResponseRef.current[id] === receivedAt) return; // already recorded, this fire is just a tab switch
+    recordedResponseRef.current[id] = receivedAt;
+
+    const ms = activeTab.response.timing.totalMs;
+    setPerfHistoryByTab((h) => ({ ...h, [id]: [...(h[id] ?? []).slice(-49), ms] }));
+    // A response landing is exactly the moment a closed Performance/Response
+    // panel is most useful — surface it automatically instead of making
+    // the person hunt for a way to reopen it.
+    setPerfOpen(true);
+    setResponseOpen(true);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeTab?.response]);
+  }, [activeTab?.response, activeTab?.id]);
 
   return (
     <div className="flex h-screen w-screen flex-col overflow-hidden bg-bg-base text-text-primary">

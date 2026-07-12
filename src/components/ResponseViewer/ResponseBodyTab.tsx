@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import clsx from "clsx";
+import { Search, MousePointerClick, Braces } from "lucide-react";
 import type { ApiResponse } from "@/types";
 import { JsonTree } from "./JsonTree";
 
@@ -56,24 +57,30 @@ export function ResponseBodyTab({ response }: Props) {
       {mode === "tree" && (
         <>
           <div className="border-b border-border p-2">
-            <input
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search keys and values..."
-              className="w-full rounded-md border border-border bg-bg-elevated px-3 py-1.5 text-[13px] text-text-primary placeholder:text-text-muted focus:border-accent focus:outline-none"
-            />
-          </div>
-          <div className="border-b border-border px-3 py-1.5 text-[11px] text-text-muted">
-            <div>Click any key to copy its JS path</div>
-            <div>
-              Use <code className="text-accent">data</code> to reference the response body in
-              scripts, e.g. <code className="text-accent">data.users[0].name</code>
+            <div className="relative">
+              <Search size={12} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-text-muted" />
+              <input
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search keys and values..."
+                className="w-full rounded-md border border-border bg-bg-elevated py-1.5 pl-7 pr-2 text-[12px] text-text-primary placeholder:text-text-muted focus:border-accent focus:outline-none"
+              />
             </div>
           </div>
-          <div
-            className="flex-1 overflow-auto p-2 font-mono"
-            style={{ fontSize: "var(--font-response)" }}
-          >
+          <div className="space-y-1 border-b border-border px-3 py-1.5 text-[11px] text-text-muted">
+            <div className="flex items-center gap-1.5">
+              <MousePointerClick size={11} className="shrink-0 text-text-muted" />
+              Click any key to copy its JS path
+            </div>
+            <div className="flex items-center gap-1.5">
+              <Braces size={11} className="shrink-0 text-text-muted" />
+              <span>
+                Use <code className="text-accent">data</code> to reference the response body in
+                scripts, e.g. <code className="text-accent">data.users[0].name</code>
+              </span>
+            </div>
+          </div>
+          <div className="flex-1 overflow-auto p-2 font-mono text-[12px] leading-[1.5]">
             {parsed !== null ? (
               <JsonTree data={parsed} searchQuery={search} />
             ) : (

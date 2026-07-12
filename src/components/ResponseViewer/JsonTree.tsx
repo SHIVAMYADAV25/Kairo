@@ -40,7 +40,7 @@ export function JsonTree({ data, path = "data", keyName, searchQuery, depth = 0 
   if (!isObject) {
     return (
       <div
-        className="flex cursor-pointer items-center gap-1 py-0.5 pl-4 hover:bg-bg-hover"
+        className="flex cursor-pointer items-center gap-1 rounded py-[1px] pl-4 leading-[1.5] hover:bg-bg-hover"
         onClick={() => copyPath(path)}
         title={`Copy JS path: ${path}`}
       >
@@ -58,10 +58,10 @@ export function JsonTree({ data, path = "data", keyName, searchQuery, depth = 0 
   return (
     <div>
       <div
-        className="flex cursor-pointer items-center gap-1 py-0.5 hover:bg-bg-hover"
+        className="flex cursor-pointer items-center gap-1 rounded py-[1px] leading-[1.5] hover:bg-bg-hover"
         onClick={() => setOpen((o) => !o)}
       >
-        {open ? <ChevronDown size={13} /> : <ChevronRight size={13} />}
+        {open ? <ChevronDown size={11} className="shrink-0" /> : <ChevronRight size={11} className="shrink-0" />}
         {keyName && <span className="text-status-redirect">{keyName}</span>}
         {keyName && <span className="text-text-muted">:</span>}
         <span className="text-text-muted">{Array.isArray(data) ? "[" : "{"}</span>
@@ -82,7 +82,7 @@ export function JsonTree({ data, path = "data", keyName, searchQuery, depth = 0 
         </div>
       )}
       {open && (
-        <div className="pl-4 text-text-muted">{Array.isArray(data) ? "]" : "}"}</div>
+        <div className="pl-4 leading-[1.5] text-text-muted">{Array.isArray(data) ? "]" : "}"}</div>
       )}
     </div>
   );

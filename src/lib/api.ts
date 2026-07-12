@@ -72,6 +72,6 @@ export const api = {
 
   tabs: {
     listPersisted: () => invoke<ApiRequest[]>("list_persisted_tabs"),
-    persist: (tabIds: string[]) => invoke<void>("persist_tabs", { tabIds }),
+    persist: (requests: ApiRequest[]) => invoke<void>("persist_tabs", { requests }),
   },
 };
