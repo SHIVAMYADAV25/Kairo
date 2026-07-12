@@ -1,4 +1,4 @@
-import { Trash2, FileText, Type as TypeIcon, FolderOpen } from "lucide-react";
+import { Trash2, FolderOpen } from "lucide-react";
 import clsx from "clsx";
 import type { FormDataField } from "@/types";
 import { uid } from "@/lib/factories";
@@ -8,15 +8,8 @@ interface Props {
   onChange: (rows: FormDataField[]) => void;
 }
 
-/**
- * Working Form Data editor (fix #5). Mirrors KeyValueTable's row layout so it
- * reads as one consistent design language, but adds a per-row Text/File type
- * toggle: text rows behave like a normal value input, file rows open the
- * native file picker (falling back to a browser file input when the Tauri
- * dialog plugin isn't available, e.g. in a plain browser preview) and store
- * the resolved path/name that the Rust side turns into a multipart part.
- */
 export function FormDataTable({ rows, onChange }: Props) {
+  // Ensure a trailing blank line is present for new entries
   const withTrailingBlank: FormDataField[] =
     rows.length === 0 || rows[rows.length - 1].key !== ""
       ? [...rows, { id: uid(), key: "", type: "text", value: "", enabled: true }]
@@ -31,88 +24,69 @@ export function FormDataTable({ rows, onChange }: Props) {
 
   const pickFile = async (id: string) => {
     try {
-      // Dynamic import so this file works even if the dialog plugin isn't
-      // registered yet (e.g. first run before native perms settle).
       const { open } = await import("@tauri-apps/plugin-dialog");
       const selected = await open({ multiple: false, directory: false });
       if (typeof selected === "string") {
         update(id, { value: selected });
       }
     } catch {
-      // Fall back to a hidden <input type="file"> click when running outside
-      // a Tauri webview (e.g. `vite dev` in a plain browser tab).
       const input = document.getElementById(`formdata-file-${id}`) as HTMLInputElement | null;
       input?.click();
     }
   };
 
   return (
-    <div className="text-[13px]" style={{ fontSize: "var(--font-request)" }}>
-      <div className="grid grid-cols-[24px_90px_1fr_1fr_32px] gap-2 px-3 pt-4 pb-1 text-[11px] font-medium uppercase tracking-wider text-[#312C22]">
-        <span />
-        <span className="pl-1">Type</span>
-        <span className="pl-3">Key</span>
-        <span className="pl-3">Value</span>
-        <span />
-      </div>
-
-      <div className="space-y-1.5">
+    <div className="w-full text-[13px] px-1 py-2 select-none">
+      <div className="space-y-2">
         {withTrailingBlank.map((row) => (
           <div
             key={row.id}
-            className="grid grid-cols-[24px_90px_1fr_1fr_32px] items-center gap-2 px-3 py-0.5"
+            className="flex items-center gap-3 py-0.5 group"
           >
+            {/* Checkbox */}
             <input
               type="checkbox"
               checked={row.enabled}
               onChange={(e) => update(row.id, { enabled: e.target.checked })}
-              className="h-4 w-4 cursor-pointer rounded border-none bg-bg-panel accent-[#f97316] checked:bg-[#f97316]"
+              className="h-3.5 w-3.5 cursor-pointer rounded border border-neutral-700 bg-transparent accent-[#f97316] checked:bg-[#f97316] outline-none"
             />
 
-            {/* Per-row Text/File toggle */}
-            <div className="flex overflow-hidden rounded-md border border-[#262626]">
-              <button
-                type="button"
-                title="Text field"
-                onClick={() => update(row.id, { type: "text", value: row.type === "file" ? "" : row.value })}
-                className={clsx(
-                  "flex flex-1 items-center justify-center gap-1 py-1.5 text-[11px] transition-colors",
-                  row.type === "text" ? "bg-[#F54900] text-white" : "bg-[#111111] text-[#a3a3a3] hover:bg-[#1c1c1c]"
-                )}
+            {/* Clean Dropdown Selector for Text/File */}
+            <div className="relative shrink-0">
+              <select
+                value={row.type}
+                onChange={(e) => update(row.id, { type: e.target.value as "text" | "file", value: "" })}
+                className="appearance-none bg-[#1a1a1a] text-neutral-300 border border-neutral-800 rounded px-2.5 py-1.5 text-[12px] font-medium tracking-wide cursor-pointer outline-none hover:bg-[#222] transition-colors pr-6"
               >
-                <TypeIcon size={11} /> Text
-              </button>
-              <button
-                type="button"
-                title="File field"
-                onClick={() => update(row.id, { type: "file", value: row.type === "text" ? "" : row.value })}
-                className={clsx(
-                  "flex flex-1 items-center justify-center gap-1 py-1.5 text-[11px] transition-colors",
-                  row.type === "file" ? "bg-[#F54900] text-white" : "bg-[#111111] text-[#a3a3a3] hover:bg-[#1c1c1c]"
-                )}
-              >
-                <FileText size={11} /> File
-              </button>
+                <option value="text">Text</option>
+                <option value="file">File</option>
+              </select>
+              <div className="pointer-events-none absolute inset-y-0 right-2 flex items-center text-neutral-500">
+                <svg className="fill-current h-3 w-3" viewBox="0 0 20 20">
+                  <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
+                </svg>
+              </div>
             </div>
 
+            {/* Key Input */}
             <input
               value={row.key}
               onChange={(e) => update(row.id, { key: e.target.value })}
               placeholder="Key"
-              className="w-full rounded-md border-none bg-[#111111] px-3 py-2 text-text-primary placeholder:text-[#737373] outline-none transition-colors focus:bg-[#161616]"
+              className="w-1/3 bg-[#141414] border border-neutral-900 rounded px-3 py-1.5 text-neutral-200 placeholder:text-neutral-600 outline-none focus:border-neutral-800 focus:bg-[#161616] transition-all"
             />
 
+            {/* Value Input / File Picker */}
             {row.type === "file" ? (
-              <div className="flex items-center gap-2">
+              <div className="flex-1 flex items-center min-w-0">
                 <button
                   type="button"
                   onClick={() => pickFile(row.id)}
-                  className="flex w-full items-center gap-2 truncate rounded-md border-none bg-[#111111] px-3 py-2 text-left text-text-secondary outline-none transition-colors hover:bg-[#161616]"
+                  className="flex-1 flex items-center gap-2 bg-[#141414] border border-neutral-900 rounded px-3 py-1.5 text-left text-neutral-400 outline-none hover:bg-[#161616] transition-all truncate"
                 >
-                  <FolderOpen size={14} className="shrink-0 text-text-muted" />
-                  <span className="truncate">{row.value || "Select a file…"}</span>
+                  <FolderOpen size={14} className="shrink-0 text-neutral-500" />
+                  <span className="truncate text-[13px]">{row.value || "Value"}</span>
                 </button>
-                {/* Browser-only fallback input, hidden; used if the Tauri dialog import fails. */}
                 <input
                   id={`formdata-file-${row.id}`}
                   type="file"
@@ -128,13 +102,18 @@ export function FormDataTable({ rows, onChange }: Props) {
                 value={row.value}
                 onChange={(e) => update(row.id, { value: e.target.value })}
                 placeholder="Value"
-                className="w-full rounded-md border-none bg-[#111111] px-3 py-2 text-text-primary placeholder:text-[#737373] outline-none transition-colors focus:bg-[#161616]"
+                className="flex-1 bg-[#141414] border border-neutral-900 rounded px-3 py-1.5 text-neutral-200 placeholder:text-neutral-600 outline-none focus:border-neutral-800 focus:bg-[#161616] transition-all"
               />
             )}
 
+            {/* Delete button (Visible on hover or when row has content) */}
             <button
+              type="button"
               onClick={() => remove(row.id)}
-              className="flex items-center justify-center text-text-muted/40 transition-colors hover:text-status-error"
+              className={clsx(
+                "flex items-center justify-center text-neutral-600 transition-colors hover:text-red-500 p-1.5",
+                row.key === "" && "opacity-0 group-hover:opacity-100 transition-opacity"
+              )}
             >
               <Trash2 size={14} />
             </button>
@@ -142,12 +121,13 @@ export function FormDataTable({ rows, onChange }: Props) {
         ))}
       </div>
 
+      {/* Add Field Button */}
       <button
         type="button"
         onClick={() =>
           onChange([...rows, { id: uid(), key: "", type: "text", value: "", enabled: true }])
         }
-        className="ml-3 mt-2 text-[12px] font-medium text-accent hover:text-accent-hover"
+        className="mt-3 text-[12px] font-medium text-[#f97316] hover:text-[#ea580c] transition-colors flex items-center gap-1 pl-6"
       >
         + Add field
       </button>
