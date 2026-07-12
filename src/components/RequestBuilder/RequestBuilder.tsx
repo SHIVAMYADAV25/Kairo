@@ -8,10 +8,11 @@ import { BodyTab } from "./BodyTab";
 import { AuthTab } from "./AuthTab";
 import { ScriptsTab } from "./ScriptsTab";
 import { SettingsTab } from "./SettingsTab";
+import { CodeTab } from "./CodeTab";
 
 const HEADER_SUGGESTIONS = ["Content-Type", "Authorization", "Accept", "Cookie", "Origin"];
 
-type SubTab = "params" | "headers" | "body" | "auth" | "scripts" | "settings";
+type SubTab = "params" | "headers" | "body" | "auth" | "scripts" | "code" | "settings";
 
 const TABS: { id: SubTab; label: string }[] = [
   { id: "params", label: "Params" },
@@ -19,6 +20,7 @@ const TABS: { id: SubTab; label: string }[] = [
   { id: "body", label: "Body" },
   { id: "auth", label: "Auth" },
   { id: "scripts", label: "Scripts" },
+  { id: "code", label: "Code" },
   { id: "settings", label: "Settings" },
 ];
 
@@ -59,7 +61,6 @@ export function RequestBuilder({ tab }: Props) {
       <div className="flex-1 overflow-auto">
         {sub === "params" && (
           <>
-            {/* Matches typography options from reference screen layout */}
             <div className="px-4 pt-4 text-[11px] font-bold uppercase tracking-widest text-[#a3a3a3]">
               Query Params
             </div>
@@ -81,6 +82,7 @@ export function RequestBuilder({ tab }: Props) {
         {sub === "body" && <BodyTab tab={tab} />}
         {sub === "auth" && <AuthTab tab={tab} />}
         {sub === "scripts" && <ScriptsTab tab={tab} />}
+        {sub === "code" && <CodeTab tab={tab} />}
         {sub === "settings" && <SettingsTab tab={tab} />}
       </div>
     </div>
