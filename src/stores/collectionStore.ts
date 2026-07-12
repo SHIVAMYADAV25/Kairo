@@ -2,6 +2,7 @@ import { create } from "zustand";
 import type { ApiRequest, Collection } from "@/types";
 import { api } from "@/lib/api";
 import { createEmptyRequest } from "@/lib/factories";
+import { useTabStore } from "@/stores/tabStore";
 
 /** Tauri command errors come back as whatever the Rust side's `Err(String)`
  * was — sometimes that's a plain string, sometimes (with some tauri/serde
@@ -177,6 +178,9 @@ export const useCollectionStore = create<CollectionState>((set, get) => ({
   renameRequest: async (request, name) => {
     const saved = await api.requests.save({ ...request, name });
     get().upsertRequestInCache(saved);
+    // If this request is open in one or more tabs, keep the tab title +
+    // request data in sync instead of the tab silently going stale.
+    useTabStore.getState().syncSavedRequest(saved.id, saved);
   },
 
   deleteRequest: async (collectionId, requestId) => {

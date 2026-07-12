@@ -63,7 +63,12 @@ export function CollectionsPanel() {
     clearError,
   } = useCollectionStore();
 
-  const { tabs, openTab, setActiveTab } = useTabStore();
+  const { tabs, activeTabId, openTab, setActiveTab } = useTabStore();
+
+  // The request behind the currently active tab — used to highlight the
+  // matching row in the tree below, the same way a selected item is
+  // highlighted in a todo list.
+  const activeRequestId = tabs.find((t) => t.id === activeTabId)?.requestId ?? null;
 
   useEffect(() => {
     if (!loaded) load().catch(console.error);
@@ -154,6 +159,7 @@ export function CollectionsPanel() {
                 expanded={expanded}
                 requestsByCollection={requestsByCollection}
                 loadingCollectionIds={loadingCollectionIds}
+                activeRequestId={activeRequestId}
                 toggleExpand={toggleExpand}
                 openRequest={openRequest}
                 onContextMenu={setMenu}
@@ -276,6 +282,7 @@ interface NodeProps {
   expanded: Record<string, boolean>;
   requestsByCollection: Record<string, ApiRequest[]>;
   loadingCollectionIds: Record<string, boolean>;
+  activeRequestId: string | null;
   toggleExpand: (id: string) => void;
   openRequest: (r: ApiRequest) => void;
   onContextMenu: (menu: { x: number; y: number; items: ContextMenuItem[] } | null) => void;
@@ -295,6 +302,7 @@ function CollectionNode(props: NodeProps) {
     expanded,
     requestsByCollection,
     loadingCollectionIds,
+    activeRequestId,
     toggleExpand,
     openRequest,
     onContextMenu,
@@ -366,6 +374,7 @@ function CollectionNode(props: NodeProps) {
               key={r.id}
               request={r}
               depth={depth}
+              isActive={r.id === activeRequestId}
               onOpen={() => openRequest(r)}
               onDelete={() => onDeleteRequest(collection.id, r.id)}
               onRename={() => onRenameRequest(r)}
@@ -393,6 +402,7 @@ function CollectionNode(props: NodeProps) {
 function RequestRow({
   request,
   depth,
+  isActive,
   onOpen,
   onDelete,
   onRename,
@@ -400,6 +410,7 @@ function RequestRow({
 }: {
   request: ApiRequest;
   depth: number;
+  isActive: boolean;
   onOpen: () => void;
   onDelete: () => void;
   onRename: () => void;
@@ -421,13 +432,19 @@ function RequestRow({
           ],
         });
       }}
-      className="group flex w-full items-center gap-2 rounded-md py-1 pr-2 text-left hover:bg-bg-hover"
+      className={`group relative flex w-full items-center gap-2 py-1 pr-2 text-left ${
+        isActive
+          ? "bg-accent/15 text-text-primary before:absolute before:left-0 before:top-0 before:h-full before:w-[3px] before:rounded-r before:bg-accent"
+          : "rounded-md hover:bg-bg-hover"
+      }`}
       style={{ paddingLeft: 12 + depth * 14 }}
     >
       <span className={`w-10 shrink-0 text-[11px] font-semibold ${METHOD_COLOR[request.method] ?? ""}`}>
         {request.method}
       </span>
-      <span className="flex-1 truncate text-text-secondary">{request.name}</span>
+      <span className={`flex-1 truncate ${isActive ? "text-text-primary font-medium" : "text-text-secondary"}`}>
+        {request.name}
+      </span>
       <Trash2
         size={12}
         className="shrink-0 text-text-muted opacity-0 hover:text-status-error group-hover:opacity-100"

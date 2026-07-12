@@ -1,77 +1,65 @@
 import { useEffect, useState } from "react";
-import { Plus, Sliders, ChevronRight, ChevronDown, Pencil, CheckCircle2, Circle } from "lucide-react";
+import {
+  Plus,
+  Settings2,
+  ChevronRight,
+  ChevronDown,
+  Pencil,
+  CheckCircle2,
+  Circle,
+  Layers,
+  MoreVertical,
+  Sliders,
+} from "lucide-react";
 import { useEnvironmentStore } from "@/stores/environmentStore";
 import { EnvironmentsModal } from "./EnvironmentsModal";
-import { uid } from "@/lib/factories";
+import { ContextMenu, type ContextMenuItem } from "@/components/common/ContextMenu";
+import type { Environment } from "@/types";
 
-/**
- * Fix #7: previously clicking an environment row only ever set it active —
- * there was no visible path from "I see a list of environments" to "I can
- * add a variable to this one" short of already knowing to open the small
- * sliders icon in the header. Each row now expands in place to show its
- * variables with an always-visible "+ Add variable" quick-add form, plus an
- * explicit pencil button that jumps straight into the full editor (for
- * renaming, bulk edits, enabling/disabling, etc.) pre-focused on that
- * environment.
- */
 export function EnvironmentsPanel() {
-  const { environments, activeEnvironmentId, load, setActive, create, update } = useEnvironmentStore();
+  console.log("ENVIRONMENTS PANEL v2 LOADED");
+  const { environments, activeEnvironmentId, load, setActive } = useEnvironmentStore();
   const [modalOpen, setModalOpen] = useState(false);
   const [modalTargetId, setModalTargetId] = useState<string | null>(null);
-  const [expandedId, setExpandedId] = useState<string | null>(null);
-  const [quickKey, setQuickKey] = useState("");
-  const [quickValue, setQuickValue] = useState("");
+  const [modalCreating, setModalCreating] = useState(false);
+  const [expanded, setExpanded] = useState<Record<string, boolean>>({});
+  const [menu, setMenu] = useState<{ x: number; y: number; items: ContextMenuItem[] } | null>(null);
 
   useEffect(() => {
     load().catch(() => {});
   }, [load]);
 
-  const handleCreateRoot = async () => {
-    const name = window.prompt("Environment name");
-    if (!name) return;
-    await create(name).catch(() => {});
-    const latest = useEnvironmentStore.getState().environments.slice(-1)[0];
-    if (latest) setExpandedId(latest.id);
+  const openManage = (envId: string | null = null) => {
+    setModalTargetId(envId);
+    setModalCreating(false);
+    setModalOpen(true);
   };
 
-  const openEditor = (envId: string) => {
-    setModalTargetId(envId);
+  const openCreate = () => {
+    setModalTargetId(null);
+    setModalCreating(true);
     setModalOpen(true);
   };
 
   const toggleExpand = (envId: string) => {
-    setExpandedId((cur) => (cur === envId ? null : envId));
-    setQuickKey("");
-    setQuickValue("");
-  };
-
-  const handleQuickAdd = async (envId: string) => {
-    const key = quickKey.trim();
-    if (!key) return;
-    const env = environments.find((e) => e.id === envId);
-    if (!env) return;
-    await update({
-      ...env,
-      variables: [...env.variables, { id: uid(), key, value: quickValue, enabled: true }],
-    }).catch(() => {});
-    setQuickKey("");
-    setQuickValue("");
+    setExpanded((prev) => ({ ...prev, [envId]: !prev[envId] }));
   };
 
   return (
-    <div className="flex h-full flex-col" style={{ fontSize: "var(--font-sidebar)" }}>
+    <div className="flex h-full flex-col select-none" style={{ fontSize: "var(--font-sidebar)" }}>
+      {/* Header */}
       <div className="flex items-center justify-between border-b border-border p-3">
         <span className="font-medium text-text-primary">Environments</span>
         <div className="flex gap-1">
           <button
-            onClick={() => openEditor(environments[0]?.id ?? "")}
+            onClick={() => openManage(activeEnvironmentId ?? environments[0]?.id ?? null)}
             className="rounded-md p-1.5 text-text-secondary hover:bg-bg-hover"
-            title="Manage all environments"
+            title="Manage environments"
           >
-            <Sliders size={15} />
+            <Settings2 size={14} />
           </button>
           <button
-            onClick={handleCreateRoot}
+            onClick={openCreate}
             className="rounded-md p-1.5 text-text-secondary hover:bg-bg-hover"
             title="New environment"
           >
@@ -80,108 +68,182 @@ export function EnvironmentsPanel() {
         </div>
       </div>
 
+      {/* Node Container List */}
       <div className="flex-1 overflow-y-auto p-2">
-        {environments.length === 0 && (
-          <div className="mt-6 text-center text-text-muted">
-            No environments yet
-            <div className="mt-2">
-              <button onClick={handleCreateRoot} className="text-[12px] font-medium text-accent hover:text-accent-hover">
-                + Create your first environment
-              </button>
+        {environments.length === 0 ? (
+          <div className="flex flex-col items-center gap-3 px-4 py-10 text-center">
+            <div className="rounded-full bg-bg-elevated p-3 text-text-muted">
+              <Layers size={18} />
             </div>
+            <div>
+              <div className="text-[13px] font-medium text-text-primary">No environments yet</div>
+              <p className="mt-1 text-[12px] leading-relaxed text-text-muted">
+                Group variables like base URLs and tokens so you can switch environments instantly.
+              </p>
+            </div>
+            <button
+              onClick={openCreate}
+              className="flex items-center gap-1.5 rounded-md bg-accent px-3 py-1.5 text-[12.5px] font-medium text-black hover:bg-accent-hover"
+            >
+              <Plus size={14} /> Create environment
+            </button>
           </div>
+        ) : (
+          environments.map((env) => (
+            <EnvironmentNode
+              key={env.id}
+              environment={env}
+              isActive={activeEnvironmentId === env.id}
+              isOpen={!!expanded[env.id]}
+              onToggleExpand={() => toggleExpand(env.id)}
+              onSetActive={() => setActive(env.id)}
+              onManage={() => openManage(env.id)}
+              onContextMenu={setMenu}
+            />
+          ))
         )}
-
-        {environments.map((env) => {
-          const isActive = activeEnvironmentId === env.id;
-          const isExpanded = expandedId === env.id;
-          return (
-            <div key={env.id} className="mb-1 rounded-md">
-              <div className="group flex items-center gap-1 rounded-md px-1 py-1 hover:bg-bg-hover">
-                <button onClick={() => toggleExpand(env.id)} className="p-0.5 text-text-muted">
-                  {isExpanded ? <ChevronDown size={13} /> : <ChevronRight size={13} />}
-                </button>
-
-                {/* Explicit "set active" control, separate from expand/click-to-edit */}
-                <button
-                  onClick={() => setActive(env.id)}
-                  title={isActive ? "Active environment" : "Set as active environment"}
-                  className={isActive ? "text-accent" : "text-text-muted hover:text-text-secondary"}
-                >
-                  {isActive ? <CheckCircle2 size={14} /> : <Circle size={14} />}
-                </button>
-
-                <button
-                  onClick={() => toggleExpand(env.id)}
-                  className={`flex-1 truncate px-1 py-0.5 text-left ${isActive ? "text-accent" : "text-text-secondary"}`}
-                >
-                  {env.name}
-                </button>
-
-                <span className="text-[11px] text-text-muted">{env.variables.length}</span>
-                <button
-                  onClick={() => openEditor(env.id)}
-                  className="rounded p-1 text-text-muted opacity-0 hover:bg-bg-elevated group-hover:opacity-100"
-                  title="Edit all variables"
-                >
-                  <Pencil size={12} />
-                </button>
-              </div>
-
-              {isExpanded && (
-                <div className="ml-6 border-l border-border pl-2 pb-2 pt-1">
-                  {env.variables.length === 0 ? (
-                    <div className="py-1 text-[12px] text-text-muted">No variables yet</div>
-                  ) : (
-                    <div className="space-y-1">
-                      {env.variables.map((v) => (
-                        <div key={v.id} className="flex items-center justify-between text-[12px]">
-                          <span className="truncate font-mono text-text-secondary">{v.key}</span>
-                          <span className="truncate text-text-muted">{v.value || "—"}</span>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-
-                  {/* Always-visible quick-add row — this is the "how do I add a
-                      variable to this specific environment" affordance that
-                      was missing before. */}
-                  <div className="mt-2 flex items-center gap-1">
-                    <input
-                      value={quickKey}
-                      onChange={(e) => setQuickKey(e.target.value)}
-                      onKeyDown={(e) => e.key === "Enter" && handleQuickAdd(env.id)}
-                      placeholder="Variable name"
-                      className="w-[45%] rounded border border-border bg-bg-elevated px-1.5 py-1 text-[12px] text-text-primary outline-none focus:border-accent"
-                    />
-                    <input
-                      value={quickValue}
-                      onChange={(e) => setQuickValue(e.target.value)}
-                      onKeyDown={(e) => e.key === "Enter" && handleQuickAdd(env.id)}
-                      placeholder="Value"
-                      className="flex-1 rounded border border-border bg-bg-elevated px-1.5 py-1 text-[12px] text-text-primary outline-none focus:border-accent"
-                    />
-                    <button
-                      onClick={() => handleQuickAdd(env.id)}
-                      disabled={!quickKey.trim()}
-                      className="rounded bg-accent p-1 text-black disabled:opacity-40"
-                      title="Add variable"
-                    >
-                      <Plus size={12} />
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
-          );
-        })}
       </div>
 
+      {/* Quick Action Footer Panels */}
+      <div className="space-y-1.5 border-t border-border p-2">
+        <button
+          type="button"
+          onClick={openCreate}
+          className="flex w-full items-center border-none gap-2 rounded-md py-2 pl-3 text-accent font-medium text-sm hover:bg-bg-hover/40"
+        >
+          <Plus size={15} /> New Environment
+        </button>
+      </div>
+
+      {/* Context Action Menu Overlay */}
+      {menu && <ContextMenu x={menu.x} y={menu.y} items={menu.items} onClose={() => setMenu(null)} />}
+
+      {/* Global Windows Frame Manager */}
       <EnvironmentsModal
         open={modalOpen}
         onClose={() => setModalOpen(false)}
         initialSelectedId={modalTargetId}
+        initialCreating={modalCreating}
       />
+    </div>
+  );
+}
+
+interface NodeProps {
+  environment: Environment;
+  isActive: boolean;
+  isOpen: boolean;
+  onToggleExpand: () => void;
+  onSetActive: () => void;
+  onManage: () => void;
+  onContextMenu: (menu: { x: number; y: number; items: ContextMenuItem[] } | null) => void;
+}
+
+function EnvironmentNode({
+  environment,
+  isActive,
+  isOpen,
+  onToggleExpand,
+  onSetActive,
+  onManage,
+  onContextMenu,
+}: NodeProps) {
+  const openMenu = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    onContextMenu({
+      x: e.clientX,
+      y: e.clientY,
+      items: [
+        { label: "Set Active", icon: <CheckCircle2 size={13} />, onClick: onSetActive },
+        { label: "Configure Variables", icon: <Pencil size={13} />, onClick: onManage },
+      ],
+    });
+  };
+
+  return (
+    <div className="mb-0.5">
+      <div
+        onContextMenu={openMenu}
+        className={`group flex w-full items-center gap-1.5 rounded-md py-1.5 pr-1 text-left text-text-primary hover:bg-bg-hover ${
+          isActive ? "bg-accent/5" : ""
+        }`}
+        style={{ paddingLeft: 6 }}
+      >
+        {/* Toggle Expand Icon */}
+        <button onClick={onToggleExpand} className="shrink-0 p-0.5 text-text-muted hover:text-text-secondary">
+          {isOpen ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+        </button>
+
+        {/* Set Active Target Button */}
+        <button
+          onClick={onSetActive}
+          className={`shrink-0 transition-colors ${isActive ? "text-accent" : "text-text-muted hover:text-text-secondary"}`}
+        >
+          {isActive ? <CheckCircle2 size={14} /> : <Circle size={14} />}
+        </button>
+
+        {/* Text Area Clickable Trigger */}
+        <button
+          onClick={onToggleExpand}
+          className={`flex-1 truncate text-left ${isActive ? "font-medium text-accent" : "text-text-secondary"}`}
+        >
+          {environment.name}
+        </button>
+
+        {/* Variable Count Counter Badge */}
+        <span className="shrink-0 rounded-full bg-bg-elevated px-1.5 py-0.5 text-[10px] text-text-muted group-hover:opacity-0 transition-opacity">
+          {environment.variables.length}
+        </span>
+
+        {/* More Operations Overflow Trigger */}
+        <button
+          onClick={openMenu}
+          className="shrink-0 rounded p-1 text-text-muted opacity-0 hover:bg-bg-elevated group-hover:opacity-100"
+          title="More actions"
+        >
+          <MoreVertical size={13} />
+        </button>
+      </div>
+
+      {/* Expanded Subtree Elements */}
+      {isOpen && (
+        <div className="border-l border-border ml-[14px]">
+          {environment.variables.length === 0 && (
+            <div className="py-1 pl-4 text-[12px] text-text-muted">Empty</div>
+          )}
+
+          {environment.variables.length > 0 && (
+            <div className="space-y-0.5 py-0.5">
+              {environment.variables.map((variable: any) => (
+                <div
+                  key={variable.id}
+                  onClick={onManage}
+                  className={`group flex w-full items-center justify-between gap-4 py-1 pl-4 pr-2 text-[12px] cursor-pointer rounded-md hover:bg-bg-hover/50 ${
+                    !variable.enabled ? "opacity-40" : ""
+                  }`}
+                >
+                  <div className="flex items-center gap-1.5 truncate">
+                    <Sliders size={11} className="shrink-0 text-text-muted/60" />
+                    <span className="truncate font-mono text-text-secondary">{variable.key}</span>
+                  </div>
+                  <span className="truncate font-mono text-right text-text-muted max-w-[50%]">
+                    {variable.value || "—"}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Clean Inline Action Trigger Button */}
+          <button
+            onClick={onManage}
+            className="flex items-center gap-1.5 py-1 pl-4 text-[12px] text-text-muted hover:text-accent w-full text-left"
+          >
+            <Plus size={12} /> Add variable
+          </button>
+        </div>
+      )}
     </div>
   );
 }

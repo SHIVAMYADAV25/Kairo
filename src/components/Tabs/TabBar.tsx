@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState } from "react";
 import clsx from "clsx";
 import { Plus, X } from "lucide-react";
 import { useTabStore } from "@/stores/tabStore";
@@ -14,16 +15,45 @@ const METHOD_COLOR: Record<string, string> = {
 };
 
 export function TabBar() {
-  const { tabs, activeTabId, setActiveTab, closeTab, openTab } = useTabStore();
+  const { tabs, activeTabId, setActiveTab, closeTab, openTab, renameTab } = useTabStore();
+  const [editingTabId, setEditingTabId] = useState<string | null>(null);
+  const [draftName, setDraftName] = useState("");
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (editingTabId) {
+      inputRef.current?.focus();
+      inputRef.current?.select();
+    }
+  }, [editingTabId]);
+
+  const startEditing = (tabId: string, currentTitle: string) => {
+    setEditingTabId(tabId);
+    setDraftName(currentTitle);
+  };
+
+  const commitEditing = () => {
+    if (editingTabId) {
+      const trimmed = draftName.trim();
+      if (trimmed) renameTab(editingTabId, trimmed);
+    }
+    setEditingTabId(null);
+  };
+
+  const cancelEditing = () => setEditingTabId(null);
 
   return (
     <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none py-0.5">
       {tabs.map((tab) => {
         const isActive = activeTabId === tab.id;
+        const isEditing = editingTabId === tab.id;
         return (
           <div
             key={tab.id}
-            onClick={() => setActiveTab(tab.id)}
+            onClick={() => {
+              if (!isEditing) setActiveTab(tab.id);
+            }}
+            onDoubleClick={() => startEditing(tab.id, tab.title)}
             className={clsx(
               "group flex shrink-0 cursor-pointer items-center gap-2.5 px-3.5 py-1 text-[13px] font-medium transition-all duration-150",
               // Pill design matching the image rounded look
@@ -36,11 +66,44 @@ export function TabBar() {
             <span className={clsx("text-[10px] font-bold tracking-wider", METHOD_COLOR[tab.request.method] || "text-green-500")}>
               {tab.request.method}
             </span>
-            <span className="max-w-[140px] truncate text-[12.5px]">
-              {tab.title || "New Request"}
-            </span>
-            {tab.isUnsaved && <span className="h-1.5 w-1.5 rounded-full bg-accent" />}
-            
+
+            {isEditing ? (
+              <input
+                ref={inputRef}
+                value={draftName}
+                onChange={(e) => setDraftName(e.target.value)}
+                onClick={(e) => e.stopPropagation()}
+                onBlur={commitEditing}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    commitEditing();
+                  } else if (e.key === "Escape") {
+                    e.preventDefault();
+                    cancelEditing();
+                  }
+                }}
+                className="w-[120px] max-w-[140px] rounded border border-accent/60 bg-bg-elevated px-1 py-0 text-[12.5px] text-text-primary outline-none"
+              />
+            ) : (
+              <span
+                className="max-w-[140px] truncate text-[12.5px]"
+                title="Click to rename"
+                onClick={(e) => {
+                  // Only the already-active tab enters rename mode on a
+                  // single click, so this doesn't fight with tab switching.
+                  if (isActive) {
+                    e.stopPropagation();
+                    startEditing(tab.id, tab.title);
+                  }
+                }}
+              >
+                {tab.title || "New Request"}
+              </span>
+            )}
+
+            {tab.isUnsaved && !isEditing && <span className="h-1.5 w-1.5 rounded-full bg-accent" />}
+
             <button
               onClick={(e) => {
                 e.stopPropagation();
