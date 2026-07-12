@@ -32,7 +32,7 @@
   --bg-hover: #eeeeef;
   --border: #e2e2e4;
   --text-primary: #18181b;
-  --text-secondary: #52525b;
+  --text-secondary: hsl(240, 5%, 34%);
   --text-muted: #a1a1aa;
   --accent: #f5820d;
   --accent-hover: #d96f08;
@@ -194,4 +194,23 @@ body,
   border-radius: 9999px;
   pointer-events: none;
   animation: perf-confetti 0.75s ease-out forwards;
+}
+
+/* Custom Scrollbars setup injection mapping */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: #0b0b0b;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #1e1e1e;
+  border-radius: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #2a2a2a;
 }
