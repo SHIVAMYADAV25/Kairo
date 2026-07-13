@@ -8,6 +8,8 @@ import {
   CheckSquare,
   Settings,
   User,
+  Braces,
+  Rss,
 } from "lucide-react";
 
 export type SidebarPanel =
@@ -15,6 +17,8 @@ export type SidebarPanel =
   | "environments"
   | "history"
   | "sockets"
+  | "graphql"
+  | "sse"
   | "mocks"
   | "tests"
   | "settings";
@@ -24,6 +28,8 @@ const ITEMS: { id: SidebarPanel; label: string; icon: typeof Folder }[] = [
   { id: "environments", label: "Environ.", icon: Globe },
   { id: "history", label: "History", icon: History },
   { id: "sockets", label: "Sockets", icon: Radio },
+  { id: "graphql", label: "GraphQL", icon: Braces },
+  { id: "sse", label: "SSE", icon: Rss },
   { id: "mocks", label: "Mocks", icon: Lock },
   { id: "tests", label: "Tests", icon: CheckSquare },
 ];
@@ -37,15 +43,14 @@ interface Props {
 export function IconRail({ active, onChange, onOpenSettings }: Props) {
   return (
     <div className="flex w-[70px] shrink-0 flex-col items-center border-r border-border bg-bg-base py-2">
-      {/* Top list */}
-      <div className="flex flex-1 flex-col gap-1 items-center w-full">
+      <div className="flex flex-1 flex-col gap-1 items-center w-full overflow-y-auto">
         {ITEMS.map(({ id, label, icon: Icon }) => (
           <button
             key={id}
             type="button"
             onClick={() => onChange(id)}
             className={clsx(
-              "flex w-[60px] flex-col items-center gap-1 rounded-md py-2 text-[10px] transition-colors",
+              "flex w-[60px] shrink-0 flex-col items-center gap-1 rounded-md py-2 text-[10px] transition-colors",
               active === id
                 ? "text-accent bg-[#2b190d]"
                 : "text-text-muted hover:bg-bg-hover hover:text-text-secondary"
@@ -57,7 +62,6 @@ export function IconRail({ active, onChange, onOpenSettings }: Props) {
         ))}
       </div>
 
-      {/* Bottom list */}
       <div className="flex flex-col gap-1 items-center w-full">
         <button
           type="button"
@@ -72,8 +76,8 @@ export function IconRail({ active, onChange, onOpenSettings }: Props) {
           <Settings size={18} strokeWidth={3} />
           Settings
         </button>
-        <button 
-          type="button" 
+        <button
+          type="button"
           className="flex w-[52px] flex-col items-center gap-1 rounded-xl py-2 text-text-muted hover:bg-bg-hover hover:text-text-secondary"
         >
           <User size={18} strokeWidth={3} />
