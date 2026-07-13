@@ -19,6 +19,9 @@ pub fn run() {
 
             let pool = db::init_pool(app_data_dir).expect("failed to initialize database");
             app.manage(pool);
+            app.manage(commands::ws::WsManager::default());
+            app.manage(commands::mock::MockServerState::default());
+            app.manage(commands::sse::SseManager::default());
 
             Ok(())
         })
@@ -55,6 +58,19 @@ pub fn run() {
             // Import
             commands::import_from_url,
             commands::import_from_file,
+            // WebSocket
+            commands::ws_connect,
+            commands::ws_send,
+            commands::ws_disconnect,
+            // Mock Server
+            commands::mock_start,
+            commands::mock_stop,
+            commands::mock_update_routes,
+            commands::mock_status,
+            // SSE
+            commands::sse_connect,
+            commands::sse_disconnect,
+            commands::sse_set_paused,
         ])
         .run(tauri::generate_context!())
         .expect("error while running RequestKit");
