@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import clsx from "clsx";
-import { X, Plus, Play, Square, Trash2 } from "lucide-react";
+import { X, Plus } from "lucide-react";
 import { useMockStore, type MockRoute, type MockHeader } from "@/stores/mockStore";
 
 interface Props {
@@ -9,11 +9,14 @@ interface Props {
 }
 
 const METHOD_COLOR: Record<string, string> = {
-  GET: "text-method-get", POST: "text-method-post", PUT: "text-method-put",
-  PATCH: "text-method-patch", DELETE: "text-method-delete", HEAD: "text-method-head", OPTIONS: "text-method-options",
+  GET: "text-[#00ca54]",
+  POST: "text-[#ffb700]",
+  PUT: "text-[#0091ff]",
+  PATCH: "text-[#0091ff]",
+  DELETE: "text-[#ff3b30]",
 };
 
-const METHODS = ["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"];
+const METHODS = ["GET", "POST", "PUT", "PATCH", "DELETE"];
 
 export function MockServerModal({ open, onClose }: Props) {
   const { routes, running, port, log, ensureListeners, addRoute, updateRoute, deleteRoute, setPort, start, stop, clearLog } = useMockStore();
@@ -43,72 +46,87 @@ export function MockServerModal({ open, onClose }: Props) {
   const editingRoute = formOpen && formOpen !== "new" ? routes.find((r) => r.id === formOpen) ?? null : null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-6" onClick={onClose}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 font-sans text-[12px] select-none" onClick={onClose}>
       <div
-        className="flex h-[80vh] w-[1150px] max-w-full overflow-hidden rounded-lg border border-border bg-bg-panel shadow-2xl"
+        className="flex h-[640px] w-[960px] max-w-full overflow-hidden rounded-md border border-[#1b1b1b] bg-[#0f0f0f] text-[#ffffff] shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Main column */}
-        <div className="flex min-w-0 flex-[2.3] flex-col overflow-hidden">
-          <div className="flex items-center justify-between border-b border-border px-5 py-4">
-            <h2 className="text-[19px] font-semibold text-text-primary">Mock Server</h2>
-            <button onClick={onClose} className="text-text-muted hover:text-text-primary">
-              <X size={20} />
+        {/* ================= LEFT CONTROLS & FORM SECTION ================= */}
+        <div className="flex flex-1 flex-col overflow-y-auto p-5 border-r border-[#1b1b1b]">
+          {/* Top Title Bar */}
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-[16px] font-medium text-white">Mock Server</h2>
+            <button onClick={onClose} className="text-[#555555] hover:text-[#aaaaaa] transition-colors">
+              <X size={16} />
             </button>
           </div>
 
-          <div className="border-b border-border px-5 py-3">
+          {/* Port and Action Setup Block */}
+          <div className="flex flex-col gap-1.5 mb-3">
             <div className="flex items-center gap-3">
-              <span className="text-[13px] text-text-secondary">Port:</span>
+              <span className="text-[#7f7f7f]">Port:</span>
               <input
                 type="number"
                 value={port}
                 onChange={(e) => setPort(Number(e.target.value))}
                 disabled={running}
-                className="w-24 rounded-md border border-border bg-bg-elevated px-2.5 py-1.5 text-text-primary focus:border-accent focus:outline-none disabled:opacity-60"
+                className="w-[75px] h-[28px] px-2.5 bg-[#1a1a1a] border border-[#262626] rounded text-white font-mono text-[12px] outline-none"
               />
+              
               <button
                 onClick={handleToggle}
                 disabled={starting}
                 className={clsx(
-                  "flex items-center gap-1.5 rounded-md px-4 py-1.5 text-[13px] font-medium disabled:opacity-60",
-                  running ? "bg-status-error text-white hover:opacity-90" : "bg-accent text-black hover:bg-accent-hover"
+                  "flex items-center justify-center gap-2 h-[28px] rounded px-4 text-[12px] font-medium text-white transition-colors",
+                  running ? "bg-[#e1001c] hover:bg-[#c80018]" : "bg-[#ff5500] hover:bg-[#e04b00]"
                 )}
               >
-                {running ? <Square size={13} /> : <Play size={13} />}
-                {running ? "Stop" : "Start"}
+                {running ? (
+                  <>
+                    <span className="h-2 w-2 bg-white rounded-xs" />
+                    <span>Stop</span>
+                  </>
+                ) : (
+                  <>
+                    <span className="w-0 h-0 border-y-[4px] border-y-transparent border-l-[6px] border-l-white" />
+                    <span>Start</span>
+                  </>
+                )}
               </button>
+
               {running && (
-                <span className="flex items-center gap-1.5 text-[12px] font-medium text-status-success">
-                  <span className="h-2 w-2 rounded-full bg-status-success" /> Running
+                <span className="flex items-center gap-1.5 text-[12px] font-medium text-[#00ca54] ml-1">
+                  <span className="h-2 w-2 rounded-full bg-[#00ca54]" /> Running
                 </span>
               )}
             </div>
-            {error && <div className="mt-2 text-[12px] text-status-error">{error}</div>}
+            
+            {error && <div className="text-[11px] text-[#ff3b30] mt-0.5">{error}</div>}
+            
             {running && (
-              <div className="mt-2 text-[12px] text-text-muted">
-                Base URL:{" "}
-                <span className="font-mono font-semibold text-text-primary">http://localhost:{port}</span>
+              <div className="text-[11px] text-[#7f7f7f] font-sans mt-1.5">
+                Base URL: <span className="text-[#a5a5a5] font-mono select-all">http://localhost:{port}</span>
               </div>
             )}
           </div>
 
-          <div className="flex items-center justify-between px-5 pb-2 pt-3">
-            <span className="text-[11px] font-bold uppercase tracking-widest text-text-muted">Routes</span>
+          {/* Dynamic Routes Header Area */}
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-[11px] font-bold text-[#555555] uppercase tracking-wider">Routes</span>
             <button
               onClick={() => setFormOpen("new")}
-              className="flex items-center gap-1 text-[13px] font-medium text-accent hover:opacity-80"
+              className="flex items-center gap-1 text-[12px] text-[#a5a5a5] hover:text-white transition-colors font-medium"
             >
               <Plus size={14} /> Add Route
             </button>
           </div>
 
-          <div className="flex-1 overflow-y-auto px-5 pb-4">
-            <div className="overflow-hidden rounded-md border border-border">
-              {routes.length === 0 ? (
-                <div className="p-6 text-center text-text-muted">No routes yet — click "Add Route"</div>
-              ) : (
-                routes.map((r) => (
+          {/* Sequential vertical layout stack */}
+          <div className="space-y-2">
+            {/* Embedded Active Route Rows */}
+            {routes.length > 0 && (
+              <div className="border border-[#1a1a1a] rounded bg-[#0b0b0b] divide-y divide-[#161616]">
+                {routes.map((r) => (
                   <RouteRow
                     key={r.id}
                     route={r}
@@ -116,53 +134,57 @@ export function MockServerModal({ open, onClose }: Props) {
                     onToggle={(enabled) => updateRoute(r.id, { enabled })}
                     onDelete={() => deleteRoute(r.id)}
                   />
-                ))
-              )}
-            </div>
+                ))}
+              </div>
+            )}
 
+            {/* Nested Inline Creation/Edit Blueprint Form Panel */}
             {(formOpen === "new" || editingRoute) && (
-              <RouteForm
-                initial={editingRoute}
-                onCancel={() => setFormOpen(null)}
-                onSave={(data) => {
-                  if (editingRoute) updateRoute(editingRoute.id, data);
-                  else addRoute(data);
-                  setFormOpen(null);
-                }}
-              />
+              <div className="border border-[#222] bg-[#121212] rounded p-4 mt-2 shadow-inner">
+                <RouteForm
+                  initial={editingRoute}
+                  onCancel={() => setFormOpen(null)}
+                  onSave={(data) => {
+                    if (editingRoute) updateRoute(editingRoute.id, data);
+                    else addRoute(data);
+                    setFormOpen(null);
+                  }}
+                />
+              </div>
             )}
           </div>
         </div>
 
-        {/* Request log column */}
-        <div className="flex w-[340px] shrink-0 flex-col border-l border-border">
-          <div className="flex items-center justify-between border-b border-border px-4 py-4">
-            <span className="text-[13px] font-bold uppercase tracking-widest text-text-muted">Request Log</span>
+        {/* ================= RIGHT SIDEBAR REQUEST LOG ================= */}
+        <div className="flex w-[300px] shrink-0 flex-col bg-[#0b0b0b] p-5">
+          <div className="flex items-center justify-between mb-3">
+            <span className="text-[11px] font-bold text-[#555555] uppercase tracking-wider">Request Log</span>
             {log.length > 0 && (
-              <button onClick={clearLog} className="text-[12px] text-text-muted hover:text-text-primary">
+              <button onClick={clearLog} className="text-[11px] text-[#666666] hover:text-[#aaaaaa] transition-colors">
                 Clear
               </button>
             )}
           </div>
-          <div className="flex-1 overflow-y-auto p-3">
+          
+          <div className="flex-1 overflow-y-auto rounded border border-[#1a1a1a] bg-[#070707] p-3">
             {log.length === 0 ? (
-              <div className="flex h-full items-center justify-center px-4 text-center text-text-muted">
-                Start the server to see requests here.
+              <div className="flex h-full items-center justify-center p-4 text-center text-[#444444] font-sans text-[12px]">
+                Waiting for requests...
               </div>
             ) : (
-              <div className="space-y-2">
+              <div className="space-y-3">
                 {log.map((entry) => {
-                  const time = new Date(entry.timestamp).toLocaleTimeString([], { hour12: false });
-                  const ok = entry.status >= 200 && entry.status < 400;
+                  const time = new Date(entry.timestamp).toLocaleTimeString([], { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
+                  const isOk = entry.status >= 200 && entry.status < 400;
                   return (
-                    <div key={entry.id} className="rounded-md border border-border px-3 py-2 text-[12px]">
-                      <div className="flex items-center gap-1.5">
-                        <span className="text-text-muted">{time}</span>
-                        <span className={clsx("font-semibold", METHOD_COLOR[entry.method] ?? "")}>{entry.method}</span>
-                        <span className="truncate font-mono text-text-secondary">{entry.path}</span>
+                    <div key={entry.id} className="text-[11px] font-mono border-b border-[#141414] pb-2 last:border-0 last:pb-0">
+                      <div className="flex items-center gap-2">
+                        <span className="text-[#555555] text-[10px]">{time}</span>
+                        <span className={clsx("font-bold text-[10px]", METHOD_COLOR[entry.method] ?? "")}>{entry.method}</span>
+                        <span className="truncate text-[#cccccc] font-medium">{entry.path}</span>
                       </div>
-                      <div className={clsx("mt-0.5 pl-[52px] font-mono", ok ? "text-status-success" : "text-status-error")}>
-                        → {entry.status} <span className="text-text-muted">({entry.durationMs}ms)</span>
+                      <div className={clsx("pl-12 mt-0.5 font-semibold text-[10px]", isOk ? "text-[#00ca54]" : "text-[#ff3b30]")}>
+                        → {entry.status} <span className="text-[#444444] font-normal text-[9px]">({entry.durationMs}ms)</span>
                       </div>
                     </div>
                   );
@@ -178,25 +200,24 @@ export function MockServerModal({ open, onClose }: Props) {
 
 function RouteRow({ route, onEdit, onToggle, onDelete }: { route: MockRoute; onEdit: () => void; onToggle: (enabled: boolean) => void; onDelete: () => void }) {
   return (
-    <div className="flex items-center gap-3 border-b border-border px-3 py-2.5 last:border-b-0 hover:bg-bg-hover">
-      <button onClick={onEdit} className="flex flex-1 items-center gap-3 text-left">
-        <span className={clsx("w-14 shrink-0 text-[12px] font-semibold", METHOD_COLOR[route.method] ?? "")}>{route.method}</span>
-        <span className="truncate font-mono text-[13px] text-text-primary">{route.path}</span>
+    <div className="flex items-center justify-between gap-3 px-3 py-2.5 hover:bg-[#131313] transition-colors group">
+      <button onClick={onEdit} className="flex flex-1 items-center gap-3 text-left font-mono text-[12px]">
+        <span className={clsx("w-10 shrink-0 font-bold text-[11px]", METHOD_COLOR[route.method] ?? "")}>{route.method}</span>
+        <span className="truncate text-[#dddddd] font-medium">{route.path}</span>
       </button>
-      <span className="text-[12px] text-text-muted">{route.status}</span>
-      <button
-        onClick={() => onToggle(!route.enabled)}
-        className={clsx(
-          "flex h-5 w-5 items-center justify-center rounded",
-          route.enabled ? "bg-accent text-black" : "border border-border text-transparent"
-        )}
-        title={route.enabled ? "Enabled" : "Disabled"}
-      >
-        ✓
-      </button>
-      <button onClick={onDelete} className="text-text-muted hover:text-status-error">
-        <X size={15} />
-      </button>
+      
+      <div className="flex items-center gap-3">
+        <span className="font-mono text-[12px] text-[#666666] font-medium">{route.status}</span>
+        <input 
+          type="checkbox" 
+          checked={route.enabled} 
+          onChange={() => onToggle(!route.enabled)}
+          className="mock-custom-checkbox" 
+        />
+        <button onClick={onDelete} className="text-[#444444] hover:text-[#ff3b30] transition-colors opacity-40 group-hover:opacity-100">
+          <X size={14} />
+        </button>
+      </div>
     </div>
   );
 }
@@ -218,7 +239,7 @@ function RouteForm({ initial, onCancel, onSave }: { initial: MockRoute | null; o
       if (!Array.isArray(parsed)) throw new Error("must be a JSON array");
       responseHeaders = parsed.map((h: any) => ({ key: String(h.key ?? ""), value: String(h.value ?? "") })).filter((h) => h.key);
     } catch (e) {
-      setHeadersError(e instanceof Error ? e.message : "Invalid JSON");
+      setHeadersError(e instanceof Error ? e.message : "Invalid JSON array");
       return;
     }
     setHeadersError(null);
@@ -226,61 +247,80 @@ function RouteForm({ initial, onCancel, onSave }: { initial: MockRoute | null; o
   };
 
   return (
-    <div className="mt-3 rounded-md border border-border bg-bg-elevated p-4">
+    <div className="text-[12px]">
       <div className="mb-3 flex items-center justify-between">
-        <span className="text-[14px] font-semibold text-text-primary">{initial ? "Edit Route" : "New Route"}</span>
-        <button onClick={onCancel} className="text-text-muted hover:text-text-primary">
-          <X size={16} />
+        <span className="font-semibold text-white text-[12px]">{initial ? "Edit Route" : "New Route"}</span>
+        <button onClick={onCancel} className="text-[#555555] hover:text-[#aaaaaa] transition-colors">
+          <X size={14} />
         </button>
       </div>
 
-      <div className="mb-3 flex gap-2">
-        <select value={method} onChange={(e) => setMethod(e.target.value)} className="w-[110px] rounded-md border border-border bg-bg-panel px-2.5 py-2 text-text-primary focus:border-accent focus:outline-none">
+      {/* Main Parameters input line alignment */}
+      <div className="mb-2.5 flex gap-2">
+        <select value={method} onChange={(e) => setMethod(e.target.value)} className="w-[85px] h-[28px] px-2 bg-[#1a1a1a] border border-[#262626] rounded text-white font-medium outline-none">
           {METHODS.map((m) => (
             <option key={m} value={m}>{m}</option>
           ))}
         </select>
-        <input value={path} onChange={(e) => setPath(e.target.value)} placeholder="/users/:id" className="flex-1 rounded-md border border-border bg-bg-panel px-3 py-2 font-mono text-text-primary placeholder:text-text-muted focus:border-accent focus:outline-none" />
-        <input type="number" value={status} onChange={(e) => setStatus(Number(e.target.value))} className="w-24 rounded-md border border-border bg-bg-panel px-3 py-2 text-text-primary focus:border-accent focus:outline-none" />
-        <input type="number" value={delayMs} onChange={(e) => setDelayMs(Number(e.target.value))} title="Delay (ms)" className="w-24 rounded-md border border-border bg-bg-panel px-3 py-2 text-text-primary focus:border-accent focus:outline-none" />
+        
+        <input 
+          value={path} 
+          onChange={(e) => setPath(e.target.value)} 
+          placeholder="/" 
+          className="flex-1 h-[28px] px-3 bg-[#1a1a1a] border border-[#262626] rounded text-white font-mono text-[12px] outline-none placeholder:text-[#444444]" 
+        />
+        
+        <input 
+          type="number" 
+          value={status} 
+          onChange={(e) => setStatus(Number(e.target.value))} 
+          className="w-16 h-[28px] text-center bg-[#1a1a1a] border border-[#262626] rounded text-white font-mono outline-none" 
+          placeholder="200"
+        />
+        
+        <input 
+          type="number" 
+          value={delayMs} 
+          onChange={(e) => setDelayMs(Number(e.target.value))} 
+          className="w-16 h-[28px] text-center bg-[#1a1a1a] border border-[#262626] rounded text-white font-mono outline-none" 
+          placeholder="0"
+        />
       </div>
 
       <input
         value={description}
         onChange={(e) => setDescription(e.target.value)}
         placeholder="Description (optional)"
-        className="mb-3 w-full rounded-md border border-border bg-bg-panel px-3 py-2 text-text-primary placeholder:text-text-muted focus:border-accent focus:outline-none"
+        className="mb-3 w-full h-[28px] px-3 bg-[#1a1a1a] border border-[#262626] rounded text-white outline-none placeholder:text-[#444444]"
       />
 
-      <div className="mb-1 text-[13px] text-text-secondary">Response Body</div>
+      <div className="mb-1 text-[#7f7f7f] text-[11px] font-medium">Response Body</div>
       <textarea
         value={responseBody}
         onChange={(e) => setResponseBody(e.target.value)}
         rows={4}
-        className="mb-1 w-full resize-y rounded-md border border-border bg-bg-panel px-3 py-2 font-mono text-[12.5px] text-text-primary outline-none focus:border-accent"
+        className="w-full resize-none p-2.5 bg-[#1a1a1a] border border-[#262626] rounded text-white font-mono text-[12px] outline-none"
       />
-      <div className="mb-3 text-[11px] text-text-muted">
-        Template variables: <code className="text-accent">{"{{$uuid}}"}</code> <code className="text-accent">{"{{$timestamp}}"}</code>{" "}
-        <code className="text-accent">{"{{$isoTimestamp}}"}</code> <code className="text-accent">{"{{$randomInt}}"}</code>{" "}
-        <code className="text-accent">{"{{$randomInt(min,max)}}"}</code> <code className="text-accent">{"{{$randomFloat}}"}</code>{" "}
-        <code className="text-accent">{"{{$randomBool}}"}</code> <code className="text-accent">{"{{$randomString}}"}</code>{" "}
-        <code className="text-accent">{"{{$randomEmail}}"}</code>
+      
+      {/* Dynamic string formatting description footer line */}
+      <div className="mb-3 font-mono text-[10px] text-[#555555] leading-relaxed">
+        Template variables: <span className="text-[#6b6b6b]">{"{{$uuid}} {{$timestamp}} {{$isoTimestamp}} {{$randomInt}} {{$randomInt(min,max)}} {{$randomFloat}} {{$randomBool}} {{$randomString}} {{$randomEmail}}"}</span>
       </div>
 
-      <div className="mb-1 text-[13px] text-text-secondary">Response Headers (JSON array)</div>
+      <div className="mb-1 text-[#7f7f7f] text-[11px] font-medium">Response Headers (JSON array)</div>
       <textarea
         value={headersRaw}
         onChange={(e) => setHeadersRaw(e.target.value)}
         rows={2}
-        className="mb-1 w-full resize-y rounded-md border border-border bg-bg-panel px-3 py-2 font-mono text-[12.5px] text-text-primary outline-none focus:border-accent"
+        className="w-full resize-none p-2.5 bg-[#1a1a1a] border border-[#262626] rounded text-white font-mono text-[12px] outline-none"
       />
-      {headersError && <div className="mb-2 text-[12px] text-status-error">{headersError}</div>}
+      {headersError && <div className="text-[11px] text-[#ff3b30] mt-1">{headersError}</div>}
 
-      <div className="mt-3 flex justify-end gap-2">
-        <button onClick={onCancel} className="rounded-md px-4 py-1.5 text-[13px] text-text-secondary hover:bg-bg-hover">
+      <div className="mt-4 flex justify-end gap-2">
+        <button onClick={onCancel} className="rounded px-3 py-1.5 text-[#aaaaaa] hover:bg-[#1c1c1c] transition-colors">
           Cancel
         </button>
-        <button onClick={handleSave} className="rounded-md bg-accent px-4 py-1.5 text-[13px] font-medium text-black hover:bg-accent-hover">
+        <button onClick={handleSave} className="rounded bg-[#ff5500] px-4 py-1.5 font-semibold text-white hover:bg-[#e04b00] transition-colors">
           {initial ? "Save Route" : "Create Route"}
         </button>
       </div>

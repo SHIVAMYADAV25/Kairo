@@ -44,6 +44,23 @@
   --font-request: 13px;
   --font-response: 12px;
   --font-mono: "JetBrains Mono", Consolas, monospace;
+
+  /* ADDED: Isolated Mock Server specific variables so they don't overwrite your app globals */
+  --bg-mock-modal: #0b0b0b;
+  --bg-mock-input: #151515;
+  --bg-mock-card: #080808;
+  --border-mock: #181818;
+  --text-mock-primary: #ffffff;
+  --text-mock-secondary: #aaaaaa;
+  --text-mock-muted: #666666;
+  --accent-mock-orange: #ff5500;
+  --accent-mock-orange-hover: #e04b00;
+  --status-mock-red: #e1001c;
+  --status-mock-green: #00ca54;
+  --color-method-get: #00ca54;
+  --color-method-post: #ffb700;
+  --color-method-put: #0091ff;
+  --color-method-delete: #ff3b30;
 }
 
 html,
@@ -76,10 +93,7 @@ body,
   background: transparent;
 }
 
-/* Resizable split-pane handle.
-   The hit-area stays a few px wide for a comfortable drag target, but a thin
-   1px line is always visible via ::after so the boundary between panels is
-   never ambiguous — it just brightens/turns accent-colored on hover/drag. */
+/* Resizable split-pane handle. */
 .resize-handle {
   position: relative;
   flex: 0 0 5px;
@@ -124,7 +138,7 @@ body,
   cursor: row-resize;
 }
 
-/* Performance panel "satisfaction" animations (fix #4) */
+/* Performance panel animations */
 @keyframes perf-pop-in {
   0% { opacity: 0; transform: scale(0.85); }
   60% { opacity: 1; transform: scale(1.04); }
@@ -138,9 +152,6 @@ body,
   from { transform: scaleY(0); opacity: 0.4; }
   to { transform: scaleY(1); opacity: 1; }
 }
-/* The newest real response gets a more pronounced "you just earned this bar"
-   bounce + brightness flash instead of the plain grow-in the filler/older
-   bars use — this is the small satisfaction beat fix #3 asked for. */
 @keyframes perf-bar-pop {
   0% { transform: scaleY(0.35); filter: brightness(1); }
   50% { transform: scaleY(1.18); filter: brightness(1.5); }
@@ -151,15 +162,12 @@ body,
   0% { opacity: 0; transform: translateY(4px) scale(0.9); }
   100% { opacity: 1; transform: translateY(0) scale(1); }
 }
-/* A little extra "you earned this" bounce on top of perf-pop-in, only fired
-   when a response actually lands fast — not on every render. */
 @keyframes perf-achieve-pop {
   0% { transform: scale(1); }
   35% { transform: scale(1.08); }
   60% { transform: scale(0.97); }
   100% { transform: scale(1); }
 }
-/* Small radial confetti burst from the center of the gauge. */
 @keyframes perf-confetti {
   0% { opacity: 1; transform: translate(-50%, -50%) rotate(var(--angle)) translateY(-6px) scale(1); }
   100% { opacity: 0; transform: translate(-50%, -50%) rotate(var(--angle)) translateY(-92px) scale(0.35); }
@@ -196,21 +204,188 @@ body,
   animation: perf-confetti 0.75s ease-out forwards;
 }
 
-/* Custom Scrollbars setup injection mapping */
-.custom-scrollbar::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+/* ---------------------------------------------------------------- */
+/* ADDED: Isolated Custom Styles for Mock Server Only               */
+/* ---------------------------------------------------------------- */
+.mock-server-container {
+  font-size: 12px;
 }
 
-.custom-scrollbar::-webkit-scrollbar-track {
-  background: #0b0b0b;
+.font-mono-mock {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 }
 
-.custom-scrollbar::-webkit-scrollbar-thumb {
-  background: #1e1e1e;
+/* Custom checkbox scoped only to avoid breaking system checkboxes */
+.mock-checkbox {
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 3px;
+  background-color: var(--bg-mock-input);
+  border: 1px solid var(--border-mock);
+  display: inline-grid;
+  place-content: center;
+  cursor: pointer;
+}
+.mock-checkbox:checked {
+  background-color: var(--accent-mock-orange);
+  border-color: var(--accent-mock-orange);
+}
+.mock-checkbox:checked::before {
+  content: "✓";
+  color: white;
+  font-size: 10px;
+  font-weight: bold;
+}
+
+/* Scoped scrollbars strictly for mock list containers */
+.custom-mock-scrollbar::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+.custom-mock-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.custom-mock-scrollbar::-webkit-scrollbar-thumb {
+  background: var(--border-mock);
+  border-radius: 4px;
+}
+.custom-mock-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: var(--text-mock-muted);
+}
+
+/* Scoped classes exclusively for the mock server viewports */
+.mock-panel-dark {
+  background-color: #0b0b0b;
+}
+
+.mock-input-dark {
+  background-color: #121212;
+  border-color: #1a1a1a;
+}
+
+.mock-input-dark:focus {
+  border-color: #ff5500;
+}
+
+/* Perfect rendering alignment for the custom checked state */
+.mock-custom-checkbox {
+  appearance: none;
+  width: 13px;
+  height: 13px;
+  border-radius: 2px;
+  background-color: #121212;
+  border: 1px solid #222222;
+  display: inline-grid;
+  place-content: center;
+  cursor: pointer;
+}
+.mock-custom-checkbox:checked {
+  background-color: #ff5500;
+  border-color: #ff5500;
+}
+.mock-custom-checkbox:checked::before {
+  content: "✓";
+  color: #ffffff;
+  font-size: 9px;
+  font-weight: 900;
+}
+
+/* Super clean custom scrollbar strictly for the mock lists */
+.mock-scroll-clean::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+.mock-scroll-clean::-webkit-scrollbar-track {
+  background: transparent;
+}
+.mock-scroll-clean::-webkit-scrollbar-thumb {
+  background: #1c1c1c;
+  border-radius: 2px;
+}
+.mock-scroll-clean::-webkit-scrollbar-thumb:hover {
+  background: #2c2c2c;
+}
+
+/* Container adjustments for inline mock route panel form placement */
+.mock-form-container {
+  background-color: #0b0b0b;
+  border: 1px solid #141414;
   border-radius: 4px;
 }
 
-.custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: #2a2a2a;
+/* Precise micro font tuning for template references */
+.mock-template-text {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  color: #555555;
+  font-size: 10px;
+  line-height: 1.4;
+}
+
+/* Input state variables */
+.mock-field {
+  background-color: #131313;
+  border: 1px solid #1c1c1c;
+  color: #ffffff;
+  border-radius: 4px;
+  outline: none;
+  transition: border-color 0.15s ease;
+}
+.mock-field:focus {
+  border-color: #ff5500;
+}
+
+/* Isolated container overrides for the embedded form layout */
+.mock-form-embed {
+  background-color: #0d0d0d;
+  border: 1px solid #1a1a1a;
+  border-radius: 4px;
+}
+
+/* Precise styling for the text list of variables */
+.mock-vars-list {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  color: #555555;
+  font-size: 10px;
+  line-height: 1.4;
+}
+
+/* Micro field styling for inputs inside the form */
+.mock-input-field {
+  background-color: #131313;
+  border: 1px solid #1c1c1c;
+  color: #ffffff;
+  border-radius: 4px;
+  outline: none;
+}
+.mock-input-field:focus {
+  border-color: #ff5500;
+}
+
+/* Scoped classes exclusively for the mock server component layout */
+.mock-container-main {
+  background-color: #0b0b0b;
+}
+
+.mock-inner-card {
+  background-color: #070707;
+  border: 1px solid #141414;
+}
+
+.mock-form-card {
+  background-color: #0d0d0d;
+  border: 1px solid #1a1a1a;
+  border-radius: 4px;
+}
+
+/* Scoped field properties matching form input borders */
+.mock-input-element {
+  background-color: #131313;
+  border: 1px solid #1c1c1c;
+  color: #ffffff;
+  border-radius: 4px;
+  outline: none;
+}
+.mock-input-element:focus {
+  border-color: #ff5500;
 }
