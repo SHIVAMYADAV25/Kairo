@@ -184,7 +184,7 @@ interface Props {
   history: number[];
 }
 
-export function PerformancePanel({ tab, onClose, history }: Props) {
+export function PerformancePanel({ tab, onClose }: Props) {
   const [window, setWindow] = useState<Window>("1m");
   const response = tab.response;
 

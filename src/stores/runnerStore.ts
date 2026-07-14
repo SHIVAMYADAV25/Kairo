@@ -13,7 +13,7 @@ export interface RunnerResult {
   durationMs: number;
 }
 
-interface RunnerState {
+export interface RunnerState {
   isRunning: boolean;
   results: RunnerResult[];
   delayMs: number;
@@ -57,10 +57,6 @@ export const useRunnerStore = create<RunnerState>((set, get) => ({
       const start = performance.now();
 
       try {
-        // execute_request already runs pre-request/test scripts and persists
-        // any environment variable changes back to storage — so a later
-        // request in the same run automatically sees variables an earlier
-        // one set via `pm.environment.set(...)`, for free.
         const response = await api.http.execute({ request: requests[i], environmentId });
         const durationMs = Math.round(performance.now() - start);
         const failedTests = response.testResults.filter((t) => !t.passed).length;

@@ -1,6 +1,7 @@
 pub mod env;
 pub mod http;
 pub mod import;
+pub mod loadtest;
 pub mod mock;
 pub mod openapi_parser;
 pub mod postman_parser;
@@ -11,6 +12,7 @@ pub mod ws;
 
 pub use http::*;
 pub use import::*;
+pub use loadtest::*;
 pub use mock::*;
 pub use sse::*;
 pub use storage::*;

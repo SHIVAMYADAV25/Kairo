@@ -9,6 +9,7 @@ import {
   User,
   Braces,
   Rss,
+  CheckSquare,
 } from "lucide-react";
 
 export type SidebarPanel =
@@ -30,7 +31,7 @@ const ITEMS: { id: SidebarPanel; label: string; icon: typeof Folder }[] = [
   { id: "graphql", label: "GraphQL", icon: Braces },
   { id: "sse", label: "SSE", icon: Rss },
   { id: "mocks", label: "Mocks", icon: Lock },
-  // { id: "tests", label: "Tests", icon: CheckSquare },
+  { id: "tests", label: "Tests", icon: CheckSquare },
 ];
 
 interface Props {

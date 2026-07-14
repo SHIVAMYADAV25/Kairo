@@ -8,7 +8,7 @@ const DEFAULT_SETTINGS: AppSettings = {
   fontSizes: { sidebar: 15, request: 13, response: 12 },
   panelSizes: {
     sidebarWidth: 260,
-    requestEditorHeight: 260, // Adjusted down from 340 so the top builder doesn't push the response panel away on first mount
+    requestEditorHeight: 480, // Gives the request builder roughly half the window by default so the response panel (which fills the rest via flex-1) doesn't dominate on first load
     responseViewerHeight: 420,
     performancePanelWidth: 280,
   },
@@ -47,6 +47,15 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
   hydrate: async () => {
     try {
       const settings = await api.settings.get();
+      // Migration guard: settings saved before the response panel switched to
+      // filling all remaining space (flex-1) may have a very small request
+      // editor height, which would now make the response panel dominate the
+      // screen. Bump it back up to a sane minimum just once.
+      const MIN_REQUEST_EDITOR_HEIGHT = 380;
+      if (settings.panelSizes.requestEditorHeight < MIN_REQUEST_EDITOR_HEIGHT) {
+        settings.panelSizes = { ...settings.panelSizes, requestEditorHeight: 480 };
+        api.settings.update({ panelSizes: settings.panelSizes }).catch(() => {});
+      }
       applyDomTheme(settings);
       set({ settings, hydrated: true });
     } catch {

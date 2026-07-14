@@ -22,7 +22,7 @@ pub fn run() {
             app.manage(commands::ws::WsManager::default());
             app.manage(commands::mock::MockServerState::default());
             app.manage(commands::sse::SseManager::default());
-
+            app.manage(commands::loadtest::LoadTestManager::default());
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
@@ -71,6 +71,9 @@ pub fn run() {
             commands::sse_connect,
             commands::sse_disconnect,
             commands::sse_set_paused,
+
+            commands::run_load_test, 
+            commands::stop_load_test,
         ])
         .run(tauri::generate_context!())
         .expect("error while running RequestKit");

@@ -8,6 +8,7 @@ import type {
   AppSettings,
 } from "@/types";
 import type { MockRoute } from "@/stores/mockStore";
+import type { LoadTestConfig } from "@/types/loadtest";
 
 export interface ExecuteRequestPayload {
   request: ApiRequest;
@@ -18,6 +19,11 @@ export const api = {
   http: {
     execute: (payload: ExecuteRequestPayload) => invoke<ApiResponse>("execute_request", { payload }),
     cancel: (requestId: string) => invoke<void>("cancel_request", { requestId }),
+  },
+
+  loadTest: {
+    run: (config: LoadTestConfig) => invoke<void>("run_load_test", { config }),
+    stop: (testId: string) => invoke<void>("stop_load_test", { testId }),
   },
 
   collections: {
