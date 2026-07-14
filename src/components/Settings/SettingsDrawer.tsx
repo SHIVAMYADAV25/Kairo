@@ -1,128 +1,5 @@
-// import clsx from "clsx";
-// import { X, Minus, Plus } from "lucide-react";
-// import { useSettingsStore } from "@/stores/settingsStore";
-
-// interface Props {
-//   open: boolean;
-//   onClose: () => void;
-// }
-
-// function FontStepper({
-//   label,
-//   value,
-//   onChange,
-// }: {
-//   label: string;
-//   value: number;
-//   onChange: (v: number) => void;
-// }) {
-//   return (
-//     <div className="flex items-center justify-between py-2">
-//       <span className="text-text-secondary">{label}</span>
-//       <div className="flex items-center gap-3">
-//         <button
-//           onClick={() => onChange(Math.max(10, value - 1))}
-//           className="rounded p-1 text-text-secondary hover:bg-bg-hover"
-//         >
-//           <Minus size={14} />
-//         </button>
-//         <span className="w-10 text-center text-text-primary">{value}px</span>
-//         <button
-//           onClick={() => onChange(Math.min(24, value + 1))}
-//           className="rounded p-1 text-text-secondary hover:bg-bg-hover"
-//         >
-//           <Plus size={14} />
-//         </button>
-//       </div>
-//     </div>
-//   );
-// }
-
-// export function SettingsDrawer({ open, onClose }: Props) {
-//   const { settings, update } = useSettingsStore();
-
-//   if (!open) return null;
-
-//   return (
-//     <div className="fixed inset-0 z-50 flex justify-end bg-black/40" onClick={onClose}>
-//       <div
-//         className="h-full w-[380px] overflow-y-auto border-l border-border bg-bg-panel p-5"
-//         onClick={(e) => e.stopPropagation()}
-//       >
-//         <div className="mb-6 flex items-center justify-between">
-//           <h2 className="text-[20px] font-semibold text-text-primary">Settings</h2>
-//           <button onClick={onClose} className="text-text-muted hover:text-text-primary">
-//             <X size={20} />
-//           </button>
-//         </div>
-
-//         <section className="mb-6">
-//           <h3 className="mb-3 text-[15px] font-medium text-text-primary">Appearance</h3>
-//           <div className="flex gap-2">
-//             {(["dark", "light"] as const).map((th) => (
-//               <button
-//                 key={th}
-//                 onClick={() => update({ theme: th })}
-//                 className={clsx(
-//                   "flex-1 rounded-md border py-2 capitalize",
-//                   settings.theme === th
-//                     ? "border-accent bg-bg-elevated text-text-primary"
-//                     : "border-border text-text-secondary hover:bg-bg-hover"
-//                 )}
-//               >
-//                 {th}
-//               </button>
-//             ))}
-//           </div>
-//         </section>
-
-//         <section className="mb-6 flex items-center justify-between">
-//           <div>
-//             <div className="text-text-primary">Opaque Mode</div>
-//             <div className="text-[12px] text-text-muted">Solid background instead of transparency</div>
-//           </div>
-//           <button
-//             onClick={() => update({ opaqueMode: !settings.opaqueMode })}
-//             className={clsx(
-//               "relative h-6 w-11 shrink-0 rounded-full transition-colors",
-//               settings.opaqueMode ? "bg-accent" : "bg-bg-elevated"
-//             )}
-//           >
-//             <span
-//               className={clsx(
-//                 "absolute top-0.5 h-5 w-5 rounded-full bg-white transition-transform",
-//                 settings.opaqueMode ? "translate-x-5" : "translate-x-0.5"
-//               )}
-//             />
-//           </button>
-//         </section>
-
-//         <section>
-//           <h3 className="mb-1 text-[15px] font-medium text-text-primary">Font Size</h3>
-//           <div className="divide-y divide-border">
-//             <FontStepper
-//               label="Sidebar"
-//               value={settings.fontSizes.sidebar}
-//               onChange={(v) => update({ fontSizes: { ...settings.fontSizes, sidebar: v } })}
-//             />
-//             <FontStepper
-//               label="Request Panel"
-//               value={settings.fontSizes.request}
-//               onChange={(v) => update({ fontSizes: { ...settings.fontSizes, request: v } })}
-//             />
-//             <FontStepper
-//               label="Response Panel"
-//               value={settings.fontSizes.response}
-//               onChange={(v) => update({ fontSizes: { ...settings.fontSizes, response: v } })}
-//             />
-//           </div>
-//         </section>
-//       </div>
-//     </div>
-//   );
-// }
 import clsx from "clsx";
-import { X, Minus, Plus } from "lucide-react";
+import { X, Minus, Plus, RotateCcw } from "lucide-react";
 import { useSettingsStore } from "@/stores/settingsStore";
 import type { HttpMethod } from "@/types";
 
@@ -135,15 +12,21 @@ const METHODS: HttpMethod[] = ["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", 
 
 function FontStepper({ label, value, onChange }: { label: string; value: number; onChange: (v: number) => void }) {
   return (
-    <div className="flex items-center justify-between py-2">
+    <div className="flex items-center justify-between py-1.5 text-[12px]">
       <span className="text-text-secondary">{label}</span>
-      <div className="flex items-center gap-3">
-        <button onClick={() => onChange(Math.max(10, value - 1))} className="rounded p-1 text-text-secondary hover:bg-bg-hover">
-          <Minus size={14} />
+      <div className="flex items-center gap-1 bg-[#121212] border border-[#222] rounded px-1 h-7">
+        <button 
+          onClick={() => onChange(Math.max(10, value - 1))} 
+          className="rounded p-0.5 text-text-muted hover:bg-bg-hover hover:text-text-primary transition-colors"
+        >
+          <Minus size={12} />
         </button>
-        <span className="w-10 text-center text-text-primary">{value}px</span>
-        <button onClick={() => onChange(Math.min(24, value + 1))} className="rounded p-1 text-text-secondary hover:bg-bg-hover">
-          <Plus size={14} />
+        <span className="w-9 text-center font-mono font-medium text-text-primary text-[11px]">{value}px</span>
+        <button 
+          onClick={() => onChange(Math.min(24, value + 1))} 
+          className="rounded p-0.5 text-text-muted hover:bg-bg-hover hover:text-text-primary transition-colors"
+        >
+          <Plus size={12} />
         </button>
       </div>
     </div>
@@ -155,9 +38,17 @@ function Toggle({ checked, onChange }: { checked: boolean; onChange: (v: boolean
     <button
       type="button"
       onClick={() => onChange(!checked)}
-      className={clsx("relative h-6 w-11 shrink-0 rounded-full transition-colors", checked ? "bg-accent" : "bg-bg-elevated")}
+      className={clsx(
+        "relative inline-flex h-4 w-8 shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out outline-none border border-transparent", 
+        checked ? "bg-accent" : "bg-[#222]"
+      )}
     >
-      <span className={clsx("absolute top-0.5 h-5 w-5 rounded-full bg-white transition-transform", checked ? "translate-x-5" : "translate-x-0.5")} />
+      <span 
+        className={clsx(
+          "pointer-events-none inline-block h-3 w-3 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out mt-[1px]", 
+          checked ? "translate-x-4" : "translate-x-[2px]"
+        )} 
+      />
     </button>
   );
 }
@@ -172,115 +63,139 @@ export function SettingsDrawer({ open, onClose }: Props) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex justify-end bg-black/40" onClick={onClose}>
-      <div className="h-full w-[380px] overflow-y-auto border-l border-border bg-bg-panel p-5" onClick={(e) => e.stopPropagation()}>
-        <div className="mb-6 flex items-center justify-between">
-          <h2 className="text-[20px] font-semibold text-text-primary">Settings</h2>
-          <button onClick={onClose} className="text-text-muted hover:text-text-primary">
-            <X size={20} />
-          </button>
-        </div>
-
-        <section className="mb-6">
-          <h3 className="mb-3 text-[15px] font-medium text-text-primary">Appearance</h3>
-          <div className="flex gap-2">
-            {(["dark", "light"] as const).map((th) => (
-              <button
-                key={th}
-                onClick={() => update({ theme: th })}
-                className={clsx(
-                  "flex-1 rounded-md border py-2 capitalize",
-                  settings.theme === th ? "border-accent bg-bg-elevated text-text-primary" : "border-border text-text-secondary hover:bg-bg-hover"
-                )}
-              >
-                {th}
-              </button>
-            ))}
-          </div>
-        </section>
-
-        <section className="mb-6 flex items-center justify-between">
-          <div>
-            <div className="text-text-primary">Opaque Mode</div>
-            <div className="text-[12px] text-text-muted">Solid background instead of transparency</div>
-          </div>
-          <Toggle checked={settings.opaqueMode} onChange={(v) => update({ opaqueMode: v })} />
-        </section>
-
-        <section className="mb-6">
-          <h3 className="mb-1 text-[15px] font-medium text-text-primary">Font Size</h3>
-          <div className="divide-y divide-border">
-            <FontStepper label="Sidebar" value={settings.fontSizes.sidebar} onChange={(v) => update({ fontSizes: { ...settings.fontSizes, sidebar: v } })} />
-            <FontStepper label="Request Panel" value={settings.fontSizes.request} onChange={(v) => update({ fontSizes: { ...settings.fontSizes, request: v } })} />
-            <FontStepper label="Response Panel" value={settings.fontSizes.response} onChange={(v) => update({ fontSizes: { ...settings.fontSizes, response: v } })} />
-          </div>
-        </section>
-
-        <section className="mb-6 space-y-4">
-          <h3 className="mb-1 text-[15px] font-medium text-text-primary">Other Preferences</h3>
-
-          <div className="flex items-center justify-between">
-            <div>
-              <div className="text-text-primary">Restore Last Session</div>
-              <div className="text-[12px] text-text-muted">Reopen your tabs on startup</div>
-            </div>
-            <Toggle checked={settings.restoreLastSession} onChange={(v) => update({ restoreLastSession: v })} />
+    <div className="fixed inset-0 z-50 flex justify-end bg-black/50 select-none backdrop-blur-xs" onClick={onClose}>
+      <div 
+        className="h-full w-[320px] overflow-y-auto border-l border-[#1a1a1a] bg-[#0c0c0c] p-4 flex flex-col justify-between" 
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="space-y-5">
+          {/* Header */}
+          <div className="flex items-center justify-between pb-2 border-b border-[#161616]">
+            <h2 className="text-[14px] font-semibold tracking-wide text-neutral-200">Settings</h2>
+            <button onClick={onClose} className="text-neutral-500 hover:text-neutral-300 transition-colors">
+              <X size={16} />
+            </button>
           </div>
 
-          <div className="flex items-center justify-between">
-            <span className="text-text-secondary">Default Request Method</span>
-            <select
-              value={settings.defaultMethod}
-              onChange={(e) => update({ defaultMethod: e.target.value as HttpMethod })}
-              className="rounded-md border border-border bg-bg-elevated px-2 py-1.5 text-text-primary focus:border-accent focus:outline-none"
-            >
-              {METHODS.map((m) => (
-                <option key={m} value={m}>{m}</option>
-              ))}
-            </select>
-          </div>
-
-          <div className="flex items-center justify-between">
-            <span className="text-text-secondary">Default JSON Formatting</span>
-            <div className="flex gap-1.5">
-              {(["pretty", "compact"] as const).map((f) => (
+          {/* Appearance Section */}
+          <section className="space-y-2">
+            <h3 className="text-[11px] font-bold uppercase tracking-wider text-neutral-500">Appearance</h3>
+            <div className="flex gap-1.5 bg-[#090909] border border-[#1a1a1a] p-1 rounded">
+              {(["dark", "light"] as const).map((th) => (
                 <button
-                  key={f}
-                  onClick={() => update({ defaultJsonFormat: f })}
+                  key={th}
+                  onClick={() => update({ theme: th })}
                   className={clsx(
-                    "rounded-md border px-2.5 py-1 text-[12px] capitalize",
-                    settings.defaultJsonFormat === f ? "border-accent bg-bg-elevated text-text-primary" : "border-border text-text-secondary hover:bg-bg-hover"
+                    "flex-1 rounded py-1 text-[11px] font-medium capitalize transition-all",
+                    settings.theme === th 
+                      ? "bg-[#181115] text-accent border border-accent/20 shadow-inner" 
+                      : "text-neutral-400 border border-transparent hover:text-neutral-200"
                   )}
                 >
-                  {f}
+                  {th}
                 </button>
               ))}
             </div>
-          </div>
+          </section>
 
-          <div className="flex items-center justify-between">
-            <div>
-              <div className="text-text-primary">Response Word Wrap</div>
-              <div className="text-[12px] text-text-muted">Wrap long lines in Raw response view</div>
+          {/* Layout Tweaks */}
+          <section className="flex items-center justify-between rounded border border-[#161616] bg-[#090909]/40 p-2.5">
+            <div className="space-y-0.5">
+              <div className="text-[12px] font-medium text-neutral-300 leading-none">Opaque Mode</div>
+              <div className="text-[10px] text-neutral-500">Solid background interface surface</div>
             </div>
-            <Toggle checked={settings.responseWordWrap} onChange={(v) => update({ responseWordWrap: v })} />
-          </div>
+            <Toggle checked={settings.opaqueMode} onChange={(v) => update({ opaqueMode: v })} />
+          </section>
 
-          <div className="flex items-center justify-between">
-            <div>
-              <div className="text-text-primary">Confirm Before Closing</div>
-              <div className="text-[12px] text-text-muted">Warn when closing a tab with unsaved changes</div>
+          {/* Typography Engine Controls */}
+          <section className="space-y-1.5">
+            <h3 className="text-[11px] font-bold uppercase tracking-wider text-neutral-500">Font Dimension Metrics</h3>
+            <div className="divide-y divide-[#161616]/60 rounded border border-[#161616] bg-[#090909]/20 px-2.5">
+              <FontStepper label="Sidebar Explorer" value={settings.fontSizes.sidebar} onChange={(v) => update({ fontSizes: { ...settings.fontSizes, sidebar: v } })} />
+              <FontStepper label="Request Panel" value={settings.fontSizes.request} onChange={(v) => update({ fontSizes: { ...settings.fontSizes, request: v } })} />
+              <FontStepper label="Response Viewport" value={settings.fontSizes.response} onChange={(v) => update({ fontSizes: { ...settings.fontSizes, response: v } })} />
             </div>
-            <Toggle checked={settings.confirmBeforeClosingUnsavedTabs} onChange={(v) => update({ confirmBeforeClosingUnsavedTabs: v })} />
-          </div>
-        </section>
+          </section>
 
-        <section className="border-t border-border pt-4">
+          {/* Core Feature Configuration Toggles */}
+          <section className="space-y-3">
+            <h3 className="text-[11px] font-bold uppercase tracking-wider text-neutral-500">Preferences</h3>
+
+            <div className="space-y-2.5 rounded border border-[#161616] bg-[#090909]/20 p-2.5">
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <div className="text-[12px] font-medium text-neutral-300 leading-none">Restore Last Session</div>
+                  <div className="text-[10px] text-neutral-500">Reopen operational workspaces on boot</div>
+                </div>
+                <Toggle checked={settings.restoreLastSession} onChange={(v) => update({ restoreLastSession: v })} />
+              </div>
+
+              <div className="h-px bg-[#161616]" />
+
+              <div className="flex items-center justify-between">
+                <span className="text-[12px] font-medium text-neutral-300">Default HTTP Method</span>
+                <select
+                  value={settings.defaultMethod}
+                  onChange={(e) => update({ defaultMethod: e.target.value as HttpMethod })}
+                  className="rounded border border-[#222] bg-[#121212] px-2 py-1 font-mono text-[11px] text-neutral-300 outline-none focus:border-accent/50 cursor-pointer h-7"
+                >
+                  {METHODS.map((m) => (
+                    <option key={m} value={m}>{m}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="h-px bg-[#161616]" />
+
+              <div className="flex items-center justify-between">
+                <span className="text-[12px] font-medium text-neutral-300">JSON Blueprint Style</span>
+                <div className="flex bg-[#121212] border border-[#222] p-0.5 rounded h-7">
+                  {(["pretty", "compact"] as const).map((f) => (
+                    <button
+                      key={f}
+                      onClick={() => update({ defaultJsonFormat: f })}
+                      className={clsx(
+                        "rounded px-2 text-[10px] font-medium capitalize transition-colors",
+                        settings.defaultJsonFormat === f ? "bg-accent text-white" : "text-neutral-500 hover:text-neutral-300"
+                      )}
+                    >
+                      {f}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="h-px bg-[#161616]" />
+
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <div className="text-[12px] font-medium text-neutral-300 leading-none">Response Word Wrap</div>
+                  <div className="text-[10px] text-neutral-500">Wrap trailing strings inside data stream views</div>
+                </div>
+                <Toggle checked={settings.responseWordWrap} onChange={(v) => update({ responseWordWrap: v })} />
+              </div>
+
+              <div className="h-px bg-[#161616]" />
+
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <div className="text-[12px] font-medium text-neutral-300 leading-none">Confirm Before Closing</div>
+                  <div className="text-[10px] text-neutral-500">Warn on closing tabs with staging state</div>
+                </div>
+                <Toggle checked={settings.confirmBeforeClosingUnsavedTabs} onChange={(v) => update({ confirmBeforeClosingUnsavedTabs: v })} />
+              </div>
+            </div>
+          </section>
+        </div>
+
+        {/* Global Structural Settings Wipe Operation */}
+        <section className="pt-4 mt-6 border-t border-[#161616]">
           <button
             onClick={handleReset}
-            className="w-full rounded-md border border-status-error/40 py-2 text-[13px] font-medium text-status-error hover:bg-status-error/10"
+            className="flex w-full items-center justify-center gap-1.5 rounded border border-rose-950/40 bg-rose-950/10 py-1.5 text-[11px] font-medium text-rose-400 transition-colors hover:bg-rose-950/20"
           >
-            Reset All Settings
+            <RotateCcw size={12} />
+            Reset Factory Defaults
           </button>
         </section>
       </div>
