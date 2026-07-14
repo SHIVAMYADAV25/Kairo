@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import clsx from "clsx";
 import { X, Info, CheckCircle2, MoreVertical, Zap } from "lucide-react";
 import type { RequestTab } from "@/types";
+import { getStatusColorClasses } from "@/lib/statusColor";
 
 type Window = "1m" | "5m" | "15m" | "1h";
 
@@ -200,7 +201,7 @@ export function PerformancePanel({ tab, onClose, history }: Props) {
   }, [response]);
 
   return (
-    <div className="flex h-full flex-col bg-[#0b0b0b] select-none text-[11px]">
+    <div className="flex h-full min-h-0 flex-col overflow-hidden bg-[#0b0b0b] select-none text-[11px]">
       {/* Header Container Area */}
       <div className="flex items-center justify-between border-b border-[#181818] px-3.5 py-2.5">
         <div className="flex items-center gap-3 text-[12px]">
@@ -221,7 +222,7 @@ export function PerformancePanel({ tab, onClose, history }: Props) {
       </div>
 
       {!response ? (
-<div className="flex flex-1 flex-col items-center justify-center gap-4 p-6 text-center select-none bg-transparent">
+<div className="flex flex-1 min-h-0 flex-col items-center justify-center gap-4 p-6 text-center select-none bg-transparent">
     {/* Clean lighting bolt accent matching image line style */}
     <Zap 
       size={44} 
@@ -234,7 +235,7 @@ export function PerformancePanel({ tab, onClose, history }: Props) {
     </p>
   </div>
       ) : (
-        <div className="flex-1 space-y-4 px-3.5 py-4 overflow-y-hidden">
+        <div className="flex-1 min-h-0 space-y-4 overflow-y-auto px-3.5 py-4">
           {/* Radial Value Gauge */}
           <div className="space-y-2">
             <CircularGauge ms={response.timing.totalMs} celebrate={celebrate} />
@@ -281,7 +282,7 @@ export function PerformancePanel({ tab, onClose, history }: Props) {
               Response Info
             </div>
             <InfoRow label="Status">
-              <span className="rounded bg-[#102a18] px-1.5 py-0.5 text-[10px] font-bold text-[#22c55e] border border-[#1b3d24]/40">
+              <span className={clsx("rounded px-1.5 py-0.5 text-[10px] font-bold", getStatusColorClasses(response.status).badge)}>
                 {response.status} {response.statusText}
               </span>
             </InfoRow>

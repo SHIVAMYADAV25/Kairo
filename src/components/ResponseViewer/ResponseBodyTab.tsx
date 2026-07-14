@@ -134,7 +134,7 @@ export function ResponseBodyTab({ response }: Props) {
   }, [rawDisplay]);
 
   return (
-    <div className="flex h-full flex-col bg-[#0b0b0b] relative overflow-hidden">
+    <div className="flex h-full min-h-0 flex-col bg-[#0b0b0b] relative overflow-hidden">
       {/* View Mode Header Options Bar */}
       <div className="flex items-center border-b border-[#141414] px-3 h-[34px] shrink-0 bg-[#0b0b0b]">
         <div className="flex items-center gap-1.5 bg-[#0e0e0e] p-0.5 rounded border border-[#161616]">
