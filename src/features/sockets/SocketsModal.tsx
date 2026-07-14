@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import clsx from "clsx";
 import {
-  X, Plus, Radio, Trash2, Zap, Unplug, Send, RotateCcw, Copy, Check, Binary,
+  X, Plus, Radio, Trash2, Zap, Unplug, Send, RotateCcw, Copy, Check, Binary, HardDrive, FileCode
 } from "lucide-react";
 import { useSocketStore, type SocketConnection, type SocketMessage, type SocketStatus } from "@/stores/socketStore";
 import { uid } from "@/lib/factories";
@@ -11,12 +11,12 @@ interface Props {
   onClose: () => void;
 }
 
-const STATUS_META: Record<SocketStatus, { label: string; color: string; pulse?: boolean }> = {
-  disconnected: { label: "Disconnected", color: "bg-text-muted" },
-  connecting: { label: "Connecting…", color: "bg-yellow-500", pulse: true },
-  open: { label: "Connected", color: "bg-status-success" },
-  closed: { label: "Closed", color: "bg-text-muted" },
-  error: { label: "Error", color: "bg-status-error" },
+const STATUS_META: Record<SocketStatus, { label: string; bg: string; text: string; dot: string; pulse?: boolean }> = {
+  disconnected: { label: "Disconnected", bg: "bg-neutral-900/60", text: "text-neutral-400", dot: "bg-neutral-500" },
+  connecting: { label: "Connecting", bg: "bg-amber-500/10", text: "text-amber-400", dot: "bg-amber-500", pulse: true },
+  open: { label: "Connected", bg: "bg-emerald-500/10", text: "text-emerald-400", dot: "bg-emerald-500" },
+  closed: { label: "Closed", bg: "bg-neutral-900/60", text: "text-neutral-400", dot: "bg-neutral-500" },
+  error: { label: "Error", bg: "bg-rose-500/10", text: "text-rose-400", dot: "bg-rose-500" },
 };
 
 export function SocketsModal({ open, onClose }: Props) {
@@ -36,14 +36,16 @@ export function SocketsModal({ open, onClose }: Props) {
 
   useEffect(() => {
     if (open && connections.length === 0) addConnection();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open]);
+  }, [open, connections.length, addConnection]);
 
   const active = connections.find((c) => c.id === activeConnectionId) ?? null;
 
+  // Handles smooth anchoring to latest console logs when frame arrays populate
   useEffect(() => {
-    logRef.current?.scrollTo({ top: logRef.current.scrollHeight, behavior: "smooth" });
-  }, [active?.messages.length]);
+    if (logRef.current) {
+      logRef.current.scrollTop = logRef.current.scrollHeight;
+    }
+  }, [active?.messages?.length, sub]);
 
   if (!open) return null;
 
@@ -53,188 +55,246 @@ export function SocketsModal({ open, onClose }: Props) {
     setComposer("");
   };
 
+  const handleDisconnect = (e: React.MouseEvent, id: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+    disconnect(id);
+  };
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-6" onClick={onClose}>
+    <div 
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 font-sans text-[12px] select-none text-white backdrop-blur-xs" 
+      onClick={onClose}
+    >
       <div
-        className="flex h-[85vh] w-[1100px] max-w-full overflow-hidden rounded-lg border border-border bg-bg-panel shadow-2xl"
+        className="flex h-[640px] w-[1020px] max-w-full overflow-hidden rounded-md border border-[#222] bg-[#0c0c0c] shadow-2xl transition-all"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Left: connection list */}
-        <div className="flex w-[240px] shrink-0 flex-col border-r border-border">
-          <div className="flex items-center justify-between border-b border-border px-3 py-3">
-            <div className="flex items-center gap-2 text-[14px] font-semibold text-text-primary">
-              <Radio size={15} className="text-[#a855f7]" /> Sockets
+        {/* ================= LEFT SIDEBAR CONNECTIONS LIST ================= */}
+        <div className="flex w-[250px] shrink-0 flex-col border-r border-[#1a1a1a] bg-[#090909]">
+          <div className="flex h-12 items-center justify-between border-b border-[#1a1a1a] px-4">
+            <div className="flex items-center gap-2 text-[13px] font-semibold tracking-wide text-neutral-200">
+              <Radio size={14} className="text-purple-500" /> WebSockets
             </div>
-            <button onClick={() => addConnection()} className="rounded p-1 text-text-muted hover:bg-bg-hover hover:text-accent" title="New connection">
-              <Plus size={16} />
+            <button 
+              onClick={() => addConnection()} 
+              className="flex h-7 w-7 items-center justify-center rounded border border-[#242424] bg-[#121212] text-neutral-400 transition-all hover:border-purple-600 hover:text-white"
+              title="Create new Client Connection"
+            >
+              <Plus size={14} />
             </button>
           </div>
-          <div className="flex-1 overflow-y-auto p-1.5">
+          
+          {/* Strict Independent View Container Frame Scroll */}
+          <div className="flex-1 overflow-y-auto p-2 space-y-1 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-[#222] [&::-webkit-scrollbar-thumb]:rounded-sm">
             {connections.map((c) => (
-              <ConnectionListItem key={c.id} conn={c} isActive={c.id === activeConnectionId} onSelect={() => setActive(c.id)} onDelete={() => removeConnection(c.id)} />
+              <button
+                key={c.id}
+                onClick={() => setActive(c.id)}
+                className={clsx(
+                  "group flex w-full flex-col items-start gap-1 rounded px-3 py-2.5 text-left border transition-all",
+                  c.id === activeConnectionId 
+                    ? "bg-[#141218] border-purple-900/50 shadow-inner" 
+                    : "bg-transparent border-transparent hover:bg-[#121212]"
+                )}
+              >
+                <div className="flex w-full items-center justify-between gap-2">
+                  <div className="flex items-center gap-2 truncate">
+                    <span className={clsx("h-1.5 w-1.5 shrink-0 rounded-full", STATUS_META[c.status].dot, STATUS_META[c.status].pulse && "animate-pulse")} />
+                    <span className={clsx("truncate text-[12px] font-medium", c.id === activeConnectionId ? "text-purple-400" : "text-neutral-300")}>
+                      {c.name || "Untitled Socket"}
+                    </span>
+                  </div>
+                  <Trash2
+                    size={13}
+                    className="shrink-0 text-neutral-600 opacity-0 hover:text-rose-500 group-hover:opacity-100 transition-opacity"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      removeConnection(c.id);
+                    }}
+                  />
+                </div>
+                <div className="w-full truncate font-mono text-[10px] text-neutral-500 leading-none">
+                  {c.url || "wss://..."}
+                </div>
+              </button>
             ))}
           </div>
         </div>
 
-        {/* Right: workspace */}
-        <div className="flex min-w-0 flex-1 flex-col">
-          <div className="flex items-center justify-between border-b border-border px-4 py-3">
-            <input
-              value={active?.name ?? ""}
-              onChange={(e) => active && updateConnection(active.id, { name: e.target.value })}
-              className="bg-transparent text-[15px] font-semibold text-text-primary outline-none"
-              placeholder="Connection name"
-            />
-            <button onClick={onClose} className="text-text-muted hover:text-text-primary">
-              <X size={18} />
-            </button>
-          </div>
-
-          {active && (
+        {/* ================= MAIN CONFIGURATION AREA ================= */}
+        <div className="flex min-w-0 flex-1 flex-col bg-[#0c0c0c]">
+          {active ? (
             <>
-              <div className="flex items-center gap-2 border-b border-border px-4 py-2.5">
+              {/* Workspace Header Panel */}
+              <div className="flex h-12 items-center justify-between border-b border-[#1a1a1a] px-4 shrink-0">
+                <input
+                  value={active.name ?? ""}
+                  onChange={(e) => updateConnection(active.id, { name: e.target.value })}
+                  className="bg-transparent text-[14px] font-medium text-neutral-200 outline-none placeholder:text-neutral-600 focus:text-white"
+                  placeholder="Connection name..."
+                />
+                <button onClick={onClose} className="text-neutral-500 hover:text-neutral-300 transition-colors">
+                  <X size={16} />
+                </button>
+              </div>
+
+              {/* URL Connect Control bar */}
+              <div className="flex items-center gap-2 border-b border-[#1a1a1a] bg-[#090909]/40 p-3 shrink-0">
                 <input
                   value={active.url}
                   onChange={(e) => updateConnection(active.id, { url: e.target.value })}
                   disabled={active.status === "open" || active.status === "connecting"}
-                  placeholder="wss://example.com/socket"
-                  className="flex-1 rounded-md border border-border bg-bg-elevated px-3 py-2 font-mono text-[13px] text-text-primary placeholder:text-text-muted focus:border-[#a855f7] focus:outline-none disabled:opacity-60"
+                  placeholder="wss://echo.websocket.org"
+                  className="flex-1 h-[32px] rounded border border-[#262626] bg-[#121212] px-3 font-mono text-[12px] text-neutral-200 outline-none transition-colors focus:border-purple-600/80 disabled:opacity-50"
                 />
+                
                 {active.status === "open" || active.status === "connecting" ? (
                   <button
-                    onClick={() => disconnect(active.id)}
-                    className="flex items-center gap-1.5 rounded-md bg-status-error px-3.5 py-2 text-[13px] font-medium text-white hover:opacity-90"
+                    onClick={(e) => handleDisconnect(e, active.id)}
+                    className="flex h-[32px] items-center gap-1.5 rounded bg-rose-950/30 border border-rose-900/50 px-4 text-[12px] font-medium text-rose-400 hover:bg-rose-900/50 transition-colors"
                   >
                     <Unplug size={14} /> Disconnect
                   </button>
                 ) : (
                   <button
                     onClick={() => connect(active.id)}
-                    className="flex items-center gap-1.5 rounded-md bg-accent px-3.5 py-2 text-[13px] font-medium text-black hover:bg-accent-hover"
+                    className="flex h-[32px] items-center gap-1.5 rounded bg-purple-600 px-4 text-[12px] font-semibold text-white hover:bg-purple-500 shadow-lg shadow-purple-900/20 transition-colors"
                   >
                     <Zap size={14} /> Connect
                   </button>
                 )}
               </div>
 
-              <div className="flex items-center justify-between border-b border-border px-4 py-1.5">
-                <div className="flex items-center gap-4">
-                  <div className="flex items-center gap-1.5 text-[12px] text-text-secondary">
-                    <span className={clsx("h-2 w-2 rounded-full", STATUS_META[active.status].color, STATUS_META[active.status].pulse && "animate-pulse")} />
+              {/* View Controller Context bar */}
+              <div className="flex h-9 items-center justify-between border-b border-[#1a1a1a] bg-[#090909] px-4 shrink-0">
+                <div className="flex items-center gap-3">
+                  <div className={clsx("flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider", STATUS_META[active.status].bg, STATUS_META[active.status].text)}>
+                    <span className={clsx("h-1.5 w-1.5 rounded-full", STATUS_META[active.status].dot)} />
                     {STATUS_META[active.status].label}
-                    {active.statusMessage && <span className="text-status-error">— {active.statusMessage}</span>}
                   </div>
-                  <label className="flex items-center gap-1.5 text-[12px] text-text-muted">
+                  {active.statusMessage && (
+                    <span className="truncate max-w-[200px] text-[11px] text-rose-400/80 font-mono">
+                      ({active.statusMessage})
+                    </span>
+                  )}
+
+                  <label className="flex items-center gap-2 cursor-pointer select-none text-neutral-500 hover:text-neutral-400 ml-2">
                     <input
                       type="checkbox"
                       checked={active.autoReconnect}
                       onChange={(e) => updateConnection(active.id, { autoReconnect: e.target.checked })}
-                      className="h-3.5 w-3.5 accent-[#a855f7]"
+                      className="peer hidden"
                     />
-                    Auto reconnect
+                    <div className="flex h-3.5 w-3.5 items-center justify-center rounded border border-neutral-700 bg-neutral-900 peer-checked:border-purple-500 peer-checked:bg-purple-600 text-white font-bold text-[8px]">
+                      {active.autoReconnect && "✓"}
+                    </div>
+                    <span>Auto-reconnect</span>
                   </label>
                 </div>
-                <div className="flex gap-1">
-                  {(["messages", "headers"] as const).map((t) => (
+
+                {/* Tabs switcher */}
+                <div className="flex h-full border-l border-[#1a1a1a]">
+                  {(["messages", "headers"] as const).map((tab) => (
                     <button
-                      key={t}
-                      onClick={() => setSub(t)}
+                      key={tab}
+                      onClick={() => setSub(tab)}
                       className={clsx(
-                        "rounded-md px-2.5 py-1 text-[12px] capitalize",
-                        sub === t ? "bg-[#a855f7]/20 text-[#c084fc]" : "text-text-secondary hover:bg-bg-hover"
+                        "relative h-full px-4 text-[11px] font-medium tracking-wide uppercase transition-colors border-r border-[#1a1a1a]",
+                        sub === tab ? "bg-[#111] text-purple-400 font-semibold" : "text-neutral-500 hover:text-neutral-300"
                       )}
                     >
-                      {t}
+                      {tab}
+                      {sub === tab && <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-purple-500" />}
                     </button>
                   ))}
                 </div>
               </div>
 
-              {sub === "headers" && <HeadersEditor conn={active} onChange={(headers) => updateConnection(active.id, { headers })} />}
-
-              {sub === "messages" && (
-                <>
-                  <div ref={logRef} className="flex-1 overflow-y-auto p-4">
-                    {active.messages.length === 0 ? (
-                      <div className="flex h-full items-center justify-center text-text-muted">
-                        No messages yet — connect and send something.
-                      </div>
-                    ) : (
-                      <div className="space-y-2.5">
-                        {active.messages.map((m) => (
-                          <MessageBubble key={m.id} message={m} />
-                        ))}
-                      </div>
-                    )}
+              {/* Main Workspace Frame Container - Rigid heights setup */}
+              <div className="flex-1 flex flex-col min-h-0 bg-[#070707] overflow-hidden">
+                {sub === "headers" && (
+                  <div className="flex-1 overflow-y-auto [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-[#222] [&::-webkit-scrollbar-thumb]:rounded-sm">
+                    <HeadersEditor conn={active} onChange={(headers) => updateConnection(active.id, { headers })} />
                   </div>
+                )}
 
-                  <div className="border-t border-border p-3">
-                    <div className="mb-2 flex items-center justify-between">
-                      <label className="flex items-center gap-1.5 text-[11px] text-text-muted">
-                        <input type="checkbox" checked={composerBinary} onChange={(e) => setComposerBinary(e.target.checked)} className="h-3.5 w-3.5 accent-accent" />
-                        <Binary size={12} /> Send as base64 binary
-                      </label>
-                      <button onClick={() => clearMessages(active.id)} className="flex items-center gap-1 text-[11px] text-text-muted hover:text-text-primary">
-                        <RotateCcw size={11} /> Clear log
-                      </button>
+                {sub === "messages" && (
+                  <>
+                    {/* Log Terminal Frame */}
+                    <div ref={logRef} className="flex-1 overflow-y-auto p-4 space-y-3 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-[#222] [&::-webkit-scrollbar-thumb]:rounded-sm">
+                      {active.messages.length === 0 ? (
+                        <div className="flex h-full flex-col items-center justify-center text-neutral-600 gap-2 font-mono">
+                          <FileCode size={24} className="stroke-1 opacity-40" />
+                          <span>Stream open. Ready to transmit frames.</span>
+                        </div>
+                      ) : (
+                        active.messages.map((m) => <MessageBubble key={m.id} message={m} />)
+                      )}
                     </div>
-                    <div className="flex items-end gap-2">
-                      <textarea
-                        value={composer}
-                        onChange={(e) => setComposer(e.target.value)}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter" && !e.shiftKey) {
-                            e.preventDefault();
-                            handleSend();
-                          }
-                        }}
-                        placeholder={active.status === "open" ? "Type a message… (Enter to send, Shift+Enter for newline)" : "Connect first to send messages"}
-                        disabled={active.status !== "open"}
-                        rows={2}
-                        className="flex-1 resize-none rounded-md border border-border bg-bg-elevated px-3 py-2 font-mono text-[13px] text-text-primary placeholder:text-text-muted focus:border-[#a855f7] focus:outline-none disabled:opacity-60"
-                      />
-                      <button
-                        onClick={handleSend}
-                        disabled={active.status !== "open" || !composer.trim()}
-                        className="flex items-center gap-1.5 self-stretch rounded-md bg-accent px-4 text-[13px] font-medium text-black hover:bg-accent-hover disabled:opacity-40"
-                      >
-                        <Send size={14} /> Send
-                      </button>
+
+                    {/* Bottom Composer Operations Tray */}
+                    <div className="border-t border-[#1a1a1a] bg-[#090909] p-3 shrink-0">
+                      <div className="mb-2 flex items-center justify-between">
+                        <label className="flex items-center gap-2 cursor-pointer text-neutral-400 hover:text-neutral-300 select-none">
+                          <input 
+                            type="checkbox" 
+                            checked={composerBinary} 
+                            onChange={(e) => setComposerBinary(e.target.checked)} 
+                            className="peer hidden" 
+                          />
+                          <div className="flex h-3.5 w-3.5 items-center justify-center rounded border border-neutral-700 bg-neutral-900 peer-checked:border-purple-500 peer-checked:bg-purple-600 text-white font-bold text-[8px]">
+                            {composerBinary && "✓"}
+                          </div>
+                          <span className="flex items-center gap-1 text-[11px]">
+                            <Binary size={12} className="text-neutral-500" /> Transmit as Base64 binary
+                          </span>
+                        </label>
+
+                        <button 
+                          onClick={() => clearMessages(active.id)} 
+                          className="flex items-center gap-1 text-[11px] text-neutral-500 hover:text-neutral-300 transition-colors"
+                        >
+                          <RotateCcw size={12} /> Reset Console Log
+                        </button>
+                      </div>
+
+                      <div className="flex items-end gap-2">
+                        <textarea
+                          value={composer}
+                          onChange={(e) => setComposer(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter" && !e.shiftKey) {
+                              e.preventDefault();
+                              handleSend();
+                            }
+                          }}
+                          placeholder={active.status === "open" ? "Enter payload here... (⏎ to send, ⇧⏎ for line break)" : "Connection offline. Connect to server to send messages."}
+                          disabled={active.status !== "open"}
+                          rows={2}
+                          className="flex-1 resize-none rounded border border-[#262626] bg-[#121212] px-3 py-2 font-mono text-[12px] text-neutral-200 outline-none placeholder:text-neutral-600 focus:border-purple-600/80 disabled:opacity-40"
+                        />
+                        <button
+                          onClick={handleSend}
+                          disabled={active.status !== "open" || !composer.trim()}
+                          className="flex h-[48px] items-center gap-1.5 rounded bg-purple-600 px-4 text-[12px] font-semibold text-white hover:bg-purple-500 disabled:bg-neutral-900 disabled:border disabled:border-[#222] disabled:text-neutral-600 disabled:opacity-100 transition-colors"
+                        >
+                          <Send size={13} /> Send
+                        </button>
+                      </div>
                     </div>
-                  </div>
-                </>
-              )}
+                  </>
+                )}
+              </div>
             </>
+          ) : (
+            <div className="flex flex-1 items-center justify-center text-neutral-500 font-mono">
+              Select or open a new stream terminal connection to begin.
+            </div>
           )}
         </div>
       </div>
     </div>
-  );
-}
-
-function ConnectionListItem({ conn, isActive, onSelect, onDelete }: { conn: SocketConnection; isActive: boolean; onSelect: () => void; onDelete: () => void }) {
-  return (
-    <button
-      onClick={onSelect}
-      className={clsx(
-        "group flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-left",
-        isActive ? "bg-[#a855f7]/15" : "hover:bg-bg-hover"
-      )}
-    >
-      <span className={clsx("h-2 w-2 shrink-0 rounded-full", STATUS_META[conn.status].color, STATUS_META[conn.status].pulse && "animate-pulse")} />
-      <div className="min-w-0 flex-1">
-        <div className={clsx("truncate text-[13px]", isActive ? "font-medium text-text-primary" : "text-text-secondary")}>{conn.name}</div>
-        <div className="truncate font-mono text-[11px] text-text-muted">{conn.url}</div>
-      </div>
-      <Trash2
-        size={12}
-        className="shrink-0 text-text-muted opacity-0 hover:text-status-error group-hover:opacity-100"
-        onClick={(e) => {
-          e.stopPropagation();
-          onDelete();
-        }}
-      />
-    </button>
   );
 }
 
@@ -250,16 +310,39 @@ function HeadersEditor({ conn, onChange }: { conn: SocketConnection; onChange: (
   const remove = (id: string) => onChange(withBlank.filter((h) => h.id !== id));
 
   return (
-    <div className="flex-1 overflow-y-auto p-4">
-      <div className="mb-2 text-[11px] uppercase tracking-wide text-text-muted">Handshake headers (e.g. Authorization)</div>
+    <div className="p-4 space-y-3">
+      <div className="text-[11px] font-bold uppercase tracking-wider text-neutral-500">Handshake Connection Headers</div>
       <div className="space-y-1.5">
         {withBlank.map((h) => (
           <div key={h.id} className="grid grid-cols-[24px_1fr_1fr_28px] items-center gap-2">
-            <input type="checkbox" checked={h.enabled} onChange={(e) => update(h.id, { enabled: e.target.checked })} className="h-4 w-4 accent-[#a855f7]" />
-            <input value={h.key} onChange={(e) => update(h.id, { key: e.target.value })} placeholder="Key" className="rounded-md border-none bg-[#111111] px-3 py-2 text-text-primary placeholder:text-[#737373] outline-none focus:bg-[#161616]" />
-            <input value={h.value} onChange={(e) => update(h.id, { value: e.target.value })} placeholder="Value" className="rounded-md border-none bg-[#111111] px-3 py-2 text-text-primary placeholder:text-[#737373] outline-none focus:bg-[#161616]" />
-            <button onClick={() => remove(h.id)} className="flex items-center justify-center text-text-muted/40 hover:text-status-error">
-              <Trash2 size={14} />
+            <label className="flex items-center justify-center cursor-pointer select-none">
+              <input 
+                type="checkbox" 
+                checked={h.enabled} 
+                onChange={(e) => update(h.id, { enabled: e.target.checked })} 
+                className="peer hidden" 
+              />
+              <div className="flex h-3.5 w-3.5 items-center justify-center rounded border border-neutral-700 bg-neutral-900 peer-checked:border-purple-500 peer-checked:bg-purple-600 text-white font-bold text-[8px]">
+                {h.enabled && "✓"}
+              </div>
+            </label>
+            <input 
+              value={h.key} 
+              onChange={(e) => update(h.id, { key: e.target.value })} 
+              placeholder="Header Key (e.g. Authorization)" 
+              className="rounded border border-[#222] bg-[#111] px-3 py-1.5 font-mono text-[11px] text-neutral-200 placeholder:text-neutral-600 outline-none focus:border-purple-950 focus:bg-[#141414]" 
+            />
+            <input 
+              value={h.value} 
+              onChange={(e) => update(h.id, { value: e.target.value })} 
+              placeholder="Value" 
+              className="rounded border border-[#222] bg-[#111] px-3 py-1.5 font-mono text-[11px] text-neutral-200 placeholder:text-neutral-600 outline-none focus:border-purple-950 focus:bg-[#141414]" 
+            />
+            <button 
+              onClick={() => remove(h.id)} 
+              className="flex items-center justify-center h-7 w-7 rounded hover:bg-rose-950/20 text-neutral-600 hover:text-rose-400 transition-colors"
+            >
+              <Trash2 size={13} />
             </button>
           </div>
         ))}
@@ -273,7 +356,7 @@ function MessageBubble({ message }: { message: SocketMessage }) {
   const isSent = message.direction === "sent";
 
   const display = (() => {
-    if (message.isBinary) return `[binary, base64] ${message.data.slice(0, 200)}${message.data.length > 200 ? "…" : ""}`;
+    if (message.isBinary) return message.data;
     try {
       return JSON.stringify(JSON.parse(message.data), null, 2);
     } catch {
@@ -281,26 +364,55 @@ function MessageBubble({ message }: { message: SocketMessage }) {
     }
   })();
 
-  const time = new Date(message.timestamp).toLocaleTimeString([], { hour12: false });
+  const time = new Date(message.timestamp).toLocaleTimeString([], { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
 
   return (
-    <div className={clsx("flex", isSent ? "justify-end" : "justify-start")}>
-      <div className={clsx("group relative max-w-[70%] rounded-lg border px-3 py-2", isSent ? "border-accent/30 bg-accent/10" : "border-[#a855f7]/30 bg-[#a855f7]/10")}>
-        <div className="mb-1 flex items-center gap-2 text-[10px] font-semibold uppercase tracking-wide">
-          <span className={isSent ? "text-accent" : "text-[#c084fc]"}>{isSent ? "↑ Sent" : "↓ Received"}</span>
-          <span className="font-normal normal-case text-text-muted">{time}</span>
+    <div className="w-full border border-[#181818] bg-[#0b0b0b] rounded overflow-hidden shadow-xs">
+      {/* Header Context Control Panel Tray */}
+      <div className="flex h-7 items-center justify-between border-b border-[#161616] bg-[#0e0e0e] px-3">
+        <div className="flex items-center gap-2">
+          <span className={clsx(
+            "rounded px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider",
+            isSent ? "bg-cyan-500/10 text-cyan-400" : "bg-purple-500/10 text-purple-400"
+          )}>
+            {isSent ? "→ OUTBOUND" : "← INBOUND"}
+          </span>
+          {message.isBinary && (
+            <span className="flex items-center gap-1 rounded bg-amber-500/10 px-1.5 py-0.5 text-[9px] font-bold text-amber-400 uppercase tracking-wider">
+              <HardDrive size={10} /> Binary Frame (Base64)
+            </span>
+          )}
+          <span className="font-mono text-[10px] text-neutral-500">{time}</span>
         </div>
-        <pre className="whitespace-pre-wrap break-all font-mono text-[12.5px] text-text-primary">{display}</pre>
+
+        {/* Copy Operations */}
         <button
           onClick={() => {
             navigator.clipboard.writeText(message.data);
             setCopied(true);
-            setTimeout(() => setCopied(false), 1200);
+            setTimeout(() => setCopied(false), 1500);
           }}
-          className="absolute -top-2 right-2 rounded bg-bg-elevated p-1 text-text-muted opacity-0 shadow hover:text-text-primary group-hover:opacity-100"
+          className="flex items-center gap-1 rounded px-2 py-0.5 text-[10px] text-neutral-400 hover:bg-[#1a1a1a] hover:text-white transition-colors"
         >
-          {copied ? <Check size={11} className="text-status-success" /> : <Copy size={11} />}
+          {copied ? (
+            <>
+              <Check size={11} className="text-emerald-400" />
+              <span className="text-emerald-400 font-medium">Copied</span>
+            </>
+          ) : (
+            <>
+              <Copy size={11} />
+              <span>Copy Data</span>
+            </>
+          )}
         </button>
+      </div>
+
+      {/* Structured Code Frame Window Container */}
+      <div className="p-3 bg-[#070707]">
+        <pre className="max-h-[220px] overflow-y-auto whitespace-pre-wrap break-all font-mono text-[12px] text-neutral-300 selection:bg-purple-900/50 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-[#222] [&::-webkit-scrollbar-thumb]:rounded-sm">
+          {display}
+        </pre>
       </div>
     </div>
   );
