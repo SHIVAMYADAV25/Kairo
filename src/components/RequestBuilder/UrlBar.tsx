@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import clsx from "clsx";
 import { ChevronDown, Save, Send, Copy, Check } from "lucide-react";
 import type { HttpMethod, RequestTab } from "@/types";
@@ -28,10 +28,24 @@ interface Props {
 export function UrlBar({ tab }: Props) {
   const [methodOpen, setMethodOpen] = useState(false);
   const [saveModalOpen, setSaveModalOpen] = useState(false);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
   const [copied, setCopied] = useState(false);
+  
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  
   const { updateRequest, setLoading, setResponse, setError, markSaved, markUnsaved } = useTabStore();
   const upsertRequestInCache = useCollectionStore((s) => s.upsertRequestInCache);
   const { environments, activeEnvironmentId } = useEnvironmentStore();
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setDropdownOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   const activeEnvVars = () => {
     const env = environments.find((e) => e.id === activeEnvironmentId);
@@ -89,13 +103,10 @@ export function UrlBar({ tab }: Props) {
     }
   };
 
-  // Detects a pasted cURL command in the URL bar and, if it parses, replaces
-  // the *whole* request (method/url/headers/params/body/auth) instead of
-  // just dumping the raw text into the URL field.
   const handlePaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
     const text = e.clipboardData.getData("text");
     const parsed = parseCurl(text);
-    if (!parsed) return; // not a curl command — let the normal paste happen
+    if (!parsed) return;
     e.preventDefault();
     updateRequest(tab.id, {
       method: parsed.method,
@@ -111,7 +122,27 @@ export function UrlBar({ tab }: Props) {
     const curl = buildCurl(tab.request, activeEnvVars());
     await navigator.clipboard.writeText(curl);
     setCopied(true);
+    setDropdownOpen(false);
     setTimeout(() => setCopied(false), 1500);
+  };
+
+  const handleImportCurl = () => {
+    setDropdownOpen(false);
+    const text = prompt("Paste your cURL command:");
+    if (!text) return;
+    const parsed = parseCurl(text);
+    if (parsed) {
+      updateRequest(tab.id, {
+        method: parsed.method,
+        url: parsed.url,
+        headers: parsed.headers,
+        params: parsed.params,
+        body: parsed.body,
+        auth: parsed.auth,
+      });
+    } else {
+      alert("Invalid cURL command");
+    }
   };
 
   return (
@@ -153,24 +184,59 @@ export function UrlBar({ tab }: Props) {
         onChange={(e) => updateRequest(tab.id, { url: e.target.value })}
         onPaste={handlePaste}
         placeholder="Enter URL or paste cURL..."
-        className="flex-1 rounded-md border border-border bg-bg-elevated px-3 py-2 font-mono text-[13px] text-text-primary placeholder:text-text-muted  focus:outline-none"
+        className="flex-1 rounded-md border border-border bg-bg-elevated px-3 py-2 font-mono text-[13px] text-text-primary placeholder:text-text-muted focus:outline-none"
       />
 
-      <button
-        onClick={handleCopyAsCurl}
-        title="Copy as cURL"
-        className="flex items-center gap-1.5 rounded-md border border-border bg-bg-elevated px-3 py-2 text-[13px] text-text-secondary hover:bg-bg-hover"
-      >
-        {copied ? <Check size={14} className="text-status-success" /> : <Copy size={14} />}
-        {copied ? "Copied" : "cURL"}
-      </button>
+      {/* Unified Split Save & Options Dropdown Button Container */}
+      <div className="relative inline-flex items-stretch rounded-md border border-border bg-bg-elevated text-[13px] text-text-secondary" ref={dropdownRef}>
+        <button
+          onClick={handleSaveClick}
+          className="flex items-center gap-1.5 rounded-l-md px-3 py-2 hover:bg-bg-hover hover:text-text-primary transition-colors focus:outline-none"
+        >
+          <Save size={14} /> Save
+        </button>
+        <div className="w-px bg-border my-1.5 shrink-0" />
+        <button
+          onClick={() => setDropdownOpen((o) => !o)}
+          className="flex items-center justify-center rounded-r-md px-2 hover:bg-bg-hover hover:text-text-primary transition-colors focus:outline-none"
+        >
+          <ChevronDown size={14} />
+        </button>
 
-      <button
-        onClick={handleSaveClick}
-        className="flex items-center gap-1.5 rounded-md border border-border bg-bg-elevated px-3 py-2 text-[13px] text-text-secondary hover:bg-bg-hover"
-      >
-        <Save size={14} /> Save
-      </button>
+        {dropdownOpen && (
+          <div className="absolute right-0 top-full z-20 mt-1 w-[200px] overflow-hidden rounded-md border border-border bg-bg-elevated shadow-xl py-1">
+            <button
+              onClick={() => { setDropdownOpen(false); handleSaveClick(); }}
+              className="flex w-full items-center justify-between px-3 py-2 text-left text-[13px] text-text-primary hover:bg-bg-hover"
+            >
+              <span>Save</span>
+              <span className="text-[10px] text-text-muted font-mono">Cmd+S</span>
+            </button>
+            <button
+              onClick={() => { setDropdownOpen(false); setSaveModalOpen(true); }}
+              className="flex w-full items-center justify-between px-3 py-2 text-left text-[13px] text-text-primary hover:bg-bg-hover"
+            >
+              <span>Save As...</span>
+              <span className="text-[10px] text-text-muted font-mono">Cmd+Shift+S</span>
+            </button>
+            <div className="border-t border-border my-1" />
+            <button
+              onClick={handleCopyAsCurl}
+              className="flex w-full items-center gap-2 px-3 py-2 text-left text-[13px] text-text-primary hover:bg-bg-hover"
+            >
+              {copied ? <Check size={14} className="text-status-success" /> : <Copy size={14} />}
+              <span>{copied ? "Copied as cURL" : "Copy as cURL"}</span>
+            </button>
+            <button
+              onClick={handleImportCurl}
+              className="flex w-full items-center gap-2 px-3 py-2 text-left text-[13px] text-text-primary hover:bg-bg-hover"
+            >
+              <Copy size={14} className="rotate-180" />
+              <span>Import cURL</span>
+            </button>
+          </div>
+        )}
+      </div>
 
       <button
         onClick={handleSend}
@@ -189,4 +255,3 @@ export function UrlBar({ tab }: Props) {
     </div>
   );
 }
-
