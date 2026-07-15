@@ -9,6 +9,7 @@ import { ResponseViewer } from "@/components/ResponseViewer/ResponseViewer";
 import { PerformancePanel } from "@/components/PerformancePanel/PerformancePanel";
 import { SettingsDrawer } from "@/components/Settings/SettingsDrawer";
 import { ResizeHandle } from "@/components/common/ResizeHandle";
+import { ZoomWrapper } from "@/components/common/ZoomWrapper";
 import { SocketsModal } from "@/features/sockets/SocketsModal";
 import { MockServerModal } from "@/features/mocks/MockServerModal";
 import { SseModal } from "@/features/sse/SseModal";
@@ -117,8 +118,10 @@ export default function App() {
       <div className="flex min-h-0 flex-1">
         <IconRail active={sidebarPanel} onChange={handleIconRailChange} onOpenSettings={() => setSettingsOpen(true)} />
 
-        <div style={{ width: settings.panelSizes.sidebarWidth }} className="shrink-0 border-r border-border bg-bg-panel">
-          <Sidebar panel={sidebarPanel} />
+        <div style={{ width: settings.panelSizes.sidebarWidth }} className="shrink-0 overflow-auto border-r border-border bg-bg-panel">
+          <ZoomWrapper cssVar="--zoom-sidebar">
+            <Sidebar panel={sidebarPanel} />
+          </ZoomWrapper>
         </div>
         <ResizeHandle
           direction="horizontal"
@@ -131,8 +134,10 @@ export default function App() {
         <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
           {activeTab ? (
             <div className="flex h-full min-h-0 w-full flex-col overflow-hidden">
-              <div style={{ height: settings.panelSizes.requestEditorHeight }} className="shrink-0 overflow-hidden">
-                <RequestBuilder tab={activeTab} />
+              <div style={{ height: settings.panelSizes.requestEditorHeight }} className="shrink-0 overflow-auto">
+                <ZoomWrapper cssVar="--zoom-request">
+                  <RequestBuilder tab={activeTab} />
+                </ZoomWrapper>
               </div>
               <ResizeHandle
                 direction="vertical"
@@ -142,8 +147,10 @@ export default function App() {
               />
 
               {responseOpen ? (
-                <div className="flex min-h-0 flex-1 flex-col overflow-hidden bg-[#0b0b0b]">
-                  <ResponseViewer tab={activeTab} onClose={() => setResponseOpen(false)} />
+                <div className="flex min-h-0 flex-1 flex-col overflow-auto bg-[#0b0b0b]">
+                  <ZoomWrapper cssVar="--zoom-response">
+                    <ResponseViewer tab={activeTab} onClose={() => setResponseOpen(false)} />
+                  </ZoomWrapper>
                 </div>
               ) : (
                 <div className="flex-1 bg-bg-base" />

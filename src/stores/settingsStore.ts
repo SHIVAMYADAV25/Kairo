@@ -2,10 +2,17 @@ import { create } from "zustand";
 import type { AppSettings } from "@/types";
 import { api } from "@/lib/api";
 
+// The "no zoom" baseline. A zoom level of 13 always renders a panel at its
+// normal (100%) scale — raising/lowering the level scales up/down from there.
+export const ZOOM_BASE = 13;
+export const ZOOM_MIN = 8;
+export const ZOOM_MAX = 20;
+
 const DEFAULT_SETTINGS: AppSettings = {
   theme: "dark",
   opaqueMode: true,
   fontSizes: { sidebar: 15, request: 13, response: 12 },
+  zoomLevels: { sidebar: ZOOM_BASE, request: ZOOM_BASE, response: ZOOM_BASE },
   panelSizes: {
     sidebarWidth: 260,
     requestEditorHeight: 480, // Gives the request builder roughly half the window by default so the response panel (which fills the rest via flex-1) doesn't dominate on first load
@@ -38,6 +45,9 @@ function applyDomTheme(settings: AppSettings) {
   root.style.setProperty("--font-sidebar", `${settings.fontSizes.sidebar}px`);
   root.style.setProperty("--font-request", `${settings.fontSizes.request}px`);
   root.style.setProperty("--font-response", `${settings.fontSizes.response}px`);
+  root.style.setProperty("--zoom-sidebar", `${settings.zoomLevels.sidebar / ZOOM_BASE}`);
+  root.style.setProperty("--zoom-request", `${settings.zoomLevels.request / ZOOM_BASE}`);
+  root.style.setProperty("--zoom-response", `${settings.zoomLevels.response / ZOOM_BASE}`);
 }
 
 export const useSettingsStore = create<SettingsState>((set, get) => ({
@@ -55,6 +65,13 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
       if (settings.panelSizes.requestEditorHeight < MIN_REQUEST_EDITOR_HEIGHT) {
         settings.panelSizes = { ...settings.panelSizes, requestEditorHeight: 480 };
         api.settings.update({ panelSizes: settings.panelSizes }).catch(() => {});
+      }
+      // Migration guard: settings persisted before zoom existed won't have
+      // zoomLevels at all — backfill with the neutral default so panels
+      // don't render at NaN scale.
+      if (!settings.zoomLevels) {
+        settings.zoomLevels = { sidebar: ZOOM_BASE, request: ZOOM_BASE, response: ZOOM_BASE };
+        api.settings.update({ zoomLevels: settings.zoomLevels }).catch(() => {});
       }
       applyDomTheme(settings);
       set({ settings, hydrated: true });

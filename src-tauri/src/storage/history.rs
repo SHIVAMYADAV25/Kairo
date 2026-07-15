@@ -23,7 +23,7 @@ pub fn insert(pool: &DbPool, request: &ApiRequest, response: &ApiResponse) -> an
     )?;
 
     // Keep history bounded so the DB doesn't grow unbounded on a machine
-    // that's been running RequestKit for months — trim beyond 5,000 rows.
+    // that's been running Kairo for months — trim beyond 5,000 rows.
     conn.execute(
         "DELETE FROM history WHERE id NOT IN (
             SELECT id FROM history ORDER BY created_at DESC LIMIT 5000

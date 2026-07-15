@@ -1967,6 +1967,37 @@ dependencies = [
 ]
 
 [[package]]
+name = "kairo"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "axum",
+ "chrono",
+ "futures-util",
+ "hyper",
+ "r2d2",
+ "r2d2_sqlite",
+ "rand 0.8.7",
+ "regex",
+ "reqwest 0.12.28",
+ "rquickjs",
+ "rusqlite",
+ "serde",
+ "serde_json",
+ "simd-json",
+ "tauri",
+ "tauri-build",
+ "tauri-plugin-dialog",
+ "tauri-plugin-fs",
+ "tauri-plugin-shell",
+ "thiserror 1.0.69",
+ "tokio",
+ "tokio-tungstenite",
+ "url",
+ "uuid",
+]
+
+[[package]]
 name = "keyboard-types"
 version = "0.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3086,37 +3117,6 @@ name = "relative-path"
 version = "1.9.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ba39f3699c378cd8970968dcbff9c43159ea4cfbd88d43c00b22f2ef10a435d2"
-
-[[package]]
-name = "requestkit"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "axum",
- "chrono",
- "futures-util",
- "hyper",
- "r2d2",
- "r2d2_sqlite",
- "rand 0.8.7",
- "regex",
- "reqwest 0.12.28",
- "rquickjs",
- "rusqlite",
- "serde",
- "serde_json",
- "simd-json",
- "tauri",
- "tauri-build",
- "tauri-plugin-dialog",
- "tauri-plugin-fs",
- "tauri-plugin-shell",
- "thiserror 1.0.69",
- "tokio",
- "tokio-tungstenite",
- "url",
- "uuid",
-]
 
 [[package]]
 name = "reqwest"

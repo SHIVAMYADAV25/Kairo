@@ -1,4 +1,4 @@
-# RequestKit
+# Kairo
 
 A fast, lightweight, cross-platform API client (Postman-class) built with
 **React + TypeScript** on the frontend and **Rust + Tauri** on the backend.
@@ -27,7 +27,7 @@ A fast, lightweight, cross-platform API client (Postman-class) built with
 ## Project layout
 
 ```
-requestkit/
+kairo/
 ├─ src/                      React + TypeScript frontend
 │  ├─ components/            Sidebar, Tabs, RequestBuilder, ResponseViewer, PerformancePanel, Settings
 │  ├─ features/               environments/, (sockets/ mocks/ tests/ import/ reserved for growth)

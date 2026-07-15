@@ -1,5 +1,5 @@
 -- ---------------------------------------------------------------------------
--- RequestKit schema v1
+-- Kairo schema v1
 -- WAL mode + targeted indexes keep history/collection search fast even at
 -- tens of thousands of rows. JSON-heavy columns (params/headers/body/etc.)
 -- are stored as TEXT (serde_json::to_string) — SQLite has no native JSON

@@ -114,7 +114,6 @@ pub struct HistoryEntry {
     pub response: ApiResponse,
     pub created_at: String,
 }
-
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct FontSizes {
@@ -132,6 +131,24 @@ pub struct PanelSizes {
     pub performance_panel_width: u32,
 }
 
+// Zoom is stored as a plain "size level" (same unit family as FontSizes),
+// default 13 = medium/100% scale for that panel. Each panel's rendered
+// content is scaled by (level / 13) on the frontend, so 13 always means
+// "no zoom" regardless of range tweaks later.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ZoomLevels {
+    pub sidebar: u32,
+    pub request: u32,
+    pub response: u32,
+}
+
+impl Default for ZoomLevels {
+    fn default() -> Self {
+        Self { sidebar: 13, request: 13, response: 13 }
+    }
+}
+
 // `default` at the container level means any field missing from an
 // old/persisted settings blob (e.g. after this update adds new fields)
 // falls back to AppSettings::default() for that field instead of failing
@@ -143,6 +160,7 @@ pub struct AppSettings {
     pub opaque_mode: bool,
     pub font_sizes: FontSizes,
     pub panel_sizes: PanelSizes,
+    pub zoom_levels: ZoomLevels,
     pub last_environment_id: Option<String>,
     pub last_collection_id: Option<String>,
     pub restore_last_session: bool,
@@ -158,6 +176,7 @@ impl Default for AppSettings {
             theme: "dark".into(),
             opaque_mode: true,
             font_sizes: FontSizes { sidebar: 15, request: 13, response: 12 },
+            zoom_levels: ZoomLevels::default(),
             panel_sizes: PanelSizes {
                 sidebar_width: 260,
                 request_editor_height: 340,

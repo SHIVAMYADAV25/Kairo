@@ -76,5 +76,5 @@ pub fn run() {
             commands::stop_load_test,
         ])
         .run(tauri::generate_context!())
-        .expect("error while running RequestKit");
+        .expect("error while running Kairo");
 }

@@ -45,6 +45,11 @@
   --font-response: 12px;
   --font-mono: "JetBrains Mono", Consolas, monospace;
 
+  /* Per-panel zoom scale, updated live by the settings store. 1 = no zoom. */
+  --zoom-sidebar: 1;
+  --zoom-request: 1;
+  --zoom-response: 1;
+
   /* ADDED: Isolated Mock Server specific variables so they don't overwrite your app globals */
   --bg-mock-modal: #0b0b0b;
   --bg-mock-input: #151515;

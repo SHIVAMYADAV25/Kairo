@@ -330,6 +330,13 @@ export interface AppSettings {
     request: number;
     response: number;
   };
+  // Zoom level per panel. 13 is the default/medium (= 100% scale, no zoom).
+  // Actual on-screen scale applied is (level / 13).
+  zoomLevels: {
+    sidebar: number;
+    request: number;
+    response: number;
+  };
   panelSizes: {
     sidebarWidth: number;
     requestEditorHeight: number;

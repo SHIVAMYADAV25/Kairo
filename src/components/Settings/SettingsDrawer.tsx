@@ -1,6 +1,6 @@
 import clsx from "clsx";
 import { X, Minus, Plus, RotateCcw } from "lucide-react";
-import { useSettingsStore } from "@/stores/settingsStore";
+import { useSettingsStore, ZOOM_MIN, ZOOM_MAX } from "@/stores/settingsStore";
 import type { HttpMethod } from "@/types";
 
 interface Props {
@@ -24,6 +24,37 @@ function FontStepper({ label, value, onChange }: { label: string; value: number;
         <span className="w-9 text-center font-mono font-medium text-text-primary text-[11px]">{value}px</span>
         <button 
           onClick={() => onChange(Math.min(24, value + 1))} 
+          className="rounded p-0.5 text-text-muted hover:bg-bg-hover hover:text-text-primary transition-colors"
+        >
+          <Plus size={12} />
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function ZoomStepper({
+  label,
+  value,
+  onChange,
+}: {
+  label: string;
+  value: number;
+  onChange: (v: number) => void;
+}) {
+  return (
+    <div className="flex items-center justify-between py-1.5 text-[12px]">
+      <span className="text-text-secondary">{label}</span>
+      <div className="flex items-center gap-1 bg-[#121212] border border-[#222] rounded px-1 h-7">
+        <button
+          onClick={() => onChange(Math.max(ZOOM_MIN, value - 1))}
+          className="rounded p-0.5 text-text-muted hover:bg-bg-hover hover:text-text-primary transition-colors"
+        >
+          <Minus size={12} />
+        </button>
+        <span className="w-9 text-center font-mono font-medium text-text-primary text-[11px]">{value}</span>
+        <button
+          onClick={() => onChange(Math.min(ZOOM_MAX, value + 1))}
           className="rounded p-0.5 text-text-muted hover:bg-bg-hover hover:text-text-primary transition-colors"
         >
           <Plus size={12} />
@@ -115,6 +146,17 @@ export function SettingsDrawer({ open, onClose }: Props) {
               <FontStepper label="Request Panel" value={settings.fontSizes.request} onChange={(v) => update({ fontSizes: { ...settings.fontSizes, request: v } })} />
               <FontStepper label="Response Viewport" value={settings.fontSizes.response} onChange={(v) => update({ fontSizes: { ...settings.fontSizes, response: v } })} />
             </div>
+          </section>
+
+          {/* Zoom Controls */}
+          <section className="space-y-1.5">
+            <h3 className="text-[11px] font-bold uppercase tracking-wider text-neutral-500">Zoom Level</h3>
+            <div className="divide-y divide-[#161616]/60 rounded border border-[#161616] bg-[#090909]/20 px-2.5">
+              <ZoomStepper label="Sidebar" value={settings.zoomLevels.sidebar} onChange={(v) => update({ zoomLevels: { ...settings.zoomLevels, sidebar: v } })} />
+              <ZoomStepper label="Request Panel" value={settings.zoomLevels.request} onChange={(v) => update({ zoomLevels: { ...settings.zoomLevels, request: v } })} />
+              <ZoomStepper label="Response Panel" value={settings.zoomLevels.response} onChange={(v) => update({ zoomLevels: { ...settings.zoomLevels, response: v } })} />
+            </div>
+            <p className="text-[10px] text-neutral-600 px-0.5">13 is default (medium). Scales the whole panel — layout, icons, and text.</p>
           </section>
 
           {/* Core Feature Configuration Toggles */}

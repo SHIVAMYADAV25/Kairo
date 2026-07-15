@@ -2,7 +2,7 @@ import { useState } from "react";
 import clsx from "clsx";
 import {
   X, Zap, TrendingUp, Activity, Clock, CheckCircle2, Link2, ChevronDown, ChevronUp,
-  Plus, Play, Square, RotateCcw,
+  Plus, Play, Square, RotateCcw, AlertTriangle, Trash2,
 } from "lucide-react";
 import { useOpenTabsStore } from "@/stores/openTabsStore";
 import { useTabStore } from "@/stores/tabStore";
@@ -62,6 +62,13 @@ const FIELD_LABEL: Record<AssertionField, string> = {
 };
 const OPERATORS: AssertionOp[] = ["=", "!=", "contains", "!contains", "<", ">", "regex", "exists", "!exists"];
 
+interface HeaderRow {
+  id: string;
+  key: string;
+  value: string;
+  enabled: boolean;
+}
+
 interface FlatCollection {
   id: string;
   label: string;
@@ -106,7 +113,16 @@ export function TestsModal({ open, onClose }: Props) {
   const [timeoutSecs, setTimeoutSecs] = useState(30);
   const [followRedirects, setFollowRedirects] = useState(true);
 
-  const [assertions, setAssertions] = useState<Assertion[]>([
+  // Headers/body — shared by load-shape tests and Response Check. Previously
+  // there was no UI for these at all, so every request went out bare (no
+  // auth header, no JSON body), which is why anything past a public GET
+  // endpoint looked "broken".
+  const [reqHeaders, setReqHeaders] = useState<HeaderRow[]>([]);
+  const [reqBody, setReqBody] = useState("");
+  const [runError, setRunError] = useState<string | null>(null);
+
+  const [assertions, setAssertions] = useState<Assertion[]>
+([
     { id: uid(), enabled: true, field: "status", headerName: "", jsonPath: "", operator: "=", value: "200" },
     { id: uid(), enabled: true, field: "responseTime", headerName: "", jsonPath: "", operator: "<", value: "500" },
   ]);
@@ -131,11 +147,33 @@ export function TestsModal({ open, onClose }: Props) {
     const ref = order.find((t) => t.key === activeKey);
     if (ref?.kind !== "http") return;
     const tab = useTabStore.getState().tabs.find((t) => t.id === ref.id);
-    if (tab) {
-      setMethod(tab.request.method);
-      setUrl(tab.request.url);
+    if (!tab) return;
+
+    setMethod(tab.request.method);
+    setUrl(tab.request.url);
+
+    const copiedHeaders: HeaderRow[] = tab.request.headers
+      .filter((h) => h.enabled && h.key)
+      .map((h) => ({ id: uid(), key: h.key, value: h.value, enabled: true }));
+
+    // Bearer auth doesn't ride along as a header on the request object — it's
+    // applied at execution time — so surface it explicitly here, otherwise
+    // authenticated endpoints silently 401 during load tests.
+    if (tab.request.auth.type === "bearer" && tab.request.auth.bearer?.token) {
+      copiedHeaders.push({ id: uid(), key: "Authorization", value: `Bearer ${tab.request.auth.bearer.token}`, enabled: true });
     }
+    setReqHeaders(copiedHeaders);
+
+    const b = tab.request.body;
+    if (b.type === "json") setReqBody(b.json ?? "");
+    else if (b.type === "raw") setReqBody(b.raw?.content ?? "");
+    else setReqBody("");
   };
+
+  const addHeader = () => setReqHeaders((h) => [...h, { id: uid(), key: "", value: "", enabled: true }]);
+  const updateHeader = (id: string, patch: Partial<HeaderRow>) =>
+    setReqHeaders((h) => h.map((x) => (x.id === id ? { ...x, ...patch } : x)));
+  const removeHeader = (id: string) => setReqHeaders((h) => h.filter((x) => x.id !== id));
 
   const addAssertion = () =>
     setAssertions((a) => [...a, { id: uid(), enabled: true, field: "status", headerName: "", jsonPath: "", operator: "=", value: "" }]);
@@ -143,7 +181,21 @@ export function TestsModal({ open, onClose }: Props) {
     setAssertions((a) => a.map((x) => (x.id === id ? { ...x, ...patch } : x)));
   const removeAssertion = (id: string) => setAssertions((a) => a.filter((x) => x.id !== id));
 
+  const enabledHeaderPairs = (): [string, string][] =>
+    reqHeaders.filter((h) => h.enabled && h.key.trim()).map((h) => [h.key.trim(), h.value] as [string, string]);
+
   const handleRun = async () => {
+    setRunError(null);
+
+    if (kind === "chain" && !collectionId) {
+      setRunError("Pick a collection to run first.");
+      return;
+    }
+    if (kind !== "chain" && !url.trim()) {
+      setRunError("Enter a URL to test.");
+      return;
+    }
+
     setShowResults(true);
 
     if (kind === "response") {
@@ -159,8 +211,8 @@ export function TestsModal({ open, onClose }: Props) {
             method: method as any,
             url,
             params: [],
-            headers: [],
-            body: { type: "none" },
+            headers: reqHeaders.filter((h) => h.enabled && h.key.trim()).map((h) => ({ id: h.id, key: h.key, value: h.value, enabled: true })),
+            body: reqBody.trim() ? { type: "raw", raw: { content: reqBody, language: "json" } } : { type: "none" },
             auth: { type: "none" },
             scripts: { preRequest: "", tests: "" },
             settings: { timeoutMs: timeoutSecs * 1000, followRedirects, maxRedirects: 5, sslVerification: true, saveCookies: false },
@@ -178,10 +230,19 @@ export function TestsModal({ open, onClose }: Props) {
     }
 
     if (kind === "chain") {
-      if (!collectionId) return;
       runner.reset();
-      const requests = await collectRequestsRecursive(collectionId);
-      runner.run(requests, activeEnvironmentId);
+      try {
+        const requests = await collectRequestsRecursive(collectionId);
+        if (requests.length === 0) {
+          setRunError("That collection (and its subfolders) has no requests to run.");
+          setShowResults(false);
+          return;
+        }
+        runner.run(requests, activeEnvironmentId);
+      } catch (e) {
+        setRunError(e instanceof Error ? e.message : String(e));
+        setShowResults(false);
+      }
       return;
     }
 
@@ -190,8 +251,8 @@ export function TestsModal({ open, onClose }: Props) {
       shape: kind,
       method,
       url,
-      headers: [],
-      body: null,
+      headers: enabledHeaderPairs(),
+      body: reqBody.trim() ? reqBody : null,
       virtualUsers: kind === "load" ? virtualUsers : undefined,
       durationSecs: kind === "load" ? durationSecs : undefined,
       requestsPerVu: kind === "load" ? requestsPerVu : undefined,
@@ -215,11 +276,15 @@ export function TestsModal({ open, onClose }: Props) {
     }
 
     load.ensureListeners();
-    load.run(config).catch(console.error);
+    load.run(config).catch((e) => {
+      console.error(e);
+      setRunError(e instanceof Error ? e.message : String(e));
+    });
   };
 
   const handleBack = () => {
     setShowResults(false);
+    setRunError(null);
     load.reset();
     runner.reset();
     setCheckResponse(null);
@@ -236,7 +301,7 @@ export function TestsModal({ open, onClose }: Props) {
           </button>
         </div>
 
-        <div className="overflow-y-auto p-5">
+        <div className="min-h-0 flex-1 overflow-y-auto p-5">
           {!showResults ? (
             <>
               <div className="mb-2 text-[11px] font-bold uppercase tracking-widest text-text-muted">Quick Start</div>
@@ -328,6 +393,8 @@ export function TestsModal({ open, onClose }: Props) {
                   </div>
                 )}
 
+                {kind !== "chain" && <HeadersAndBody headers={reqHeaders} onAdd={addHeader} onUpdate={updateHeader} onRemove={removeHeader} body={reqBody} onBodyChange={setReqBody} />}
+
                 {(kind === "load" || kind === "stress" || kind === "spike" || kind === "soak") && (
                   <div>
                     <button onClick={() => setAdvancedOpen((o) => !o)} className="flex items-center gap-1 text-[12px] text-text-muted hover:text-text-primary">
@@ -349,6 +416,7 @@ export function TestsModal({ open, onClose }: Props) {
 
                 {kind === "response" && (
                   <div className="space-y-2">
+                    <div className="mb-1 text-[11px] font-bold uppercase tracking-widest text-text-muted">Assertions</div>
                     {assertions.map((a) => (
                       <div key={a.id} className="flex items-center gap-2">
                         <input type="checkbox" checked={a.enabled} onChange={(e) => updateAssertion(a.id, { enabled: e.target.checked })} className="h-4 w-4 shrink-0 accent-accent" />
@@ -402,10 +470,15 @@ export function TestsModal({ open, onClose }: Props) {
                 )}
               </div>
 
-              <div className="mt-5 flex justify-end">
+              <div className="mt-5 flex items-center justify-between gap-3">
+                {runError ? (
+                  <div className="flex items-center gap-1.5 text-[12.5px] text-status-error">
+                    <AlertTriangle size={14} /> {runError}
+                  </div>
+                ) : <span />}
                 <button
                   onClick={handleRun}
-                  disabled={kind !== "chain" && !url}
+                  disabled={kind === "chain" ? !collectionId : !url.trim()}
                   className="flex items-center gap-1.5 rounded-md bg-accent px-5 py-2 text-[13px] font-semibold text-black hover:bg-accent-hover disabled:opacity-40"
                 >
                   <Play size={14} /> Run Test
@@ -420,6 +493,7 @@ export function TestsModal({ open, onClose }: Props) {
               checkRunning={checkRunning}
               checkResponse={checkResponse}
               checkError={checkError}
+              runError={runError}
               assertions={assertions}
               runner={runner}
             />
@@ -435,6 +509,57 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
     <div>
       <label className="mb-1 block text-[12px] text-text-muted">{label}</label>
       {children}
+    </div>
+  );
+}
+
+function HeadersAndBody({
+  headers, onAdd, onUpdate, onRemove, body, onBodyChange,
+}: {
+  headers: HeaderRow[];
+  onAdd: () => void;
+  onUpdate: (id: string, patch: Partial<HeaderRow>) => void;
+  onRemove: (id: string) => void;
+  body: string;
+  onBodyChange: (v: string) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const activeCount = headers.filter((h) => h.enabled && h.key.trim()).length + (body.trim() ? 1 : 0);
+
+  return (
+    <div>
+      <button onClick={() => setOpen((o) => !o)} className="flex items-center gap-1 text-[12px] text-text-muted hover:text-text-primary">
+        {open ? <ChevronUp size={13} /> : <ChevronDown size={13} />} Headers &amp; Body
+        {activeCount > 0 && <span className="rounded-full bg-accent/15 px-1.5 py-0.5 text-[10px] font-semibold text-accent">{activeCount}</span>}
+      </button>
+      {open && (
+        <div className="mt-3 space-y-3 rounded-md border border-border p-3">
+          <div className="space-y-1.5">
+            {headers.length === 0 && <div className="text-[12px] text-text-muted">No headers set — the request will be sent as-is, with no auth.</div>}
+            {headers.map((h) => (
+              <div key={h.id} className="flex items-center gap-2">
+                <input type="checkbox" checked={h.enabled} onChange={(e) => onUpdate(h.id, { enabled: e.target.checked })} className="h-3.5 w-3.5 shrink-0 accent-accent" />
+                <input value={h.key} onChange={(e) => onUpdate(h.id, { key: e.target.value })} placeholder="Header name" className="w-[170px] shrink-0 rounded-md border border-border bg-bg-elevated px-2 py-1.5 text-[12.5px] text-text-primary placeholder:text-text-muted focus:border-accent focus:outline-none" />
+                <input value={h.value} onChange={(e) => onUpdate(h.id, { value: e.target.value })} placeholder="Value" className="flex-1 rounded-md border border-border bg-bg-elevated px-2 py-1.5 text-[12.5px] text-text-primary placeholder:text-text-muted focus:border-accent focus:outline-none" />
+                <button onClick={() => onRemove(h.id)} className="shrink-0 text-text-muted hover:text-status-error"><Trash2 size={14} /></button>
+              </div>
+            ))}
+            <button onClick={onAdd} className="flex items-center gap-1.5 text-[12.5px] font-medium text-accent hover:opacity-80">
+              <Plus size={13} /> Add Header
+            </button>
+          </div>
+          <div>
+            <label className="mb-1 block text-[12px] text-text-muted">Body (optional, sent as-is)</label>
+            <textarea
+              value={body}
+              onChange={(e) => onBodyChange(e.target.value)}
+              placeholder={'{\n  "key": "value"\n}'}
+              rows={4}
+              className="w-full resize-y rounded-md border border-border bg-bg-elevated px-3 py-2 font-mono text-[12.5px] text-text-primary placeholder:text-text-muted focus:border-accent focus:outline-none"
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -461,19 +586,20 @@ interface ResultsViewProps {
   checkRunning: boolean;
   checkResponse: ApiResponse | null;
   checkError: string | null;
+  runError: string | null;
   assertions: Assertion[];
   runner: RunnerState;
 }
 
 function ResultsView(props: ResultsViewProps) {
-  const { kind, onBack, load, checkRunning, checkResponse, checkError, assertions, runner } = props;
+  const { kind, onBack, load, checkRunning, checkResponse, checkError, runError, assertions, runner } = props;
   if (kind === "response") {
     return <ResponseCheckResults onBack={onBack} running={checkRunning} response={checkResponse} error={checkError} assertions={assertions} />;
   }
   if (kind === "chain") {
     return <ChainResults onBack={onBack} runner={runner} />;
   }
-  return <LoadTestResults onBack={onBack} load={load} />;
+  return <LoadTestResults onBack={onBack} load={load} runError={runError} />;
 }
 
 function StatCard({ label, value, accent }: { label: string; value: string; accent?: string }) {
@@ -496,7 +622,7 @@ function Sparkline({ values, color }: { values: number[]; color: string }) {
   );
 }
 
-function LoadTestResults({ onBack, load }: { onBack: () => void; load: LoadTestState }) {
+function LoadTestResults({ onBack, load, runError }: { onBack: () => void; load: LoadTestState; runError: string | null }) {
   const p = load.progress;
   return (
     <div>
@@ -504,7 +630,11 @@ function LoadTestResults({ onBack, load }: { onBack: () => void; load: LoadTestS
         <button onClick={onBack} className="flex items-center gap-1.5 text-[13px] text-text-secondary hover:text-text-primary">
           <RotateCcw size={13} /> Back to config
         </button>
-        {load.isRunning ? (
+        {runError ? (
+          <span className="flex items-center gap-1.5 text-[13px] font-medium text-status-error">
+            <AlertTriangle size={14} /> Failed to start
+          </span>
+        ) : load.isRunning ? (
           <button onClick={() => load.stop()} className="flex items-center gap-1.5 rounded-md bg-status-error px-4 py-1.5 text-[13px] font-medium text-white hover:opacity-90">
             <Square size={13} /> Stop
           </button>
@@ -515,8 +645,13 @@ function LoadTestResults({ onBack, load }: { onBack: () => void; load: LoadTestS
         )}
       </div>
 
-      {!p ? (
-        <div className="py-16 text-center text-text-muted">Starting test…</div>
+      {runError ? (
+        <div className="rounded-md border border-status-error/30 bg-status-error/10 p-3 text-[13px] text-status-error">{runError}</div>
+      ) : !p ? (
+        <div className="flex flex-col items-center gap-3 py-16 text-center text-text-muted">
+          <div className="h-6 w-6 animate-spin rounded-full border-2 border-border border-t-accent" />
+          Starting test…
+        </div>
       ) : (
         <>
           <div className="mb-4 grid grid-cols-4 gap-3">
