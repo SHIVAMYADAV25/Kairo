@@ -12,6 +12,8 @@ export default function DownloadCTA() {
   const windowsRef = useRef<HTMLDivElement>(null);
   const linuxRef = useRef<HTMLDivElement>(null);
 
+  const GITHUB_RELEASE_BASE = "https://github.com/SHIVAMYADAV25/Kairo/releases/download/v1.1.0";
+
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (
@@ -66,19 +68,25 @@ export default function DownloadCTA() {
               {activeDropdown === "mac" && (
                 <div className="absolute top-[52px] left-1/2 -translate-x-1/2 z-50 w-[310px] rounded-lg border border-[#181818] bg-[#111111] p-3 shadow-2xl text-left">
                   <div className="flex flex-col text-[12px] -mx-1 -my-1">
-                    <a href="#download-mac-silicon" className="flex items-center gap-3 p-3 text-left hover:bg-[#1a1a1e] rounded transition-colors group">
+                    <a 
+                      href={`${GITHUB_RELEASE_BASE}/Kairo_0.1.0_aarch64.dmg`}
+                      className="flex items-center gap-3 p-3 text-left hover:bg-[#1a1a1e] rounded transition-colors group"
+                    >
                       <div className="text-[#666666] group-hover:text-white"><AppleIcon /></div>
                       <div>
                         <div className="font-semibold text-white">Apple Silicon (.dmg)</div>
-                        <div className="text-[11px] text-[#666666]">Universal build optimized for M-series</div>
+                        <div className="text-[11px] text-[#666666]">Universal build optimized for M-series chips</div>
                       </div>
                     </a>
                     <div className="h-px bg-[#181818]" />
-                    <a href="#download-mac-intel" className="flex items-center gap-3 p-3 text-left hover:bg-[#1a1a1e] rounded transition-colors group">
+                    <a 
+                      href={`${GITHUB_RELEASE_BASE}/Kairo_0.1.0_x64.dmg`}
+                      className="flex items-center gap-3 p-3 text-left hover:bg-[#1a1a1e] rounded transition-colors group"
+                    >
                       <div className="text-[#666666] group-hover:text-white"><AppleIcon /></div>
                       <div>
                         <div className="font-semibold text-white">Intel DMG (.dmg)</div>
-                        <div className="text-[11px] text-[#666666]">Legacy compilation archive package</div>
+                        <div className="text-[11px] text-[#666666]">Legacy compilation archive architecture package</div>
                       </div>
                     </a>
                   </div>
@@ -98,19 +106,25 @@ export default function DownloadCTA() {
               {activeDropdown === "windows" && (
                 <div className="absolute top-[52px] left-1/2 -translate-x-1/2 z-50 w-[310px] rounded-lg border border-[#181818] bg-[#111111] p-3 shadow-2xl text-left">
                   <div className="flex flex-col text-[12px] -mx-1 -my-1">
-                    <a href="#download-win-exe" className="flex items-center gap-3 p-3 text-left hover:bg-[#1a1a1e] rounded transition-colors group">
+                    <a 
+                      href={`${GITHUB_RELEASE_BASE}/Kairo_0.1.0_x64-setup.exe`}
+                      className="flex items-center gap-3 p-3 text-left hover:bg-[#1a1a1e] rounded transition-colors group"
+                    >
                       <div className="text-[#666666] group-hover:text-white"><WindowsIcon /></div>
                       <div>
                         <div className="font-semibold text-white">Installer (.exe)</div>
-                        <div className="text-[11px] text-[#666666]">Standard setup wizard configuration</div>
+                        <div className="text-[11px] text-[#666666]">Standard setup wizard installation runtime executable</div>
                       </div>
                     </a>
                     <div className="h-px bg-[#181818]" />
-                    <a href="#download-win-zip" className="flex items-center gap-3 p-3 text-left hover:bg-[#1a1a1e] rounded transition-colors group">
+                    <a 
+                      href={`${GITHUB_RELEASE_BASE}/Kairo_0.1.0_x64_en-US.msi`}
+                      className="flex items-center gap-3 p-3 text-left hover:bg-[#1a1a1e] rounded transition-colors group"
+                    >
                       <div className="text-[#666666] group-hover:text-white"><WindowsIcon /></div>
                       <div>
-                        <div className="font-semibold text-white">Portable Binary (.zip)</div>
-                        <div className="text-[11px] text-[#666666]">Unpack and deploy instantly anywhere</div>
+                        <div className="font-semibold text-white">Windows Installer (.msi)</div>
+                        <div className="text-[11px] text-[#666666]">Enterprise deployable en-US package configuration</div>
                       </div>
                     </a>
                   </div>
@@ -142,36 +156,36 @@ export default function DownloadCTA() {
                   {showInfo === "linux" ? (
                     <div className="space-y-3 text-[12px]">
                       <div>
-                        <div className="text-center font-medium text-[#aaaaaa] mb-1.5 text-[11px]">AppImage (recommended)</div>
+                        <div className="text-center font-medium text-[#aaaaaa] mb-1.5 text-[11px]">AppImage Tarball (recommended)</div>
                         <div className="bg-[#151515] p-2.5 rounded border border-[#1e1e1e] font-mono text-[#00ca54] leading-relaxed select-text text-[11px]">
-                          chmod +x Kairo_*.AppImage
+                          tar -xvf Kairo_0.1.0_x64.app.tar.gz
                           <br />
-                          ./Kairo_*.AppImage
+                          ./Kairo.AppImage
                         </div>
                       </div>
-                      <div>
-                        <div className="text-center font-medium text-[#aaaaaa] mb-1.5 text-[11px]">.deb (Ubuntu / Debian)</div>
-                        <div className="bg-[#151515] p-2.5 rounded border border-[#1e1e1e] font-mono text-[#00ca54] leading-relaxed select-text text-[11px]">
-                          sudo dpkg -i Kairo_*.deb
-                        </div>
-                      </div>
-                      <div className="text-center text-[10px] text-[#666666] mt-1">Requires x86_64 (amd64).</div>
+                      <div className="text-center text-[10px] text-[#666666] mt-1">Requires x86_64 or aarch64 architectures.</div>
                     </div>
                   ) : (
                     <div className="flex flex-col text-[12px] -mx-1 -my-1">
-                      <a href="#download-appimage" className="flex items-center gap-3 p-3 text-left hover:bg-[#1a1a1e] rounded transition-colors group">
+                      <a 
+                        href={`${GITHUB_RELEASE_BASE}/Kairo_0.1.0_x64.app.tar.gz`}
+                        className="flex items-center gap-3 p-3 text-left hover:bg-[#1a1a1e] rounded transition-colors group"
+                      >
                         <div className="text-[#666666] group-hover:text-white"><LinuxIcon /></div>
                         <div>
-                          <div className="font-semibold text-white">AppImage</div>
-                          <div className="text-[11px] text-[#666666]">Universal, no install needed</div>
+                          <div className="font-semibold text-white">x64 Tarball (.tar.gz)</div>
+                          <div className="text-[11px] text-[#666666]">Standard portable execution package bin</div>
                         </div>
                       </a>
                       <div className="h-px bg-[#181818]" />
-                      <a href="#download-deb" className="flex items-center gap-3 p-3 text-left hover:bg-[#1a1a1e] rounded transition-colors group">
+                      <a 
+                        href={`${GITHUB_RELEASE_BASE}/Kairo_0.1.0_aarch64.app.tar.gz`}
+                        className="flex items-center gap-3 p-3 text-left hover:bg-[#1a1a1e] rounded transition-colors group"
+                      >
                         <div className="text-[#666666] group-hover:text-white"><LinuxIcon /></div>
                         <div>
-                          <div className="font-semibold text-white">.deb</div>
-                          <div className="text-[11px] text-[#666666]">Ubuntu / Debian architectures</div>
+                          <div className="font-semibold text-white">aarch64 Tarball (.tar.gz)</div>
+                          <div className="text-[11px] text-[#666666]">ARM64 compatible Linux release variant</div>
                         </div>
                       </a>
                     </div>
