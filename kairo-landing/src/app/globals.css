@@ -1,0 +1,83 @@
+@import "tailwindcss";
+
+:root {
+  --background: #0a0a0a;
+  --foreground: #e5e5e5;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-inter);
+  --font-mono: var(--font-jetbrains-mono);
+}
+
+html {
+  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+}
+
+body {
+  color: var(--foreground);
+  font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
+  background-color: var(--background);
+  overflow-x: hidden;
+}
+
+::selection {
+  background-color: #f973164d;
+}
+
+.glass-card {
+  -webkit-backdrop-filter: blur(24px);
+  backdrop-filter: blur(24px);
+  background: #ffffff08;
+  border: 1px solid #ffffff0f;
+}
+
+.gradient-text {
+  -webkit-text-fill-color: transparent;
+  background: linear-gradient(135deg, #fff, #fdba74 55%, #f97316);
+  -webkit-background-clip: text;
+  background-clip: text;
+}
+
+.glow {
+  filter: blur(80px);
+  pointer-events: none;
+  border-radius: 9999px;
+  position: absolute;
+}
+
+.syn-keyword { color: #c084fc; }
+.syn-string { color: #34d399; }
+.syn-function { color: #60a5fa; }
+.syn-comment { color: #6b7280; }
+.syn-variable { color: #f9a8d4; }
+.syn-number { color: #fbbf24; }
+.syn-operator { color: #94a3b8; }
+.syn-property { color: #67e8f9; }
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #ffffff1a;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #ffffff33;
+}
+
+html {
+  scroll-behavior: smooth;
+}

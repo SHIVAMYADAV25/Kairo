@@ -1,0 +1,190 @@
+"use client"
+import { useState, useRef, useEffect } from "react";
+import { AppleIcon, ChevronDownIcon, InfoIcon, LinuxIcon, WindowsIcon } from "./icons";
+
+type Platform = "linux" | "windows" | "mac";
+
+export default function DownloadCTA() {
+  const [activeDropdown, setActiveDropdown] = useState<Platform | null>(null);
+  const [showInfo, setShowInfo] = useState<Platform | null>(null);
+
+  const macRef = useRef<HTMLDivElement>(null);
+  const windowsRef = useRef<HTMLDivElement>(null);
+  const linuxRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (
+        (activeDropdown === "mac" && macRef.current && !macRef.current.contains(event.target as Node)) ||
+        (activeDropdown === "windows" && windowsRef.current && !windowsRef.current.contains(event.target as Node)) ||
+        (activeDropdown === "linux" && linuxRef.current && !linuxRef.current.contains(event.target as Node))
+      ) {
+        setActiveDropdown(null);
+        setShowInfo(null);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [activeDropdown]);
+
+  const toggleDropdown = (platform: Platform) => {
+    if (activeDropdown === platform) {
+      setActiveDropdown(null);
+      setShowInfo(null);
+    } else {
+      setActiveDropdown(platform);
+      setShowInfo(null);
+    }
+  };
+
+  const toggleInfo = (e: React.MouseEvent, platform: Platform) => {
+    e.stopPropagation();
+    setShowInfo(showInfo === platform ? null : platform);
+    setActiveDropdown(platform);
+  };
+
+  return (
+    <section id="download" className="relative py-24 overflow-hidden">
+      <div className="glow w-[500px] h-[500px] bg-orange-500/[0.10] top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" />
+      <div className="relative mx-auto max-w-3xl px-6 text-center">
+        <div>
+          <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4">Ready to get started?</h2>
+          <p className="text-neutral-400 mb-8 max-w-lg mx-auto">
+            Download Kairo for free and start building better APIs today.
+          </p>
+          <div className="flex flex-wrap justify-center gap-3 mb-8">
+            
+            {/* macOS DOWNLOAD */}
+            <div ref={macRef} className="relative">
+              <button
+                onClick={() => toggleDropdown("mac")}
+                className="inline-flex items-center gap-2 px-6 py-3 rounded-lg text-sm font-medium transition-all bg-orange-600 hover:bg-orange-500 text-white"
+              >
+                <AppleIcon /> macOS <ChevronDownIcon className={`transition-transform duration-200 ${activeDropdown === "mac" ? "rotate-180" : ""}`} />
+              </button>
+
+              {activeDropdown === "mac" && (
+                <div className="absolute top-[52px] left-1/2 -translate-x-1/2 z-50 w-[310px] rounded-lg border border-[#181818] bg-[#111111] p-3 shadow-2xl text-left">
+                  <div className="flex flex-col text-[12px] -mx-1 -my-1">
+                    <a href="#download-mac-silicon" className="flex items-center gap-3 p-3 text-left hover:bg-[#1a1a1e] rounded transition-colors group">
+                      <div className="text-[#666666] group-hover:text-white"><AppleIcon /></div>
+                      <div>
+                        <div className="font-semibold text-white">Apple Silicon (.dmg)</div>
+                        <div className="text-[11px] text-[#666666]">Universal build optimized for M-series</div>
+                      </div>
+                    </a>
+                    <div className="h-px bg-[#181818]" />
+                    <a href="#download-mac-intel" className="flex items-center gap-3 p-3 text-left hover:bg-[#1a1a1e] rounded transition-colors group">
+                      <div className="text-[#666666] group-hover:text-white"><AppleIcon /></div>
+                      <div>
+                        <div className="font-semibold text-white">Intel DMG (.dmg)</div>
+                        <div className="text-[11px] text-[#666666]">Legacy compilation archive package</div>
+                      </div>
+                    </a>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Windows DOWNLOAD */}
+            <div ref={windowsRef} className="relative">
+              <button
+                onClick={() => toggleDropdown("windows")}
+                className="inline-flex items-center gap-2 px-6 py-3 rounded-lg text-sm font-medium transition-all bg-orange-600 hover:bg-orange-500 text-white"
+              >
+                <WindowsIcon /> Windows <ChevronDownIcon className={`transition-transform duration-200 ${activeDropdown === "windows" ? "rotate-180" : ""}`} />
+              </button>
+
+              {activeDropdown === "windows" && (
+                <div className="absolute top-[52px] left-1/2 -translate-x-1/2 z-50 w-[310px] rounded-lg border border-[#181818] bg-[#111111] p-3 shadow-2xl text-left">
+                  <div className="flex flex-col text-[12px] -mx-1 -my-1">
+                    <a href="#download-win-exe" className="flex items-center gap-3 p-3 text-left hover:bg-[#1a1a1e] rounded transition-colors group">
+                      <div className="text-[#666666] group-hover:text-white"><WindowsIcon /></div>
+                      <div>
+                        <div className="font-semibold text-white">Installer (.exe)</div>
+                        <div className="text-[11px] text-[#666666]">Standard setup wizard configuration</div>
+                      </div>
+                    </a>
+                    <div className="h-px bg-[#181818]" />
+                    <a href="#download-win-zip" className="flex items-center gap-3 p-3 text-left hover:bg-[#1a1a1e] rounded transition-colors group">
+                      <div className="text-[#666666] group-hover:text-white"><WindowsIcon /></div>
+                      <div>
+                        <div className="font-semibold text-white">Portable Binary (.zip)</div>
+                        <div className="text-[11px] text-[#666666]">Unpack and deploy instantly anywhere</div>
+                      </div>
+                    </a>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Linux DOWNLOAD */}
+            <div ref={linuxRef} className="relative">
+              <div className="flex items-center">
+                <button
+                  onClick={() => toggleDropdown("linux")}
+                  className="inline-flex items-center gap-2 px-6 py-3 rounded-l-lg text-sm font-medium transition-all bg-orange-600 hover:bg-orange-500 text-white"
+                >
+                  <LinuxIcon /> Linux <ChevronDownIcon className={`transition-transform duration-200 ${activeDropdown === "linux" && !showInfo ? "rotate-180" : ""}`} />
+                </button>
+                <button
+                  onClick={(e) => toggleInfo(e, "linux")}
+                  className="inline-flex items-center justify-center px-2.5 py-3 rounded-r-lg text-sm font-medium transition-all bg-orange-600 hover:bg-orange-500 border-l border-orange-400/30 text-orange-100 hover:text-white"
+                  title="Installation instructions"
+                  aria-label="Installation instructions"
+                >
+                  <InfoIcon />
+                </button>
+              </div>
+
+              {activeDropdown === "linux" && (
+                <div className="absolute top-[52px] left-1/2 -translate-x-1/2 z-50 w-[310px] rounded-lg border border-[#181818] bg-[#111111] p-3 shadow-2xl text-left">
+                  {showInfo === "linux" ? (
+                    <div className="space-y-3 text-[12px]">
+                      <div>
+                        <div className="text-center font-medium text-[#aaaaaa] mb-1.5 text-[11px]">AppImage (recommended)</div>
+                        <div className="bg-[#151515] p-2.5 rounded border border-[#1e1e1e] font-mono text-[#00ca54] leading-relaxed select-text text-[11px]">
+                          chmod +x Kairo_*.AppImage
+                          <br />
+                          ./Kairo_*.AppImage
+                        </div>
+                      </div>
+                      <div>
+                        <div className="text-center font-medium text-[#aaaaaa] mb-1.5 text-[11px]">.deb (Ubuntu / Debian)</div>
+                        <div className="bg-[#151515] p-2.5 rounded border border-[#1e1e1e] font-mono text-[#00ca54] leading-relaxed select-text text-[11px]">
+                          sudo dpkg -i Kairo_*.deb
+                        </div>
+                      </div>
+                      <div className="text-center text-[10px] text-[#666666] mt-1">Requires x86_64 (amd64).</div>
+                    </div>
+                  ) : (
+                    <div className="flex flex-col text-[12px] -mx-1 -my-1">
+                      <a href="#download-appimage" className="flex items-center gap-3 p-3 text-left hover:bg-[#1a1a1e] rounded transition-colors group">
+                        <div className="text-[#666666] group-hover:text-white"><LinuxIcon /></div>
+                        <div>
+                          <div className="font-semibold text-white">AppImage</div>
+                          <div className="text-[11px] text-[#666666]">Universal, no install needed</div>
+                        </div>
+                      </a>
+                      <div className="h-px bg-[#181818]" />
+                      <a href="#download-deb" className="flex items-center gap-3 p-3 text-left hover:bg-[#1a1a1e] rounded transition-colors group">
+                        <div className="text-[#666666] group-hover:text-white"><LinuxIcon /></div>
+                        <div>
+                          <div className="font-semibold text-white">.deb</div>
+                          <div className="text-[11px] text-[#666666]">Ubuntu / Debian architectures</div>
+                        </div>
+                      </a>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
+          </div>
+          <p className="text-sm text-neutral-600">Built with Rust. Runs on macOS, Windows, and Linux.</p>
+          <p className="text-xs text-neutral-700 mt-2">v0.4.0 Alpha</p>
+        </div>
+      </div>
+    </section>
+  );
+}
