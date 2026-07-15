@@ -56,7 +56,7 @@ export function FormDataTable({ rows, onChange }: Props) {
               <select
                 value={row.type}
                 onChange={(e) => update(row.id, { type: e.target.value as "text" | "file", value: "" })}
-                className="appearance-none bg-[#1a1a1a] text-neutral-300 border border-neutral-800 rounded px-2.5 py-1.5 text-[12px] font-medium tracking-wide cursor-pointer outline-none hover:bg-[#222] transition-colors pr-6"
+                className="appearance-none bg-[var(--c-1a1a1a)] text-neutral-300 border border-neutral-800 rounded px-2.5 py-1.5 text-[12px] font-medium tracking-wide cursor-pointer outline-none hover:bg-[var(--c-222222)] transition-colors pr-6"
               >
                 <option value="text">Text</option>
                 <option value="file">File</option>
@@ -73,7 +73,7 @@ export function FormDataTable({ rows, onChange }: Props) {
               value={row.key}
               onChange={(e) => update(row.id, { key: e.target.value })}
               placeholder="Key"
-              className="w-1/3 bg-[#141414] border border-neutral-900 rounded px-3 py-1.5 text-neutral-200 placeholder:text-neutral-600 outline-none focus:border-neutral-800 focus:bg-[#161616] transition-all"
+              className="w-1/3 bg-[var(--c-141414)] border border-neutral-900 rounded px-3 py-1.5 text-neutral-200 placeholder:text-neutral-600 outline-none focus:border-neutral-800 focus:bg-[var(--c-161616)] transition-all"
             />
 
             {/* Value Input / File Picker */}
@@ -82,7 +82,7 @@ export function FormDataTable({ rows, onChange }: Props) {
                 <button
                   type="button"
                   onClick={() => pickFile(row.id)}
-                  className="flex-1 flex items-center gap-2 bg-[#141414] border border-neutral-900 rounded px-3 py-1.5 text-left text-neutral-400 outline-none hover:bg-[#161616] transition-all truncate"
+                  className="flex-1 flex items-center gap-2 bg-[var(--c-141414)] border border-neutral-900 rounded px-3 py-1.5 text-left text-neutral-400 outline-none hover:bg-[var(--c-161616)] transition-all truncate"
                 >
                   <FolderOpen size={14} className="shrink-0 text-neutral-500" />
                   <span className="truncate text-[13px]">{row.value || "Value"}</span>
@@ -102,7 +102,7 @@ export function FormDataTable({ rows, onChange }: Props) {
                 value={row.value}
                 onChange={(e) => update(row.id, { value: e.target.value })}
                 placeholder="Value"
-                className="flex-1 bg-[#141414] border border-neutral-900 rounded px-3 py-1.5 text-neutral-200 placeholder:text-neutral-600 outline-none focus:border-neutral-800 focus:bg-[#161616] transition-all"
+                className="flex-1 bg-[var(--c-141414)] border border-neutral-900 rounded px-3 py-1.5 text-neutral-200 placeholder:text-neutral-600 outline-none focus:border-neutral-800 focus:bg-[var(--c-161616)] transition-all"
               />
             )}
 

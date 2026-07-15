@@ -134,17 +134,17 @@ export function ResponseBodyTab({ response }: Props) {
   }, [rawDisplay]);
 
   return (
-    <div className="flex h-full min-h-0 flex-col bg-[#0b0b0b] relative overflow-hidden">
+    <div className="flex h-full min-h-0 flex-col bg-[var(--c-0b0b0b)] relative overflow-hidden">
       {/* View Mode Header Options Bar */}
-      <div className="flex items-center border-b border-[#141414] px-3 h-[34px] shrink-0 bg-[#0b0b0b]">
-        <div className="flex items-center gap-1.5 bg-[#0e0e0e] p-0.5 rounded border border-[#161616]">
+      <div className="flex items-center border-b border-[var(--c-141414)] px-3 h-[34px] shrink-0 bg-[var(--c-0b0b0b)]">
+        <div className="flex items-center gap-1.5 bg-[var(--c-0e0e0e)] p-0.5 rounded border border-[var(--c-161616)]">
           <button
             onClick={() => setMode("tree")}
             className={clsx(
               "text-[11px] font-medium px-2.5 py-0.5 rounded transition-all",
               mode === "tree" 
-                ? "bg-[#181818] text-accent border border-[#242424]" 
-                : "text-[#7c7c7c] hover:text-[#aaaaaa] border border-transparent"
+                ? "bg-[var(--c-181818)] text-accent border border-[var(--c-242424)]" 
+                : "text-[var(--c-7c7c7c)] hover:text-[var(--c-aaaaaa)] border border-transparent"
             )}
           >
             Tree
@@ -154,8 +154,8 @@ export function ResponseBodyTab({ response }: Props) {
             className={clsx(
               "text-[11px] font-medium px-2.5 py-0.5 rounded transition-all",
               mode === "raw" 
-                ? "bg-[#181818] text-accent border border-[#242424]" 
-                : "text-[#7c7c7c] hover:text-[#aaaaaa] border border-transparent"
+                ? "bg-[var(--c-181818)] text-accent border border-[var(--c-242424)]" 
+                : "text-[var(--c-7c7c7c)] hover:text-[var(--c-aaaaaa)] border border-transparent"
             )}
           >
             View Raw
@@ -164,34 +164,34 @@ export function ResponseBodyTab({ response }: Props) {
       </div>
 
       {/* Main Internal Content Area (Locks scrolling here) */}
-      <div className="flex-1 overflow-auto min-h-0 bg-[#070707] relative select-text">
+      <div className="flex-1 overflow-auto min-h-0 bg-[var(--c-070707)] relative select-text">
         <div className="p-4">
           {mode === "tree" && parsedJson !== null ? (
             <div className="space-y-3">
               <div className="relative w-full">
-                <Search size={12} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[#444444]" />
+                <Search size={12} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[var(--c-444444)]" />
                 <input
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   placeholder="Search keys and values..."
-                  className="w-full rounded border border-[#161616] bg-[#0f0f0f] py-1 pl-8 pr-2 font-sans text-[11px] text-[#cccccc] placeholder:text-[#444444] focus:border-accent/40 focus:outline-none"
+                  className="w-full rounded border border-[var(--c-161616)] bg-[var(--c-0f0f0f)] py-1 pl-8 pr-2 font-sans text-[11px] text-[var(--c-cccccc)] placeholder:text-[var(--c-444444)] focus:border-accent/40 focus:outline-none"
                 />
               </div>
 
-              <div className="space-y-1 text-[10px] text-[#7c7c7c] font-sans tracking-wide select-none">
+              <div className="space-y-1 text-[10px] text-[var(--c-7c7c7c)] font-sans tracking-wide select-none">
                 <div className="flex items-center gap-2">
-                  <Files size={12} className="text-[#444444] shrink-0" />
+                  <Files size={12} className="text-[var(--c-444444)] shrink-0" />
                   <span>Click any key to copy its JS path</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <AlertCircle size={12} className="text-[#444444] shrink-0" />
+                  <AlertCircle size={12} className="text-[var(--c-444444)] shrink-0" />
                   <span>
-                    Use <code className="text-accent font-mono font-light text-[9.5px]">data</code> to reference the response body in scripts, e.g. <code className="text-[#a1a1aa] font-mono font-light text-[9.5px]">data.users[0].name</code>
+                    Use <code className="text-accent font-mono font-light text-[9.5px]">data</code> to reference the response body in scripts, e.g. <code className="text-[var(--c-a1a1aa)] font-mono font-light text-[9.5px]">data.users[0].name</code>
                   </span>
                 </div>
               </div>
 
-              <div className="font-mono text-[11px] pt-1.5 leading-[1.6] text-[#dedede] relative">
+              <div className="font-mono text-[11px] pt-1.5 leading-[1.6] text-[var(--c-dedede)] relative">
                 <JsonTree
                   data={parsedJson}
                   searchQuery={search}
@@ -203,7 +203,7 @@ export function ResponseBodyTab({ response }: Props) {
             <pre
               className={clsx(
                 "font-mono text-[11px] leading-[1.6]",
-                parsedJson === null && lang !== "text" ? "text-[#cccccc]" : "text-[#22c55e]",
+                parsedJson === null && lang !== "text" ? "text-[var(--c-cccccc)]" : "text-[#22c55e]",
                 wordWrap ? "whitespace-pre-wrap" : "whitespace-pre"
               )}
             >
@@ -215,7 +215,7 @@ export function ResponseBodyTab({ response }: Props) {
         {tooltip && (
           <div
             style={{ top: `${tooltip.y}px`, left: `${tooltip.x}px` }}
-            className="absolute z-50 pointer-events-none bg-[#111111] border border-[#222222] text-[#4ade80] px-2 py-0.5 rounded font-mono text-[11px] shadow-lg flex items-center gap-1 opacity-100 transition-opacity duration-150"
+            className="absolute z-50 pointer-events-none bg-[var(--c-111111)] border border-[var(--c-222222)] text-[#4ade80] px-2 py-0.5 rounded font-mono text-[11px] shadow-lg flex items-center gap-1 opacity-100 transition-opacity duration-150"
           >
             {tooltip.path}
           </div>
@@ -223,19 +223,19 @@ export function ResponseBodyTab({ response }: Props) {
       </div>
 
       {/* FIXED BOTTOM UTILITY STATUS DOCK BAR */}
-      <div className="w-full flex items-center justify-between border-t border-[#141414] bg-[#0b0b0b] px-4 h-[28px] shrink-0 text-[11px] text-[#555555] font-sans font-medium select-none z-10">
+      <div className="w-full flex items-center justify-between border-t border-[var(--c-141414)] bg-[var(--c-0b0b0b)] px-4 h-[28px] shrink-0 text-[11px] text-[var(--c-555555)] font-sans font-medium select-none z-10">
         <div className="relative inline-block text-left" ref={dropdownRef}>
           <button
             type="button"
             onClick={() => setDropdownOpen(!dropdownOpen)}
-            className="flex items-center gap-1 bg-transparent text-[#666666] hover:text-[#aaaaaa] font-sans text-[11px] font-medium transition-colors focus:outline-none"
+            className="flex items-center gap-1 bg-transparent text-[var(--c-666666)] hover:text-[var(--c-aaaaaa)] font-sans text-[11px] font-medium transition-colors focus:outline-none"
           >
             <span className="capitalize">{lang === "auto" ? "Auto" : lang.toUpperCase()}</span>
-            <ChevronDown size={11} className={clsx("transition-transform duration-150 text-[#555555]", dropdownOpen && "rotate-180")} />
+            <ChevronDown size={11} className={clsx("transition-transform duration-150 text-[var(--c-555555)]", dropdownOpen && "rotate-180")} />
           </button>
 
           {dropdownOpen && (
-            <div className="absolute left-0 bottom-full mb-1 w-24 rounded border border-[#161616] bg-[#0b0b0b] py-1 shadow-2xl z-50">
+            <div className="absolute left-0 bottom-full mb-1 w-24 rounded border border-[var(--c-161616)] bg-[var(--c-0b0b0b)] py-1 shadow-2xl z-50">
               {(["auto", "json", "xml", "html", "text"] as Lang[]).map((option) => (
                 <button
                   key={option}
@@ -247,8 +247,8 @@ export function ResponseBodyTab({ response }: Props) {
                   className={clsx(
                     "w-full px-3 py-1 text-left font-sans text-[11px] transition-colors focus:outline-none",
                     lang === option
-                      ? "bg-[#181818] text-accent font-medium"
-                      : "text-[#7c7c7c] hover:bg-[#111111] hover:text-[#aaaaaa]"
+                      ? "bg-[var(--c-181818)] text-accent font-medium"
+                      : "text-[var(--c-7c7c7c)] hover:bg-[var(--c-111111)] hover:text-[var(--c-aaaaaa)]"
                   )}
                 >
                   {option === "auto" ? "Auto" : option.toUpperCase()}
@@ -259,17 +259,17 @@ export function ResponseBodyTab({ response }: Props) {
         </div>
 
         <div className="flex items-center gap-4">
-          <span className="font-mono text-[#444444] text-[10px]">
+          <span className="font-mono text-[var(--c-444444)] text-[10px]">
             Lines 1-{lineCount} of {lineCount}
           </span>
           <label className="flex items-center gap-2 cursor-pointer">
-            <span className="text-[#555555]">Prettify</span>
+            <span className="text-[var(--c-555555)]">Prettify</span>
             <button
               type="button"
               onClick={() => setPretty((p) => !p)}
               className={clsx(
                 "relative inline-flex h-3.5 w-6 shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none",
-                pretty ? "bg-accent" : "bg-[#222222]"
+                pretty ? "bg-accent" : "bg-[var(--c-222222)]"
               )}
             >
               <span
@@ -280,7 +280,7 @@ export function ResponseBodyTab({ response }: Props) {
               />
             </button>
           </label>
-          <span className="text-[#444444] font-mono text-[10px]">Spaces: 2</span>
+          <span className="text-[var(--c-444444)] font-mono text-[10px]">Spaces: 2</span>
         </div>
       </div>
     </div>

@@ -7,6 +7,7 @@ import { useCollectionStore } from "@/stores/collectionStore";
 import { api } from "@/lib/api";
 import { useEnvironmentStore } from "@/stores/environmentStore";
 import { SaveRequestModal } from "./SaveRequestModal";
+import { CurlImportModal } from "./CurlImportModal";
 import { parseCurl, buildCurl } from "@/lib/curl";
 
 const METHODS: HttpMethod[] = ["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"];
@@ -28,6 +29,7 @@ interface Props {
 export function UrlBar({ tab }: Props) {
   const [methodOpen, setMethodOpen] = useState(false);
   const [saveModalOpen, setSaveModalOpen] = useState(false);
+  const [curlModalOpen, setCurlModalOpen] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [copied, setCopied] = useState(false);
   
@@ -128,21 +130,22 @@ export function UrlBar({ tab }: Props) {
 
   const handleImportCurl = () => {
     setDropdownOpen(false);
-    const text = prompt("Paste your cURL command:");
-    if (!text) return;
+    setCurlModalOpen(true);
+  };
+
+  const handleConfirmCurlImport = (text: string): "ok" | "invalid" => {
     const parsed = parseCurl(text);
-    if (parsed) {
-      updateRequest(tab.id, {
-        method: parsed.method,
-        url: parsed.url,
-        headers: parsed.headers,
-        params: parsed.params,
-        body: parsed.body,
-        auth: parsed.auth,
-      });
-    } else {
-      alert("Invalid cURL command");
-    }
+    if (!parsed) return "invalid";
+    updateRequest(tab.id, {
+      method: parsed.method,
+      url: parsed.url,
+      headers: parsed.headers,
+      params: parsed.params,
+      body: parsed.body,
+      auth: parsed.auth,
+    });
+    setCurlModalOpen(false);
+    return "ok";
   };
 
   return (
@@ -251,6 +254,12 @@ export function UrlBar({ tab }: Props) {
         initialName={tab.request.name === "New Request" ? tab.title : tab.request.name}
         onCancel={() => setSaveModalOpen(false)}
         onConfirm={handleConfirmSave}
+      />
+
+      <CurlImportModal
+        open={curlModalOpen}
+        onCancel={() => setCurlModalOpen(false)}
+        onConfirm={handleConfirmCurlImport}
       />
     </div>
   );

@@ -61,7 +61,7 @@ export function AuthTab({ tab }: Props) {
               "rounded-md px-3.5 py-1 text-[11px] font-normal tracking-wide transition-all",
               auth.type === a.id
                 ? "bg-[#F54900] text-[#FDFFFF] font-semibold "
-                : "bg-[#1a1a1a] text-[#a3a3a3] border-none hover:bg-[#262626] hover:text-text-primary"
+                : "bg-[var(--c-1a1a1a)] text-[var(--c-a3a3a3)] border-none hover:bg-[var(--c-262626)] hover:text-text-primary"
             )}
           >
             {a.label}

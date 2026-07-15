@@ -61,7 +61,7 @@ export function RequestBuilder({ tab }: Props) {
       <div className="flex-1 overflow-auto">
         {sub === "params" && (
           <>
-            <div className="px-4 pt-4 text-[11px] font-bold uppercase tracking-widest text-[#a3a3a3]">
+            <div className="px-4 pt-4 text-[11px] font-bold uppercase tracking-widest text-[var(--c-a3a3a3)]">
               Query Params
             </div>
             <KeyValueTable

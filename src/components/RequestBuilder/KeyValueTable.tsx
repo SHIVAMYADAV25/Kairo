@@ -35,7 +35,7 @@ export function KeyValueTable({ rows, onChange, keyPlaceholder = "Key", keySugge
       )}
 
       {/* Adjusted padding here to balance the top spacing perfectly */}
-      <div className="grid grid-cols-[16px_24px_1fr_1fr_1fr_32px] gap-2 px-3 pt-2 pb-1 text-[11px] font-medium uppercase tracking-wider text-[#312C22]">
+      <div className="grid grid-cols-[16px_24px_1fr_1fr_1fr_32px] gap-2 px-3 pt-2 pb-1 text-[11px] font-medium uppercase tracking-wider text-[var(--c-312c22)]">
         <span />
         <span />
         <span className="pl-3">Key</span>
@@ -67,21 +67,21 @@ export function KeyValueTable({ rows, onChange, keyPlaceholder = "Key", keySugge
                 list={keySuggestions ? listId : undefined}
                 onChange={(e) => update(row.id, { key: e.target.value })}
                 placeholder={keyPlaceholder}
-                className="w-full rounded-md border-none bg-[#111111] px-3 py-1.5 text-text-primary placeholder:text-[#737373] outline-none transition-colors focus:bg-[#161616]"
+                className="w-full rounded-md border-none bg-[var(--c-111111)] px-3 py-1.5 text-text-primary placeholder:text-[var(--c-737373)] outline-none transition-colors focus:bg-[var(--c-161616)]"
               />
 
               <input
                 value={row.value}
                 onChange={(e) => update(row.id, { value: e.target.value })}
                 placeholder="Value"
-                className="w-full rounded-md border-none bg-[#111111] px-3 py-1.5 text-text-primary placeholder:text-[#737373] outline-none transition-colors focus:bg-[#161616]"
+                className="w-full rounded-md border-none bg-[var(--c-111111)] px-3 py-1.5 text-text-primary placeholder:text-[var(--c-737373)] outline-none transition-colors focus:bg-[var(--c-161616)]"
               />
 
               <input
                 value={row.description ?? ""}
                 onChange={(e) => update(row.id, { description: e.target.value })}
                 placeholder="Description"
-                className="w-full rounded-md border border-[#161616] bg-[#0A0A0A] px-3 py-1.5 text-text-primary font-normal placeholder:text-[#424040] outline-none transition-colors focus:bg-[#161616]"
+                className="w-full rounded-md border border-[var(--c-161616)] bg-[var(--c-0a0a0a)] px-3 py-1.5 text-text-primary font-normal placeholder:text-[var(--c-424040)] outline-none transition-colors focus:bg-[var(--c-161616)]"
               />
 
               <button onClick={() => remove(row.id)} className="flex items-center justify-center text-text-muted/40 transition-colors hover:text-status-error">

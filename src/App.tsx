@@ -40,6 +40,8 @@ export default function App() {
   const activeTab = tabs.find((t) => t.id === activeTabId) ?? null;
   const perfHistory = activeTab ? perfHistoryByTab[activeTab.id] ?? [] : [];
 
+  const centerStackRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
     (async () => {
       await hydrate();
@@ -131,7 +133,7 @@ export default function App() {
         />
 
         {/* Center stack: request editor (resizable, fixed height) + response (fills whatever remains) */}
-        <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
+        <div ref={centerStackRef} className="flex min-w-0 flex-1 flex-col overflow-hidden">
           {activeTab ? (
             <div className="flex h-full min-h-0 w-full flex-col overflow-hidden">
               <div style={{ height: settings.panelSizes.requestEditorHeight }} className="shrink-0 overflow-auto">
@@ -141,13 +143,22 @@ export default function App() {
               </div>
               <ResizeHandle
                 direction="vertical"
-                onResize={(d) =>
-                  update({ panelSizes: { ...settings.panelSizes, requestEditorHeight: Math.max(180, settings.panelSizes.requestEditorHeight + d) } })
-                }
+                onResize={(d) => {
+                  const totalHeight = centerStackRef.current?.clientHeight || window.innerHeight;
+                  const minResponseHeight = 200; 
+                  const maxRequestHeight = totalHeight - minResponseHeight;
+                  
+                  const newHeight = Math.min(
+                    maxRequestHeight,
+                    Math.max(180, settings.panelSizes.requestEditorHeight + d)
+                  );
+
+                  update({ panelSizes: { ...settings.panelSizes, requestEditorHeight: newHeight } });
+                }}
               />
 
               {responseOpen ? (
-                <div className="flex min-h-0 flex-1 flex-col overflow-auto bg-[#0b0b0b]">
+                <div className="flex min-h-0 flex-1 flex-col overflow-auto bg-[var(--c-0b0b0b)]">
                   <ZoomWrapper cssVar="--zoom-response">
                     <ResponseViewer tab={activeTab} onClose={() => setResponseOpen(false)} />
                   </ZoomWrapper>

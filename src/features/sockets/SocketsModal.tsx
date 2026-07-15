@@ -67,18 +67,18 @@ export function SocketsModal({ open, onClose }: Props) {
       onClick={onClose}
     >
       <div
-        className="flex h-[640px] w-[1020px] max-w-full overflow-hidden rounded-md border border-[#222] bg-[#0c0c0c] shadow-2xl transition-all"
+        className="flex h-[640px] w-[1020px] max-w-full overflow-hidden rounded-md border border-[var(--c-222222)] bg-[var(--c-0c0c0c)] shadow-2xl transition-all"
         onClick={(e) => e.stopPropagation()}
       >
         {/* ================= LEFT SIDEBAR CONNECTIONS LIST ================= */}
-        <div className="flex w-[250px] shrink-0 flex-col border-r border-[#1a1a1a] bg-[#090909]">
-          <div className="flex h-12 items-center justify-between border-b border-[#1a1a1a] px-4">
+        <div className="flex w-[250px] shrink-0 flex-col border-r border-[var(--c-1a1a1a)] bg-[var(--c-090909)]">
+          <div className="flex h-12 items-center justify-between border-b border-[var(--c-1a1a1a)] px-4">
             <div className="flex items-center gap-2 text-[13px] font-semibold tracking-wide text-neutral-200">
               <Radio size={14} className="text-purple-500" /> WebSockets
             </div>
             <button 
               onClick={() => addConnection()} 
-              className="flex h-7 w-7 items-center justify-center rounded border border-[#242424] bg-[#121212] text-neutral-400 transition-all hover:border-purple-600 hover:text-white"
+              className="flex h-7 w-7 items-center justify-center rounded border border-[var(--c-242424)] bg-[var(--c-121212)] text-neutral-400 transition-all hover:border-purple-600 hover:text-white"
               title="Create new Client Connection"
             >
               <Plus size={14} />
@@ -86,7 +86,7 @@ export function SocketsModal({ open, onClose }: Props) {
           </div>
           
           {/* Strict Independent View Container Frame Scroll */}
-          <div className="flex-1 overflow-y-auto p-2 space-y-1 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-[#222] [&::-webkit-scrollbar-thumb]:rounded-sm">
+          <div className="flex-1 overflow-y-auto p-2 space-y-1 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-[var(--c-222222)] [&::-webkit-scrollbar-thumb]:rounded-sm">
             {connections.map((c) => (
               <button
                 key={c.id}
@@ -94,8 +94,8 @@ export function SocketsModal({ open, onClose }: Props) {
                 className={clsx(
                   "group flex w-full flex-col items-start gap-1 rounded px-3 py-2.5 text-left border transition-all",
                   c.id === activeConnectionId 
-                    ? "bg-[#141218] border-purple-900/50 shadow-inner" 
-                    : "bg-transparent border-transparent hover:bg-[#121212]"
+                    ? "bg-[var(--c-141218)] border-purple-900/50 shadow-inner" 
+                    : "bg-transparent border-transparent hover:bg-[var(--c-121212)]"
                 )}
               >
                 <div className="flex w-full items-center justify-between gap-2">
@@ -123,11 +123,11 @@ export function SocketsModal({ open, onClose }: Props) {
         </div>
 
         {/* ================= MAIN CONFIGURATION AREA ================= */}
-        <div className="flex min-w-0 flex-1 flex-col bg-[#0c0c0c]">
+        <div className="flex min-w-0 flex-1 flex-col bg-[var(--c-0c0c0c)]">
           {active ? (
             <>
               {/* Workspace Header Panel */}
-              <div className="flex h-12 items-center justify-between border-b border-[#1a1a1a] px-4 shrink-0">
+              <div className="flex h-12 items-center justify-between border-b border-[var(--c-1a1a1a)] px-4 shrink-0">
                 <input
                   value={active.name ?? ""}
                   onChange={(e) => updateConnection(active.id, { name: e.target.value })}
@@ -140,13 +140,13 @@ export function SocketsModal({ open, onClose }: Props) {
               </div>
 
               {/* URL Connect Control bar */}
-              <div className="flex items-center gap-2 border-b border-[#1a1a1a] bg-[#090909]/40 p-3 shrink-0">
+              <div className="flex items-center gap-2 border-b border-[var(--c-1a1a1a)] bg-[var(--c-090909)]/40 p-3 shrink-0">
                 <input
                   value={active.url}
                   onChange={(e) => updateConnection(active.id, { url: e.target.value })}
                   disabled={active.status === "open" || active.status === "connecting"}
                   placeholder="wss://echo.websocket.org"
-                  className="flex-1 h-[32px] rounded border border-[#262626] bg-[#121212] px-3 font-mono text-[12px] text-neutral-200 outline-none transition-colors focus:border-purple-600/80 disabled:opacity-50"
+                  className="flex-1 h-[32px] rounded border border-[var(--c-262626)] bg-[var(--c-121212)] px-3 font-mono text-[12px] text-neutral-200 outline-none transition-colors focus:border-purple-600/80 disabled:opacity-50"
                 />
                 
                 {active.status === "open" || active.status === "connecting" ? (
@@ -167,7 +167,7 @@ export function SocketsModal({ open, onClose }: Props) {
               </div>
 
               {/* View Controller Context bar */}
-              <div className="flex h-9 items-center justify-between border-b border-[#1a1a1a] bg-[#090909] px-4 shrink-0">
+              <div className="flex h-9 items-center justify-between border-b border-[var(--c-1a1a1a)] bg-[var(--c-090909)] px-4 shrink-0">
                 <div className="flex items-center gap-3">
                   <div className={clsx("flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider", STATUS_META[active.status].bg, STATUS_META[active.status].text)}>
                     <span className={clsx("h-1.5 w-1.5 rounded-full", STATUS_META[active.status].dot)} />
@@ -194,14 +194,14 @@ export function SocketsModal({ open, onClose }: Props) {
                 </div>
 
                 {/* Tabs switcher */}
-                <div className="flex h-full border-l border-[#1a1a1a]">
+                <div className="flex h-full border-l border-[var(--c-1a1a1a)]">
                   {(["messages", "headers"] as const).map((tab) => (
                     <button
                       key={tab}
                       onClick={() => setSub(tab)}
                       className={clsx(
-                        "relative h-full px-4 text-[11px] font-medium tracking-wide uppercase transition-colors border-r border-[#1a1a1a]",
-                        sub === tab ? "bg-[#111] text-purple-400 font-semibold" : "text-neutral-500 hover:text-neutral-300"
+                        "relative h-full px-4 text-[11px] font-medium tracking-wide uppercase transition-colors border-r border-[var(--c-1a1a1a)]",
+                        sub === tab ? "bg-[var(--c-111111)] text-purple-400 font-semibold" : "text-neutral-500 hover:text-neutral-300"
                       )}
                     >
                       {tab}
@@ -212,9 +212,9 @@ export function SocketsModal({ open, onClose }: Props) {
               </div>
 
               {/* Main Workspace Frame Container - Rigid heights setup */}
-              <div className="flex-1 flex flex-col min-h-0 bg-[#070707] overflow-hidden">
+              <div className="flex-1 flex flex-col min-h-0 bg-[var(--c-070707)] overflow-hidden">
                 {sub === "headers" && (
-                  <div className="flex-1 overflow-y-auto [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-[#222] [&::-webkit-scrollbar-thumb]:rounded-sm">
+                  <div className="flex-1 overflow-y-auto [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-[var(--c-222222)] [&::-webkit-scrollbar-thumb]:rounded-sm">
                     <HeadersEditor conn={active} onChange={(headers) => updateConnection(active.id, { headers })} />
                   </div>
                 )}
@@ -222,7 +222,7 @@ export function SocketsModal({ open, onClose }: Props) {
                 {sub === "messages" && (
                   <>
                     {/* Log Terminal Frame */}
-                    <div ref={logRef} className="flex-1 overflow-y-auto p-4 space-y-3 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-[#222] [&::-webkit-scrollbar-thumb]:rounded-sm">
+                    <div ref={logRef} className="flex-1 overflow-y-auto p-4 space-y-3 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-[var(--c-222222)] [&::-webkit-scrollbar-thumb]:rounded-sm">
                       {active.messages.length === 0 ? (
                         <div className="flex h-full flex-col items-center justify-center text-neutral-600 gap-2 font-mono">
                           <FileCode size={24} className="stroke-1 opacity-40" />
@@ -234,7 +234,7 @@ export function SocketsModal({ open, onClose }: Props) {
                     </div>
 
                     {/* Bottom Composer Operations Tray */}
-                    <div className="border-t border-[#1a1a1a] bg-[#090909] p-3 shrink-0">
+                    <div className="border-t border-[var(--c-1a1a1a)] bg-[var(--c-090909)] p-3 shrink-0">
                       <div className="mb-2 flex items-center justify-between">
                         <label className="flex items-center gap-2 cursor-pointer text-neutral-400 hover:text-neutral-300 select-none">
                           <input 
@@ -272,12 +272,12 @@ export function SocketsModal({ open, onClose }: Props) {
                           placeholder={active.status === "open" ? "Enter payload here... (⏎ to send, ⇧⏎ for line break)" : "Connection offline. Connect to server to send messages."}
                           disabled={active.status !== "open"}
                           rows={2}
-                          className="flex-1 resize-none rounded border border-[#262626] bg-[#121212] px-3 py-2 font-mono text-[12px] text-neutral-200 outline-none placeholder:text-neutral-600 focus:border-purple-600/80 disabled:opacity-40"
+                          className="flex-1 resize-none rounded border border-[var(--c-262626)] bg-[var(--c-121212)] px-3 py-2 font-mono text-[12px] text-neutral-200 outline-none placeholder:text-neutral-600 focus:border-purple-600/80 disabled:opacity-40"
                         />
                         <button
                           onClick={handleSend}
                           disabled={active.status !== "open" || !composer.trim()}
-                          className="flex h-[48px] items-center gap-1.5 rounded bg-purple-600 px-4 text-[12px] font-semibold text-white hover:bg-purple-500 disabled:bg-neutral-900 disabled:border disabled:border-[#222] disabled:text-neutral-600 disabled:opacity-100 transition-colors"
+                          className="flex h-[48px] items-center gap-1.5 rounded bg-purple-600 px-4 text-[12px] font-semibold text-white hover:bg-purple-500 disabled:bg-neutral-900 disabled:border disabled:border-[var(--c-222222)] disabled:text-neutral-600 disabled:opacity-100 transition-colors"
                         >
                           <Send size={13} /> Send
                         </button>
@@ -330,13 +330,13 @@ function HeadersEditor({ conn, onChange }: { conn: SocketConnection; onChange: (
               value={h.key} 
               onChange={(e) => update(h.id, { key: e.target.value })} 
               placeholder="Header Key (e.g. Authorization)" 
-              className="rounded border border-[#222] bg-[#111] px-3 py-1.5 font-mono text-[11px] text-neutral-200 placeholder:text-neutral-600 outline-none focus:border-purple-950 focus:bg-[#141414]" 
+              className="rounded border border-[var(--c-222222)] bg-[var(--c-111111)] px-3 py-1.5 font-mono text-[11px] text-neutral-200 placeholder:text-neutral-600 outline-none focus:border-purple-950 focus:bg-[var(--c-141414)]" 
             />
             <input 
               value={h.value} 
               onChange={(e) => update(h.id, { value: e.target.value })} 
               placeholder="Value" 
-              className="rounded border border-[#222] bg-[#111] px-3 py-1.5 font-mono text-[11px] text-neutral-200 placeholder:text-neutral-600 outline-none focus:border-purple-950 focus:bg-[#141414]" 
+              className="rounded border border-[var(--c-222222)] bg-[var(--c-111111)] px-3 py-1.5 font-mono text-[11px] text-neutral-200 placeholder:text-neutral-600 outline-none focus:border-purple-950 focus:bg-[var(--c-141414)]" 
             />
             <button 
               onClick={() => remove(h.id)} 
@@ -367,9 +367,9 @@ function MessageBubble({ message }: { message: SocketMessage }) {
   const time = new Date(message.timestamp).toLocaleTimeString([], { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
 
   return (
-    <div className="w-full border border-[#181818] bg-[#0b0b0b] rounded overflow-hidden shadow-xs">
+    <div className="w-full border border-[var(--c-181818)] bg-[var(--c-0b0b0b)] rounded overflow-hidden shadow-xs">
       {/* Header Context Control Panel Tray */}
-      <div className="flex h-7 items-center justify-between border-b border-[#161616] bg-[#0e0e0e] px-3">
+      <div className="flex h-7 items-center justify-between border-b border-[var(--c-161616)] bg-[var(--c-0e0e0e)] px-3">
         <div className="flex items-center gap-2">
           <span className={clsx(
             "rounded px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider",
@@ -392,7 +392,7 @@ function MessageBubble({ message }: { message: SocketMessage }) {
             setCopied(true);
             setTimeout(() => setCopied(false), 1500);
           }}
-          className="flex items-center gap-1 rounded px-2 py-0.5 text-[10px] text-neutral-400 hover:bg-[#1a1a1a] hover:text-white transition-colors"
+          className="flex items-center gap-1 rounded px-2 py-0.5 text-[10px] text-neutral-400 hover:bg-[var(--c-1a1a1a)] hover:text-white transition-colors"
         >
           {copied ? (
             <>
@@ -409,8 +409,8 @@ function MessageBubble({ message }: { message: SocketMessage }) {
       </div>
 
       {/* Structured Code Frame Window Container */}
-      <div className="p-3 bg-[#070707]">
-        <pre className="max-h-[220px] overflow-y-auto whitespace-pre-wrap break-all font-mono text-[12px] text-neutral-300 selection:bg-purple-900/50 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-[#222] [&::-webkit-scrollbar-thumb]:rounded-sm">
+      <div className="p-3 bg-[var(--c-070707)]">
+        <pre className="max-h-[220px] overflow-y-auto whitespace-pre-wrap break-all font-mono text-[12px] text-neutral-300 selection:bg-purple-900/50 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-[var(--c-222222)] [&::-webkit-scrollbar-thumb]:rounded-sm">
           {display}
         </pre>
       </div>

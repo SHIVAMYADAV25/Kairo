@@ -48,15 +48,15 @@ export function MockServerModal({ open, onClose }: Props) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 font-sans text-[12px] select-none" onClick={onClose}>
       <div
-        className="flex h-[640px] w-[960px] max-w-full overflow-hidden rounded-md border border-[#1b1b1b] bg-[#0f0f0f] text-[#ffffff] shadow-2xl"
+        className="flex h-[640px] w-[960px] max-w-full overflow-hidden rounded-md border border-[var(--c-1b1b1b)] bg-[var(--c-0f0f0f)] text-[var(--c-ffffff)] shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
         {/* ================= LEFT CONTROLS & FORM SECTION ================= */}
-        <div className="flex flex-1 flex-col overflow-y-auto p-5 border-r border-[#1b1b1b]">
+        <div className="flex flex-1 flex-col overflow-y-auto p-5 border-r border-[var(--c-1b1b1b)]">
           {/* Top Title Bar */}
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-[16px] font-medium text-white">Mock Server</h2>
-            <button onClick={onClose} className="text-[#555555] hover:text-[#aaaaaa] transition-colors">
+            <button onClick={onClose} className="text-[var(--c-555555)] hover:text-[var(--c-aaaaaa)] transition-colors">
               <X size={16} />
             </button>
           </div>
@@ -64,13 +64,13 @@ export function MockServerModal({ open, onClose }: Props) {
           {/* Port and Action Setup Block */}
           <div className="flex flex-col gap-1.5 mb-3">
             <div className="flex items-center gap-3">
-              <span className="text-[#7f7f7f]">Port:</span>
+              <span className="text-[var(--c-7f7f7f)]">Port:</span>
               <input
                 type="number"
                 value={port}
                 onChange={(e) => setPort(Number(e.target.value))}
                 disabled={running}
-                className="w-[75px] h-[28px] px-2.5 bg-[#1a1a1a] border border-[#262626] rounded text-white font-mono text-[12px] outline-none"
+                className="w-[75px] h-[28px] px-2.5 bg-[var(--c-1a1a1a)] border border-[var(--c-262626)] rounded text-white font-mono text-[12px] outline-none"
               />
               
               <button
@@ -104,18 +104,18 @@ export function MockServerModal({ open, onClose }: Props) {
             {error && <div className="text-[11px] text-[#ff3b30] mt-0.5">{error}</div>}
             
             {running && (
-              <div className="text-[11px] text-[#7f7f7f] font-sans mt-1.5">
-                Base URL: <span className="text-[#a5a5a5] font-mono select-all">http://localhost:{port}</span>
+              <div className="text-[11px] text-[var(--c-7f7f7f)] font-sans mt-1.5">
+                Base URL: <span className="text-[var(--c-a5a5a5)] font-mono select-all">http://localhost:{port}</span>
               </div>
             )}
           </div>
 
           {/* Dynamic Routes Header Area */}
           <div className="flex items-center justify-between mb-2">
-            <span className="text-[11px] font-bold text-[#555555] uppercase tracking-wider">Routes</span>
+            <span className="text-[11px] font-bold text-[var(--c-555555)] uppercase tracking-wider">Routes</span>
             <button
               onClick={() => setFormOpen("new")}
-              className="flex items-center gap-1 text-[12px] text-[#a5a5a5] hover:text-white transition-colors font-medium"
+              className="flex items-center gap-1 text-[12px] text-[var(--c-a5a5a5)] hover:text-white transition-colors font-medium"
             >
               <Plus size={14} /> Add Route
             </button>
@@ -125,7 +125,7 @@ export function MockServerModal({ open, onClose }: Props) {
           <div className="space-y-2">
             {/* Embedded Active Route Rows */}
             {routes.length > 0 && (
-              <div className="border border-[#1a1a1a] rounded bg-[#0b0b0b] divide-y divide-[#161616]">
+              <div className="border border-[var(--c-1a1a1a)] rounded bg-[var(--c-0b0b0b)] divide-y divide-[var(--c-161616)]">
                 {routes.map((r) => (
                   <RouteRow
                     key={r.id}
@@ -140,7 +140,7 @@ export function MockServerModal({ open, onClose }: Props) {
 
             {/* Nested Inline Creation/Edit Blueprint Form Panel */}
             {(formOpen === "new" || editingRoute) && (
-              <div className="border border-[#222] bg-[#121212] rounded p-4 mt-2 shadow-inner">
+              <div className="border border-[var(--c-222222)] bg-[var(--c-121212)] rounded p-4 mt-2 shadow-inner">
                 <RouteForm
                   initial={editingRoute}
                   onCancel={() => setFormOpen(null)}
@@ -156,19 +156,19 @@ export function MockServerModal({ open, onClose }: Props) {
         </div>
 
         {/* ================= RIGHT SIDEBAR REQUEST LOG ================= */}
-        <div className="flex w-[300px] shrink-0 flex-col bg-[#0b0b0b] p-5">
+        <div className="flex w-[300px] shrink-0 flex-col bg-[var(--c-0b0b0b)] p-5">
           <div className="flex items-center justify-between mb-3">
-            <span className="text-[11px] font-bold text-[#555555] uppercase tracking-wider">Request Log</span>
+            <span className="text-[11px] font-bold text-[var(--c-555555)] uppercase tracking-wider">Request Log</span>
             {log.length > 0 && (
-              <button onClick={clearLog} className="text-[11px] text-[#666666] hover:text-[#aaaaaa] transition-colors">
+              <button onClick={clearLog} className="text-[11px] text-[var(--c-666666)] hover:text-[var(--c-aaaaaa)] transition-colors">
                 Clear
               </button>
             )}
           </div>
           
-          <div className="flex-1 overflow-y-auto rounded border border-[#1a1a1a] bg-[#070707] p-3">
+          <div className="flex-1 overflow-y-auto rounded border border-[var(--c-1a1a1a)] bg-[var(--c-070707)] p-3">
             {log.length === 0 ? (
-              <div className="flex h-full items-center justify-center p-4 text-center text-[#444444] font-sans text-[12px]">
+              <div className="flex h-full items-center justify-center p-4 text-center text-[var(--c-444444)] font-sans text-[12px]">
                 Waiting for requests...
               </div>
             ) : (
@@ -177,14 +177,14 @@ export function MockServerModal({ open, onClose }: Props) {
                   const time = new Date(entry.timestamp).toLocaleTimeString([], { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
                   const isOk = entry.status >= 200 && entry.status < 400;
                   return (
-                    <div key={entry.id} className="text-[11px] font-mono border-b border-[#141414] pb-2 last:border-0 last:pb-0">
+                    <div key={entry.id} className="text-[11px] font-mono border-b border-[var(--c-141414)] pb-2 last:border-0 last:pb-0">
                       <div className="flex items-center gap-2">
-                        <span className="text-[#555555] text-[10px]">{time}</span>
+                        <span className="text-[var(--c-555555)] text-[10px]">{time}</span>
                         <span className={clsx("font-bold text-[10px]", METHOD_COLOR[entry.method] ?? "")}>{entry.method}</span>
-                        <span className="truncate text-[#cccccc] font-medium">{entry.path}</span>
+                        <span className="truncate text-[var(--c-cccccc)] font-medium">{entry.path}</span>
                       </div>
                       <div className={clsx("pl-12 mt-0.5 font-semibold text-[10px]", isOk ? "text-[#00ca54]" : "text-[#ff3b30]")}>
-                        → {entry.status} <span className="text-[#444444] font-normal text-[9px]">({entry.durationMs}ms)</span>
+                        → {entry.status} <span className="text-[var(--c-444444)] font-normal text-[9px]">({entry.durationMs}ms)</span>
                       </div>
                     </div>
                   );
@@ -200,21 +200,21 @@ export function MockServerModal({ open, onClose }: Props) {
 
 function RouteRow({ route, onEdit, onToggle, onDelete }: { route: MockRoute; onEdit: () => void; onToggle: (enabled: boolean) => void; onDelete: () => void }) {
   return (
-    <div className="flex items-center justify-between gap-3 px-3 py-2.5 hover:bg-[#131313] transition-colors group">
+    <div className="flex items-center justify-between gap-3 px-3 py-2.5 hover:bg-[var(--c-131313)] transition-colors group">
       <button onClick={onEdit} className="flex flex-1 items-center gap-3 text-left font-mono text-[12px]">
         <span className={clsx("w-10 shrink-0 font-bold text-[11px]", METHOD_COLOR[route.method] ?? "")}>{route.method}</span>
-        <span className="truncate text-[#dddddd] font-medium">{route.path}</span>
+        <span className="truncate text-[var(--c-dddddd)] font-medium">{route.path}</span>
       </button>
       
       <div className="flex items-center gap-3">
-        <span className="font-mono text-[12px] text-[#666666] font-medium">{route.status}</span>
+        <span className="font-mono text-[12px] text-[var(--c-666666)] font-medium">{route.status}</span>
         <input 
           type="checkbox" 
           checked={route.enabled} 
           onChange={() => onToggle(!route.enabled)}
           className="mock-custom-checkbox" 
         />
-        <button onClick={onDelete} className="text-[#444444] hover:text-[#ff3b30] transition-colors opacity-40 group-hover:opacity-100">
+        <button onClick={onDelete} className="text-[var(--c-444444)] hover:text-[#ff3b30] transition-colors opacity-40 group-hover:opacity-100">
           <X size={14} />
         </button>
       </div>
@@ -250,14 +250,14 @@ function RouteForm({ initial, onCancel, onSave }: { initial: MockRoute | null; o
     <div className="text-[12px]">
       <div className="mb-3 flex items-center justify-between">
         <span className="font-semibold text-white text-[12px]">{initial ? "Edit Route" : "New Route"}</span>
-        <button onClick={onCancel} className="text-[#555555] hover:text-[#aaaaaa] transition-colors">
+        <button onClick={onCancel} className="text-[var(--c-555555)] hover:text-[var(--c-aaaaaa)] transition-colors">
           <X size={14} />
         </button>
       </div>
 
       {/* Main Parameters input line alignment */}
       <div className="mb-2.5 flex gap-2">
-        <select value={method} onChange={(e) => setMethod(e.target.value)} className="w-[85px] h-[28px] px-2 bg-[#1a1a1a] border border-[#262626] rounded text-white font-medium outline-none">
+        <select value={method} onChange={(e) => setMethod(e.target.value)} className="w-[85px] h-[28px] px-2 bg-[var(--c-1a1a1a)] border border-[var(--c-262626)] rounded text-white font-medium outline-none">
           {METHODS.map((m) => (
             <option key={m} value={m}>{m}</option>
           ))}
@@ -267,14 +267,14 @@ function RouteForm({ initial, onCancel, onSave }: { initial: MockRoute | null; o
           value={path} 
           onChange={(e) => setPath(e.target.value)} 
           placeholder="/" 
-          className="flex-1 h-[28px] px-3 bg-[#1a1a1a] border border-[#262626] rounded text-white font-mono text-[12px] outline-none placeholder:text-[#444444]" 
+          className="flex-1 h-[28px] px-3 bg-[var(--c-1a1a1a)] border border-[var(--c-262626)] rounded text-white font-mono text-[12px] outline-none placeholder:text-[var(--c-444444)]" 
         />
         
         <input 
           type="number" 
           value={status} 
           onChange={(e) => setStatus(Number(e.target.value))} 
-          className="w-16 h-[28px] text-center bg-[#1a1a1a] border border-[#262626] rounded text-white font-mono outline-none" 
+          className="w-16 h-[28px] text-center bg-[var(--c-1a1a1a)] border border-[var(--c-262626)] rounded text-white font-mono outline-none" 
           placeholder="200"
         />
         
@@ -282,7 +282,7 @@ function RouteForm({ initial, onCancel, onSave }: { initial: MockRoute | null; o
           type="number" 
           value={delayMs} 
           onChange={(e) => setDelayMs(Number(e.target.value))} 
-          className="w-16 h-[28px] text-center bg-[#1a1a1a] border border-[#262626] rounded text-white font-mono outline-none" 
+          className="w-16 h-[28px] text-center bg-[var(--c-1a1a1a)] border border-[var(--c-262626)] rounded text-white font-mono outline-none" 
           placeholder="0"
         />
       </div>
@@ -291,33 +291,33 @@ function RouteForm({ initial, onCancel, onSave }: { initial: MockRoute | null; o
         value={description}
         onChange={(e) => setDescription(e.target.value)}
         placeholder="Description (optional)"
-        className="mb-3 w-full h-[28px] px-3 bg-[#1a1a1a] border border-[#262626] rounded text-white outline-none placeholder:text-[#444444]"
+        className="mb-3 w-full h-[28px] px-3 bg-[var(--c-1a1a1a)] border border-[var(--c-262626)] rounded text-white outline-none placeholder:text-[var(--c-444444)]"
       />
 
-      <div className="mb-1 text-[#7f7f7f] text-[11px] font-medium">Response Body</div>
+      <div className="mb-1 text-[var(--c-7f7f7f)] text-[11px] font-medium">Response Body</div>
       <textarea
         value={responseBody}
         onChange={(e) => setResponseBody(e.target.value)}
         rows={4}
-        className="w-full resize-none p-2.5 bg-[#1a1a1a] border border-[#262626] rounded text-white font-mono text-[12px] outline-none"
+        className="w-full resize-none p-2.5 bg-[var(--c-1a1a1a)] border border-[var(--c-262626)] rounded text-white font-mono text-[12px] outline-none"
       />
       
       {/* Dynamic string formatting description footer line */}
-      <div className="mb-3 font-mono text-[10px] text-[#555555] leading-relaxed">
-        Template variables: <span className="text-[#6b6b6b]">{"{{$uuid}} {{$timestamp}} {{$isoTimestamp}} {{$randomInt}} {{$randomInt(min,max)}} {{$randomFloat}} {{$randomBool}} {{$randomString}} {{$randomEmail}}"}</span>
+      <div className="mb-3 font-mono text-[10px] text-[var(--c-555555)] leading-relaxed">
+        Template variables: <span className="text-[var(--c-6b6b6b)]">{"{{$uuid}} {{$timestamp}} {{$isoTimestamp}} {{$randomInt}} {{$randomInt(min,max)}} {{$randomFloat}} {{$randomBool}} {{$randomString}} {{$randomEmail}}"}</span>
       </div>
 
-      <div className="mb-1 text-[#7f7f7f] text-[11px] font-medium">Response Headers (JSON array)</div>
+      <div className="mb-1 text-[var(--c-7f7f7f)] text-[11px] font-medium">Response Headers (JSON array)</div>
       <textarea
         value={headersRaw}
         onChange={(e) => setHeadersRaw(e.target.value)}
         rows={2}
-        className="w-full resize-none p-2.5 bg-[#1a1a1a] border border-[#262626] rounded text-white font-mono text-[12px] outline-none"
+        className="w-full resize-none p-2.5 bg-[var(--c-1a1a1a)] border border-[var(--c-262626)] rounded text-white font-mono text-[12px] outline-none"
       />
       {headersError && <div className="text-[11px] text-[#ff3b30] mt-1">{headersError}</div>}
 
       <div className="mt-4 flex justify-end gap-2">
-        <button onClick={onCancel} className="rounded px-3 py-1.5 text-[#aaaaaa] hover:bg-[#1c1c1c] transition-colors">
+        <button onClick={onCancel} className="rounded px-3 py-1.5 text-[var(--c-aaaaaa)] hover:bg-[var(--c-1c1c1c)] transition-colors">
           Cancel
         </button>
         <button onClick={handleSave} className="rounded bg-[#ff5500] px-4 py-1.5 font-semibold text-white hover:bg-[#e04b00] transition-colors">

@@ -479,6 +479,7 @@ import { useCollectionStore } from "@/stores/collectionStore";
 import { createTabFromRequest } from "@/lib/factories";
 import { ContextMenu, type ContextMenuItem } from "@/components/common/ContextMenu";
 import { PromptModal } from "@/components/common/PromptModal";
+import { ConfirmModal } from "@/components/common/ConfirmModal";
 import { RunnerModal } from "@/features/runner/RunnerModal";
 import { api } from "@/lib/api";
 import type { ApiRequest, Collection } from "@/types";
@@ -498,6 +499,12 @@ type PromptState =
   | { kind: "new-subcollection"; parentId: string }
   | { kind: "rename-collection"; collection: Collection }
   | { kind: "rename-request"; request: ApiRequest }
+  | { kind: "import-url" }
+  | null;
+
+type ConfirmState =
+  | { kind: "delete-collection"; id: string }
+  | { kind: "delete-request"; collectionId: string; requestId: string }
   | null;
 
 type DragItem =
@@ -508,6 +515,7 @@ export function CollectionsPanel() {
   const [query, setQuery] = useState("");
   const [menu, setMenu] = useState<{ x: number; y: number; items: ContextMenuItem[] } | null>(null);
   const [prompt, setPrompt] = useState<PromptState>(null);
+  const [confirmState, setConfirmState] = useState<ConfirmState>(null);
   const [dragged, setDragged] = useState<DragItem | null>(null);
   const [runnerCollectionId, setRunnerCollectionId] = useState<string | null>(null);
 
@@ -552,15 +560,21 @@ export function CollectionsPanel() {
 
   const matchesQuery = (c: Collection) => !query || c.name.toLowerCase().includes(query.toLowerCase());
 
-  const handleImportUrl = async () => {
-    const url = window.prompt("Paste a collection URL (Postman/OpenAPI export link)");
-    if (!url) return;
+  const [importError, setImportError] = useState<string | null>(null);
+
+  const handleImportUrl = () => {
+    setImportError(null);
+    setPrompt({ kind: "import-url" });
+  };
+
+  const handleConfirmImportUrl = async (url: string) => {
+    setPrompt(null);
     try {
       await api.import.fromUrl(url);
       await load();
     } catch (e) {
       console.error(e);
-      window.alert("Import failed — check the console for details.");
+      setImportError("Import failed — that URL didn't return a valid Postman/OpenAPI collection.");
     }
   };
 
@@ -641,19 +655,11 @@ export function CollectionsPanel() {
               onContextMenu={setMenu}
               onCreateSubcollection={(parentId) => setPrompt({ kind: "new-subcollection", parentId })}
               onRename={(collection) => setPrompt({ kind: "rename-collection", collection })}
-              onDeleteCollection={(id) => {
-                if (window.confirm("Delete this collection and everything inside it?")) {
-                  deleteCollection(id).catch(console.error);
-                }
-              }}
+              onDeleteCollection={(id) => setConfirmState({ kind: "delete-collection", id })}
               onNewRequest={(collectionId) => {
                 createRequestIn(collectionId).then((req) => openRequest(req)).catch(console.error);
               }}
-              onDeleteRequest={(collectionId, requestId) => {
-                if (window.confirm("Delete this request?")) {
-                  deleteRequest(collectionId, requestId).catch(console.error);
-                }
-              }}
+              onDeleteRequest={(collectionId, requestId) => setConfirmState({ kind: "delete-request", collectionId, requestId })}
               onRenameRequest={(request) => setPrompt({ kind: "rename-request", request })}
               onRunCollection={(id) => setRunnerCollectionId(id)}
               onDragStart={setDragged}
@@ -687,6 +693,13 @@ export function CollectionsPanel() {
         >
           <Download size={14} /> Import from file
         </button>
+
+        {importError && (
+          <div className="flex items-start justify-between gap-2 rounded-md border border-status-error/30 bg-status-error/10 px-2.5 py-1.5 text-[11.5px] text-status-error">
+            <span className="flex-1 break-words">{importError}</span>
+            <button onClick={() => setImportError(null)} className="shrink-0 font-semibold hover:opacity-70">✕</button>
+          </div>
+        )}
       </div>
 
       {menu && <ContextMenu x={menu.x} y={menu.y} items={menu.items} onClose={() => setMenu(null)} />}
@@ -740,6 +753,37 @@ export function CollectionsPanel() {
         onConfirm={(name) => {
           if (prompt?.kind === "rename-request") renameRequest(prompt.request, name).catch(console.error);
           setPrompt(null);
+        }}
+      />
+      <PromptModal
+        open={prompt?.kind === "import-url"}
+        title="Import from URL"
+        label="Postman / OpenAPI export link"
+        confirmLabel="Import"
+        onCancel={() => setPrompt(null)}
+        onConfirm={handleConfirmImportUrl}
+      />
+
+      <ConfirmModal
+        open={confirmState?.kind === "delete-collection"}
+        title="Delete collection"
+        message="This deletes the collection and everything inside it — subfolders and requests included. This can't be undone."
+        confirmLabel="Delete"
+        onCancel={() => setConfirmState(null)}
+        onConfirm={() => {
+          if (confirmState?.kind === "delete-collection") deleteCollection(confirmState.id).catch(console.error);
+          setConfirmState(null);
+        }}
+      />
+      <ConfirmModal
+        open={confirmState?.kind === "delete-request"}
+        title="Delete request"
+        message="This can't be undone."
+        confirmLabel="Delete"
+        onCancel={() => setConfirmState(null)}
+        onConfirm={() => {
+          if (confirmState?.kind === "delete-request") deleteRequest(confirmState.collectionId, confirmState.requestId).catch(console.error);
+          setConfirmState(null);
         }}
       />
 

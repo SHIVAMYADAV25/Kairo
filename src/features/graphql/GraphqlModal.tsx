@@ -36,24 +36,24 @@ export function GraphqlModal({ open, onClose }: Props) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 font-sans select-none backdrop-blur-xs" onClick={onClose}>
-      <div className="flex h-[760px] w-[1180px] max-w-full overflow-hidden rounded-md border border-[#222] bg-[#0c0c0c] shadow-2xl transition-all" onClick={(e) => e.stopPropagation()}>
+      <div className="flex h-[760px] w-[1180px] max-w-full overflow-hidden rounded-md border border-[var(--c-222222)] bg-[var(--c-0c0c0c)] shadow-2xl transition-all" onClick={(e) => e.stopPropagation()}>
         
         {/* ================= LEFT SIDEBAR OPERATIONS LIST ================= */}
-        <div className="flex w-[240px] shrink-0 flex-col border-r border-[#1a1a1a] bg-[#090909]">
-          <div className="flex h-12 items-center justify-between border-b border-[#1a1a1a] px-4">
+        <div className="flex w-[240px] shrink-0 flex-col border-r border-[var(--c-1a1a1a)] bg-[var(--c-090909)]">
+          <div className="flex h-12 items-center justify-between border-b border-[var(--c-1a1a1a)] px-4">
             <div className="flex items-center gap-2 text-[13px] font-semibold tracking-wide text-neutral-200">
               <Braces size={14} className="text-[#ec4899]" /> GraphQL
             </div>
             <button 
               onClick={() => addOperation()} 
-              className="flex h-7 w-7 items-center justify-center rounded border border-[#242424] bg-[#121212] text-neutral-400 transition-all hover:border-[#ec4899]/60 hover:text-white"
+              className="flex h-7 w-7 items-center justify-center rounded border border-[var(--c-242424)] bg-[var(--c-121212)] text-neutral-400 transition-all hover:border-[#ec4899]/60 hover:text-white"
               title="New operation"
             >
               <Plus size={14} />
             </button>
           </div>
           
-          <div className="flex-1 overflow-y-auto p-2 space-y-1 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-[#222] [&::-webkit-scrollbar-thumb]:rounded-sm">
+          <div className="flex-1 overflow-y-auto p-2 space-y-1 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-[var(--c-222222)] [&::-webkit-scrollbar-thumb]:rounded-sm">
             {operations.map((op) => (
               <button
                 key={op.id}
@@ -61,8 +61,8 @@ export function GraphqlModal({ open, onClose }: Props) {
                 className={clsx(
                   "group flex w-full flex-col items-start gap-1 rounded px-3 py-2.5 text-left border transition-all",
                   op.id === activeOperationId 
-                    ? "bg-[#181115] border-[#ec4899]/20 shadow-inner" 
-                    : "bg-transparent border-transparent hover:bg-[#121212]"
+                    ? "bg-[var(--c-181115)] border-[#ec4899]/20 shadow-inner" 
+                    : "bg-transparent border-transparent hover:bg-[var(--c-121212)]"
                 )}
               >
                 <div className="flex w-full items-center justify-between gap-2">
@@ -87,8 +87,8 @@ export function GraphqlModal({ open, onClose }: Props) {
         </div>
 
         {/* ================= MAIN CONFIGURATION / WORKSPACE AREA ================= */}
-        <div className="flex min-w-0 flex-1 flex-col bg-[#0c0c0c]">
-          <div className="flex h-12 items-center justify-between border-b border-[#1a1a1a] px-4 shrink-0">
+        <div className="flex min-w-0 flex-1 flex-col bg-[var(--c-0c0c0c)]">
+          <div className="flex h-12 items-center justify-between border-b border-[var(--c-1a1a1a)] px-4 shrink-0">
             <input
               value={active?.name ?? ""}
               onChange={(e) => active && updateOperation(active.id, { name: e.target.value })}
@@ -103,12 +103,12 @@ export function GraphqlModal({ open, onClose }: Props) {
           {active ? (
             <>
               {/* Endpoint Connect Control Bar */}
-              <div className="flex items-center gap-2 border-b border-[#1a1a1a] bg-[#090909]/40 p-3 shrink-0">
+              <div className="flex items-center gap-2 border-b border-[var(--c-1a1a1a)] bg-[var(--c-090909)]/40 p-3 shrink-0">
                 <input
                   value={active.endpoint}
                   onChange={(e) => updateOperation(active.id, { endpoint: e.target.value })}
                   placeholder="https://api.example.com/graphql"
-                  className="flex-1 h-[34px] rounded border border-[#262626] bg-[#121212] px-3 font-mono text-[12px] text-neutral-200 outline-none transition-colors focus:border-[#ec4899]/70"
+                  className="flex-1 h-[34px] rounded border border-[var(--c-262626)] bg-[var(--c-121212)] px-3 font-mono text-[12px] text-neutral-200 outline-none transition-colors focus:border-[#ec4899]/70"
                 />
                 <button
                   onClick={() => execute(active.id, activeEnvironmentId)}
@@ -121,15 +121,15 @@ export function GraphqlModal({ open, onClose }: Props) {
               </div>
 
               {/* Sub-navigation Tabs Controls Bar */}
-              <div className="flex h-9 items-center justify-between border-b border-[#1a1a1a] bg-[#090909] px-2 shrink-0">
+              <div className="flex h-9 items-center justify-between border-b border-[var(--c-1a1a1a)] bg-[var(--c-090909)] px-2 shrink-0">
                 <div className="flex h-full items-center">
                   {(["query", "variables", "headers", "schema"] as const).map((t) => (
                     <button
                       key={t}
                       onClick={() => setSub(t)}
                       className={clsx(
-                        "relative h-full px-4 text-[11px] font-medium tracking-wide uppercase transition-colors border-r border-[#1a1a1a]",
-                        sub === t ? "bg-[#111] text-[#ec4899] font-semibold" : "text-neutral-500 hover:text-neutral-300"
+                        "relative h-full px-4 text-[11px] font-medium tracking-wide uppercase transition-colors border-r border-[var(--c-1a1a1a)]",
+                        sub === t ? "bg-[var(--c-111111)] text-[#ec4899] font-semibold" : "text-neutral-500 hover:text-neutral-300"
                       )}
                     >
                       {t}
@@ -140,7 +140,7 @@ export function GraphqlModal({ open, onClose }: Props) {
                 {sub === "query" && (
                   <button
                     onClick={() => updateOperation(active.id, { query: formatGraphQL(active.query) })}
-                    className="flex h-6 items-center gap-1.5 rounded px-2.5 text-[11px] text-neutral-400 hover:bg-[#141414] hover:text-white transition-colors mr-2"
+                    className="flex h-6 items-center gap-1.5 rounded px-2.5 text-[11px] text-neutral-400 hover:bg-[var(--c-141414)] hover:text-white transition-colors mr-2"
                   >
                     <Wand2 size={12} /> Format Document
                   </button>
@@ -148,7 +148,7 @@ export function GraphqlModal({ open, onClose }: Props) {
               </div>
 
               {/* Core Execution Frame Panel */}
-              <div className="flex min-h-0 flex-1 bg-[#070707]">
+              <div className="flex min-h-0 flex-1 bg-[var(--c-070707)]">
                 {/* Left Side Editor Frame */}
                 <div className="flex min-w-0 flex-[1.4] flex-col overflow-hidden">
                   {sub === "query" && (
@@ -156,7 +156,7 @@ export function GraphqlModal({ open, onClose }: Props) {
                       value={active.query}
                       onChange={(e) => updateOperation(active.id, { query: e.target.value })}
                       spellCheck={false}
-                      className="h-full w-full resize-none border-none bg-transparent p-4 font-mono text-[13px] leading-relaxed text-neutral-200 outline-none select-text [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-[#222]"
+                      className="h-full w-full resize-none border-none bg-transparent p-4 font-mono text-[13px] leading-relaxed text-neutral-200 outline-none select-text [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-[var(--c-222222)]"
                       placeholder={"query {\n  \n}"}
                     />
                   )}
@@ -165,17 +165,17 @@ export function GraphqlModal({ open, onClose }: Props) {
                       value={active.variables}
                       onChange={(e) => updateOperation(active.id, { variables: e.target.value })}
                       spellCheck={false}
-                      className="h-full w-full resize-none border-none bg-transparent p-4 font-mono text-[13px] leading-relaxed text-neutral-200 outline-none select-text [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-[#222]"
+                      className="h-full w-full resize-none border-none bg-transparent p-4 font-mono text-[13px] leading-relaxed text-neutral-200 outline-none select-text [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-[var(--c-222222)]"
                       placeholder="{\n  \n}"
                     />
                   )}
                   {sub === "headers" && (
-                    <div className="flex-1 overflow-y-auto [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-[#222]">
+                    <div className="flex-1 overflow-y-auto [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-[var(--c-222222)]">
                       <GraphqlHeadersEditor op={active} onChange={(headers) => updateOperation(active.id, { headers })} />
                     </div>
                   )}
                   {sub === "schema" && (
-                    <div className="flex-1 overflow-y-auto [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-[#222]">
+                    <div className="flex-1 overflow-y-auto [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-[var(--c-222222)]">
                       <SchemaExplorer
                         op={active}
                         onFetch={() => fetchSchema(active.id, activeEnvironmentId)}
@@ -186,8 +186,8 @@ export function GraphqlModal({ open, onClose }: Props) {
                 </div>
 
                 {/* Right Side Response Context Panel */}
-                <div className="flex w-[440px] shrink-0 flex-col border-l border-[#1a1a1a] bg-[#090909]/20">
-                  <div className="flex h-8 items-center justify-between border-b border-[#1a1a1a] px-4 py-2 text-[10px] font-bold uppercase tracking-wider text-neutral-500 bg-[#090909]/40">
+                <div className="flex w-[440px] shrink-0 flex-col border-l border-[var(--c-1a1a1a)] bg-[var(--c-090909)]/20">
+                  <div className="flex h-8 items-center justify-between border-b border-[var(--c-1a1a1a)] px-4 py-2 text-[10px] font-bold uppercase tracking-wider text-neutral-500 bg-[var(--c-090909)]/40">
                     <span>Response Viewport</span>
                     {active.response && (
                       <button
@@ -200,7 +200,7 @@ export function GraphqlModal({ open, onClose }: Props) {
                     )}
                   </div>
                   
-                  <div className="flex-1 overflow-auto p-4 select-text [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-[#222] [&::-webkit-scrollbar-thumb]:rounded-sm">
+                  <div className="flex-1 overflow-auto p-4 select-text [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-[var(--c-222222)] [&::-webkit-scrollbar-thumb]:rounded-sm">
                     {active.error && (
                       <div className="rounded border border-rose-950/40 bg-rose-950/10 px-3 py-2.5 font-mono text-[12px] text-rose-400 leading-normal">
                         {active.error}
@@ -215,7 +215,7 @@ export function GraphqlModal({ open, onClose }: Props) {
                     
                     {!active.error && active.response && (
                       <div className="space-y-3">
-                        <div className="flex items-center gap-3 font-mono text-[11px] text-neutral-500 border-b border-[#1a1a1a]/80 pb-2">
+                        <div className="flex items-center gap-3 font-mono text-[11px] text-neutral-500 border-b border-[var(--c-1a1a1a)]/80 pb-2">
                           <span className={clsx("font-semibold px-1.5 py-0.5 rounded", active.response.status < 400 ? "bg-emerald-500/10 text-emerald-400" : "bg-rose-500/10 text-rose-400")}>
                             {active.response.status} {active.response.statusText}
                           </span>
@@ -275,13 +275,13 @@ function GraphqlHeadersEditor({ op, onChange }: { op: GraphqlOperation; onChange
               value={h.key} 
               onChange={(e) => update(h.id, { key: e.target.value })} 
               placeholder="Key" 
-              className="rounded border border-[#222] bg-[#111] px-3 py-1.5 font-mono text-[11px] text-neutral-200 placeholder:text-neutral-600 outline-none focus:border-[#ec4899]/40 focus:bg-[#141414]" 
+              className="rounded border border-[var(--c-222222)] bg-[var(--c-111111)] px-3 py-1.5 font-mono text-[11px] text-neutral-200 placeholder:text-neutral-600 outline-none focus:border-[#ec4899]/40 focus:bg-[var(--c-141414)]" 
             />
             <input 
               value={h.value} 
               onChange={(e) => update(h.id, { value: e.target.value })} 
               placeholder="Value" 
-              className="rounded border border-[#222] bg-[#111] px-3 py-1.5 font-mono text-[11px] text-neutral-200 placeholder:text-neutral-600 outline-none focus:border-[#ec4899]/40 focus:bg-[#141414]" 
+              className="rounded border border-[var(--c-222222)] bg-[var(--c-111111)] px-3 py-1.5 font-mono text-[11px] text-neutral-200 placeholder:text-neutral-600 outline-none focus:border-[#ec4899]/40 focus:bg-[var(--c-141414)]" 
             />
             <button 
               onClick={() => remove(h.id)} 
@@ -314,12 +314,12 @@ function SchemaExplorer({ op, onFetch, onInsertField }: { op: GraphqlOperation; 
 
   return (
     <div className="p-4 space-y-4">
-      <div className="flex items-center justify-between border-b border-[#1a1a1a] pb-3">
+      <div className="flex items-center justify-between border-b border-[var(--c-1a1a1a)] pb-3">
         <span className="text-[12px] font-medium text-neutral-400">{op.schema ? "Introspection schema active" : "No active Introspection schema structure"}</span>
         <button 
           onClick={onFetch} 
           disabled={op.schemaLoading} 
-          className="flex h-[28px] items-center gap-1.5 rounded border border-[#262626] bg-[#121212] px-3 text-[11px] text-neutral-300 hover:border-neutral-500 hover:text-white transition-all disabled:opacity-50"
+          className="flex h-[28px] items-center gap-1.5 rounded border border-[var(--c-262626)] bg-[var(--c-121212)] px-3 text-[11px] text-neutral-300 hover:border-neutral-500 hover:text-white transition-all disabled:opacity-50"
         >
           <RefreshCw size={12} className={clsx(op.schemaLoading && "animate-spin")} /> 
           {op.schemaLoading ? "Fetching..." : "Fetch Schema"}
@@ -333,24 +333,24 @@ function SchemaExplorer({ op, onFetch, onInsertField }: { op: GraphqlOperation; 
       )}
 
       {op.schema && (
-        <div className="space-y-1 bg-[#090909]/30 rounded border border-[#161616] p-2">
+        <div className="space-y-1 bg-[var(--c-090909)]/30 rounded border border-[var(--c-161616)] p-2">
           <SchemaSection title="Queries" fields={queryFields(op.schema)} open={openSection === "queries"} onToggle={() => setOpenSection(openSection === "queries" ? null : "queries")} onInsertField={onInsertField} />
           <SchemaSection title="Mutations" fields={mutationFields(op.schema)} open={openSection === "mutations"} onToggle={() => setOpenSection(openSection === "mutations" ? null : "mutations")} onInsertField={onInsertField} />
           
-          <div className="border-t border-[#161616] mt-1 pt-1">
-            <button onClick={() => setOpenSection(openSection === "types" ? null : "types")} className="flex w-full items-center gap-1.5 py-1.5 px-2 text-[12px] font-medium text-neutral-300 hover:bg-[#121212] rounded transition-colors">
+          <div className="border-t border-[var(--c-161616)] mt-1 pt-1">
+            <button onClick={() => setOpenSection(openSection === "types" ? null : "types")} className="flex w-full items-center gap-1.5 py-1.5 px-2 text-[12px] font-medium text-neutral-300 hover:bg-[var(--c-121212)] rounded transition-colors">
               {openSection === "types" ? <ChevronDown size={14} className="text-neutral-500" /> : <ChevronRight size={14} className="text-neutral-500" />} 
               <span>Types</span>
-              <span className="ml-auto font-mono text-[10px] text-neutral-600 bg-neutral-900 border border-[#1a1a1a] px-1 rounded">{op.schema.types.length}</span>
+              <span className="ml-auto font-mono text-[10px] text-neutral-600 bg-neutral-900 border border-[var(--c-1a1a1a)] px-1 rounded">{op.schema.types.length}</span>
             </button>
             
             {openSection === "types" && (
-              <div className="mt-1 ml-4 pl-1 space-y-0.5 border-l border-[#1a1a1a]">
+              <div className="mt-1 ml-4 pl-1 space-y-0.5 border-l border-[var(--c-1a1a1a)]">
                 {op.schema.types.map((t: IntroType) => (
                   <div key={t.name} className="space-y-0.5">
                     <button 
                       onClick={() => setOpenType(openType === t.name ? null : t.name)} 
-                      className="flex w-full items-center gap-1.5 py-1 px-2 rounded text-left text-[12px] text-neutral-400 hover:bg-[#121212] hover:text-neutral-200 transition-colors"
+                      className="flex w-full items-center gap-1.5 py-1 px-2 rounded text-left text-[12px] text-neutral-400 hover:bg-[var(--c-121212)] hover:text-neutral-200 transition-colors"
                     >
                       {t.fields.length > 0 ? (openType === t.name ? <ChevronDown size={12} className="text-neutral-600" /> : <ChevronRight size={12} className="text-neutral-600" />) : <span className="w-3" />}
                       <span className="text-[10px] uppercase font-bold text-[#ec4899]/70 tracking-wider text-[9px]">{t.kind}</span> 
@@ -358,7 +358,7 @@ function SchemaExplorer({ op, onFetch, onInsertField }: { op: GraphqlOperation; 
                     </button>
                     
                     {openType === t.name && t.fields.length > 0 && (
-                      <div className="ml-6 border-l border-[#222] pl-3 py-1 space-y-1 bg-[#060606]/60 rounded-r p-2">
+                      <div className="ml-6 border-l border-[var(--c-222222)] pl-3 py-1 space-y-1 bg-[var(--c-060606)]/60 rounded-r p-2">
                         {t.fields.map((f) => (
                           <div key={f.name} className="text-[11px] font-mono text-neutral-500">
                             <span className="text-neutral-300">{f.name}</span>: <span className="text-[#ec4899]/80">{f.type}</span>
@@ -380,19 +380,19 @@ function SchemaExplorer({ op, onFetch, onInsertField }: { op: GraphqlOperation; 
 function SchemaSection({ title, fields, open, onToggle, onInsertField }: { title: string; fields: IntroField[]; open: boolean; onToggle: () => void; onInsertField: (f: IntroField) => void }) {
   if (fields.length === 0) return null;
   return (
-    <div className="border-b border-[#161616]/40 last:border-none pb-0.5">
-      <button onClick={onToggle} className="flex w-full items-center gap-1.5 py-1.5 px-2 text-[12px] font-medium text-neutral-300 hover:bg-[#121212] rounded transition-colors">
+    <div className="border-b border-[var(--c-161616)]/40 last:border-none pb-0.5">
+      <button onClick={onToggle} className="flex w-full items-center gap-1.5 py-1.5 px-2 text-[12px] font-medium text-neutral-300 hover:bg-[var(--c-121212)] rounded transition-colors">
         {open ? <ChevronDown size={14} className="text-neutral-500" /> : <ChevronRight size={14} className="text-neutral-500" />} 
         <span>{title}</span>
-        <span className="ml-auto font-mono text-[10px] text-neutral-600 bg-neutral-900 border border-[#1a1a1a] px-1 rounded">{fields.length}</span>
+        <span className="ml-auto font-mono text-[10px] text-neutral-600 bg-neutral-900 border border-[var(--c-1a1a1a)] px-1 rounded">{fields.length}</span>
       </button>
       {open && (
-        <div className="mt-1 ml-4 pl-1 space-y-0.5 border-l border-[#1a1a1a]">
+        <div className="mt-1 ml-4 pl-1 space-y-0.5 border-l border-[var(--c-1a1a1a)]">
           {fields.map((f) => (
             <button 
               key={f.name} 
               onClick={() => onInsertField(f)} 
-              className="flex w-full items-center justify-between rounded px-2.5 py-1 text-left font-mono text-[11.5px] hover:bg-[#121212] group transition-all"
+              className="flex w-full items-center justify-between rounded px-2.5 py-1 text-left font-mono text-[11.5px] hover:bg-[var(--c-121212)] group transition-all"
             >
               <span className="text-neutral-400 group-hover:text-[#ec4899] transition-colors">{f.name}</span>
               <span className="text-neutral-600 text-[10px] font-sans">{f.type}</span>

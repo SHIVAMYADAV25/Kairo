@@ -52,7 +52,7 @@ export function IconRail({ active, onChange, onOpenSettings }: Props) {
             className={clsx(
               "flex w-[60px] shrink-0 flex-col items-center gap-1 rounded-md py-2 text-[10px] transition-colors",
               active === id
-                ? "text-accent bg-[#2b190d]"
+                ? "text-accent bg-[var(--c-2b190d)]"
                 : "text-text-muted hover:bg-bg-hover hover:text-text-secondary"
             )}
           >
@@ -69,7 +69,7 @@ export function IconRail({ active, onChange, onOpenSettings }: Props) {
           className={clsx(
             "flex w-[60px] flex-col items-center gap-1 rounded-md py-2 text-[10px] transition-colors",
             active === "settings"
-              ? "text-accent bg-[#2b190d]"
+              ? "text-accent bg-[var(--c-2b190d)]"
               : "text-text-muted hover:bg-bg-hover hover:text-text-secondary"
           )}
         >

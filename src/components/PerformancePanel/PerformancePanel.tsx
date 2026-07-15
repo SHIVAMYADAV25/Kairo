@@ -44,7 +44,7 @@ function CircularGauge({ ms, celebrate }: { ms: number; celebrate: boolean }) {
         className={clsx("perf-gauge-pop", celebrate && isGood && "perf-achieve-pop")}
         style={celebrate && isGood ? { filter: `drop-shadow(0 0 10px ${color}66)` } : undefined}
       >
-        <circle cx={98} cy={98} r={radius} fill="none" stroke="#222222" strokeWidth={stroke} />
+        <circle cx={98} cy={98} r={radius} fill="none" stroke="var(--c-222222)" strokeWidth={stroke} />
         <circle
           cx={98}
           cy={98}
@@ -58,10 +58,10 @@ function CircularGauge({ ms, celebrate }: { ms: number; celebrate: boolean }) {
           transform="rotate(-90 98 98)"
           style={{ transition: "stroke-dashoffset 0.15s linear, stroke 0.3s ease" }}
         />
-        <text x="98" y="94" textAnchor="middle" fontSize="38" fontWeight="700" fill="#ffffff" letterSpacing="-0.5px">
+        <text x="98" y="94" textAnchor="middle" fontSize="38" fontWeight="700" fill="var(--c-ffffff)" letterSpacing="-0.5px">
           {displayMs}
         </text>
-        <text x="98" y="122" textAnchor="middle" fontSize="11" fontWeight="500" fill="#666666">
+        <text x="98" y="122" textAnchor="middle" fontSize="11" fontWeight="500" fill="var(--c-666666)">
           ms
         </text>
       </svg>
@@ -155,7 +155,7 @@ function BarHistory({ currentMs, timeWindow, responseId }: BarHistoryProps) {
   });
 
   return (
-    <div className="flex h-[76px] items-end justify-between rounded-lg border border-[#1e1e1e] bg-[#111111]/30 p-2.5">
+    <div className="flex h-[76px] items-end justify-between rounded-lg border border-[var(--c-1e1e1e)] bg-[var(--c-111111)]/30 p-2.5">
       {bars.map((b, i) => {
         const isLatest = i === bars.length - 1;
         return (
@@ -201,21 +201,21 @@ export function PerformancePanel({ tab, onClose }: Props) {
   }, [response]);
 
   return (
-    <div className="flex h-full min-h-0 flex-col overflow-hidden bg-[#0b0b0b] select-none text-[11px]">
+    <div className="flex h-full min-h-0 flex-col overflow-hidden bg-[var(--c-0b0b0b)] select-none text-[11px]">
       {/* Header Container Area */}
-      <div className="flex items-center justify-between border-b border-[#181818] px-3.5 py-2.5">
+      <div className="flex items-center justify-between border-b border-[var(--c-181818)] px-3.5 py-2.5">
         <div className="flex items-center gap-3 text-[12px]">
           <span className="flex items-center gap-1 font-medium text-[#d97706]">
             Performance
-            <Info size={11} className="text-[#555555] ml-0.5" />
+            <Info size={11} className="text-[var(--c-555555)] ml-0.5" />
           </span>
-          <button className="text-[#555555] hover:text-[#888888] font-medium transition-colors">Cookies</button>
+          <button className="text-[var(--c-555555)] hover:text-[var(--c-888888)] font-medium transition-colors">Cookies</button>
         </div>
         <div className="flex items-center gap-0.5">
-          <button onClick={onClose} className="rounded p-1 text-[#555555] hover:bg-[#1a1a1a] hover:text-[#cccccc]" title="Close panel">
+          <button onClick={onClose} className="rounded p-1 text-[var(--c-555555)] hover:bg-[var(--c-1a1a1a)] hover:text-[var(--c-cccccc)]" title="Close panel">
             <X size={14} />
           </button>
-          <button className="rounded p-1 text-[#555555] hover:bg-[#1a1a1a] hover:text-[#cccccc]" title="More actions">
+          <button className="rounded p-1 text-[var(--c-555555)] hover:bg-[var(--c-1a1a1a)] hover:text-[var(--c-cccccc)]" title="More actions">
             <MoreVertical size={14} />
           </button>
         </div>
@@ -226,11 +226,11 @@ export function PerformancePanel({ tab, onClose }: Props) {
     {/* Clean lighting bolt accent matching image line style */}
     <Zap 
       size={44} 
-      className="text-[#2a2a2a] fill-[#0b0b0b] stroke-[0.9]" 
+      className="text-[var(--c-2a2a2a)] fill-[var(--c-0b0b0b)] stroke-[0.9]" 
     />
     
     {/* Captioned description text stack */}
-    <p className="max-w-[200px] text-[14px] font-normal leading-normal tracking-wide text-[#444444]">
+    <p className="max-w-[200px] text-[14px] font-normal leading-normal tracking-wide text-[var(--c-444444)]">
       Send a request to see performance data
     </p>
   </div>
@@ -239,12 +239,12 @@ export function PerformancePanel({ tab, onClose }: Props) {
           {/* Radial Value Gauge */}
           <div className="space-y-2">
             <CircularGauge ms={response.timing.totalMs} celebrate={celebrate} />
-            <div className="text-center text-[11px] font-medium text-[#777777] tracking-wide">Total Response Time</div>
+            <div className="text-center text-[11px] font-medium text-[var(--c-777777)] tracking-wide">Total Response Time</div>
           </div>
 
           {/* Connected Rhythmic Waveform Graph */}
           <div className="space-y-2">
-            <div className="text-[11px] font-medium text-[#777777] tracking-wide">Response Time Over Time</div>
+            <div className="text-[11px] font-medium text-[var(--c-777777)] tracking-wide">Response Time Over Time</div>
             <BarHistory 
               currentMs={response.timing.totalMs} 
               timeWindow={window} 
@@ -257,7 +257,7 @@ export function PerformancePanel({ tab, onClose }: Props) {
                   onClick={() => setWindow(w)}
                   className={clsx(
                     "rounded px-2 py-0.5 text-[10px] font-semibold tracking-wide transition-all",
-                    window === w ? "bg-[#c2760c]/20 text-[#d97706]" : "text-[#555555] hover:text-[#888888]"
+                    window === w ? "bg-[#c2760c]/20 text-[#d97706]" : "text-[var(--c-555555)] hover:text-[var(--c-888888)]"
                   )}
                 >
                   {w}
@@ -267,18 +267,18 @@ export function PerformancePanel({ tab, onClose }: Props) {
           </div>
 
           {/* Metric Timings Details */}
-          <div className="space-y-1.5 border-b border-[#181818]/60 pb-3">
+          <div className="space-y-1.5 border-b border-[var(--c-181818)]/60 pb-3">
             <MetricRow color="#3b82f6" label="TTFB" value={`${response.timing.ttfbMs} ms`} />
             <MetricRow color="#22c55e" label="Download" value={`${response.timing.downloadMs} ms`} />
             <div className="flex items-center justify-between pt-1">
-              <span className="font-semibold text-[#888888]">Total</span>
+              <span className="font-semibold text-[var(--c-888888)]">Total</span>
               <span className="font-bold text-[#d97706] text-[12px]">{response.timing.totalMs} ms</span>
             </div>
           </div>
 
           {/* Response Metadata Parameters */}
           <div className="space-y-2.5 pt-0.5">
-            <div className="text-[10px] font-bold uppercase tracking-wider text-[#555555]">
+            <div className="text-[10px] font-bold uppercase tracking-wider text-[var(--c-555555)]">
               Response Info
             </div>
             <InfoRow label="Status">
@@ -300,11 +300,11 @@ export function PerformancePanel({ tab, onClose }: Props) {
 function MetricRow({ color, label, value }: { color: string; label: string; value: string }) {
   return (
     <div className="flex items-center justify-between py-0.5">
-      <span className="flex items-center gap-2 text-[#888888] font-medium">
+      <span className="flex items-center gap-2 text-[var(--c-888888)] font-medium">
         <span className="h-2 w-2 rounded-full shrink-0" style={{ background: color }} />
         {label}
       </span>
-      <span className="font-mono font-semibold text-[#cccccc] tracking-tight">{value}</span>
+      <span className="font-mono font-semibold text-[var(--c-cccccc)] tracking-tight">{value}</span>
     </div>
   );
 }
@@ -320,8 +320,8 @@ function InfoRow({
 }) {
   return (
     <div className="flex items-center justify-between py-0.5 text-[11px]">
-      <span className="text-[#555555] font-medium">{label}</span>
-      {children ?? <span className="font-mono font-semibold text-[#cccccc] tracking-tight">{value}</span>}
+      <span className="text-[var(--c-555555)] font-medium">{label}</span>
+      {children ?? <span className="font-mono font-semibold text-[var(--c-cccccc)] tracking-tight">{value}</span>}
     </div>
   );
 }

@@ -4,7 +4,7 @@ import { api } from "@/lib/api";
 
 // The "no zoom" baseline. A zoom level of 13 always renders a panel at its
 // normal (100%) scale — raising/lowering the level scales up/down from there.
-export const ZOOM_BASE = 13;
+export const ZOOM_BASE = 12;
 export const ZOOM_MIN = 8;
 export const ZOOM_MAX = 20;
 
@@ -14,10 +14,10 @@ const DEFAULT_SETTINGS: AppSettings = {
   fontSizes: { sidebar: 15, request: 13, response: 12 },
   zoomLevels: { sidebar: ZOOM_BASE, request: ZOOM_BASE, response: ZOOM_BASE },
   panelSizes: {
-    sidebarWidth: 260,
+    sidebarWidth: 220,
     requestEditorHeight: 480, // Gives the request builder roughly half the window by default so the response panel (which fills the rest via flex-1) doesn't dominate on first load
     responseViewerHeight: 420,
-    performancePanelWidth: 280,
+    performancePanelWidth: 230,
   },
   lastEnvironmentId: null,
   lastCollectionId: null,

@@ -1,6 +1,8 @@
+import { useState } from "react";
 import clsx from "clsx";
 import { X, Minus, Plus, RotateCcw } from "lucide-react";
 import { useSettingsStore, ZOOM_MIN, ZOOM_MAX } from "@/stores/settingsStore";
+import { ConfirmModal } from "@/components/common/ConfirmModal";
 import type { HttpMethod } from "@/types";
 
 interface Props {
@@ -33,15 +35,7 @@ function FontStepper({ label, value, onChange }: { label: string; value: number;
   );
 }
 
-function ZoomStepper({
-  label,
-  value,
-  onChange,
-}: {
-  label: string;
-  value: number;
-  onChange: (v: number) => void;
-}) {
+function ZoomStepper({ label, value, onChange }: { label: string; value: number; onChange: (v: number) => void }) {
   return (
     <div className="flex items-center justify-between py-1.5 text-[12px]">
       <span className="text-text-secondary">{label}</span>
@@ -86,12 +80,11 @@ function Toggle({ checked, onChange }: { checked: boolean; onChange: (v: boolean
 
 export function SettingsDrawer({ open, onClose }: Props) {
   const { settings, update, reset } = useSettingsStore();
+  const [resetConfirmOpen, setResetConfirmOpen] = useState(false);
 
   if (!open) return null;
 
-  const handleReset = () => {
-    if (window.confirm("Reset all settings to their defaults?")) reset();
-  };
+  const handleReset = () => setResetConfirmOpen(true);
 
   return (
     <div className="fixed inset-0 z-50 flex justify-end bg-black/50 select-none backdrop-blur-xs" onClick={onClose}>
@@ -241,6 +234,18 @@ export function SettingsDrawer({ open, onClose }: Props) {
           </button>
         </section>
       </div>
+
+      <ConfirmModal
+        open={resetConfirmOpen}
+        title="Reset settings"
+        message="This resets all settings to their defaults. This can't be undone."
+        confirmLabel="Reset"
+        onCancel={() => setResetConfirmOpen(false)}
+        onConfirm={() => {
+          reset();
+          setResetConfirmOpen(false);
+        }}
+      />
     </div>
   );
 }

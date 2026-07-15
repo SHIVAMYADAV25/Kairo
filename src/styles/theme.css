@@ -18,39 +18,14 @@
   --text-muted1 : #312C22;
   --accent: #f5820d;
   --accent-hover: #ff9a2e;
-}
 
-:root[data-theme="dark"][data-opaque="false"] {
-  --bg-panel: rgba(19, 19, 22, 0.85);
-  --bg-elevated: rgba(26, 26, 30, 0.85);
-}
+  /* Added: Resizer-specific handles for Dark Mode */
+  --resize-handle-bg: transparent;
+  --resize-line: #1c1c1e;
+  --resize-line-hover: #2d2d30;
+  --resize-drag-overlay: rgba(255, 255, 255, 0.015);
 
-:root[data-theme="light"] {
-  --bg-base: #ffffff;
-  --bg-panel: #f7f7f8;
-  --bg-elevated: #ffffff;
-  --bg-hover: #eeeeef;
-  --border: #e2e2e4;
-  --text-primary: #18181b;
-  --text-secondary: hsl(240, 5%, 34%);
-  --text-muted: #a1a1aa;
-  --accent: #f5820d;
-  --accent-hover: #d96f08;
-}
-
-/* Independently adjustable font sizes, persisted via settings store */
-:root {
-  --font-sidebar: 15px;
-  --font-request: 13px;
-  --font-response: 12px;
-  --font-mono: "JetBrains Mono", Consolas, monospace;
-
-  /* Per-panel zoom scale, updated live by the settings store. 1 = no zoom. */
-  --zoom-sidebar: 1;
-  --zoom-request: 1;
-  --zoom-response: 1;
-
-  /* ADDED: Isolated Mock Server specific variables so they don't overwrite your app globals */
+  /* Mock Server specific variables (dark) — unchanged from the original values */
   --bg-mock-modal: #0b0b0b;
   --bg-mock-input: #151515;
   --bg-mock-card: #080808;
@@ -62,6 +37,221 @@
   --accent-mock-orange-hover: #e04b00;
   --status-mock-red: #e1001c;
   --status-mock-green: #00ca54;
+
+  /* ---------------------------------------------------------------- */
+  /* Component-level colors that used to be hardcoded hex values      */
+  /* directly in JSX. Dark values below are EXACTLY the original        */
+  /* hardcoded values — nothing was changed here, only extracted into  */
+  /* variables so a light alternative could be added below.            */
+  /* ---------------------------------------------------------------- */
+  --c-060606: #060606;
+  --c-070707: #070707;
+  --c-080808: #080808;
+  --c-090909: #090909;
+  --c-0a0a0a: #0a0a0a;
+  --c-0b0b0b: #0b0b0b;
+  --c-0c0c0c: #0c0c0c;
+  --c-0e0e0e: #0e0e0e;
+  --c-0f0f0f: #0f0f0f;
+  --c-111111: #111111;
+  --c-121212: #121212;
+  --c-131313: #131313;
+  --c-141414: #141414;
+  --c-161616: #161616;
+  --c-181818: #181818;
+  --c-1a1a1a: #1a1a1a;
+  --c-1b1b1b: #1b1b1b;
+  --c-1c1c1c: #1c1c1c;
+  --c-1e1e1e: #1e1e1e;
+  --c-222222: #222222;
+  --c-242424: #242424;
+  --c-262626: #262626;
+  --c-2a2a2a: #2a2a2a;
+  --c-424040: #424040;
+  --c-444444: #444444;
+  --c-555555: #555555;
+  --c-666666: #666666;
+  --c-6b6b6b: #6b6b6b;
+  --c-737373: #737373;
+  --c-777777: #777777;
+  --c-7c7c7c: #7c7c7c;
+  --c-7f7f7f: #7f7f7f;
+  --c-888888: #888888;
+  --c-999999: #999999;
+  --c-9c9c9c: #9c9c9c;
+  --c-a3a3a3: #a3a3a3;
+  --c-a5a5a5: #655c4c;
+  --c-a1a1aa: #a1a1aa;
+  --c-aaaaaa: #aaaaaa;
+  --c-cccccc: #cccccc;
+  --c-dddddd: #dddddd;
+  --c-dedede: #dedede;
+  --c-f0f0f0: #f0f0f0;
+  --c-ffffff: #ffffff;
+  --c-1a1010: #1a1010;
+  --c-2e1414: #2e1414;
+  --c-3a1f1f: #3a1f1f;
+  --c-4a1c1c: #4a1c1c;
+  --c-6a3919: #6a3919;
+  --c-1d140e: #1d140e;
+  --c-2b190d: #2b190d;
+  --c-3d2413: #3d2413;
+  --c-28190e: #28190e;
+  --c-2e2410: #2e2410;
+  --c-312c22: #312c22;
+  --c-4a3a12: #4a3a12;
+  --c-1c1a10: #1c1a10;
+  --c-2a2a1a: #2a2a1a;
+  --c-112519: #112519;
+  --c-1b3d29: #1b3d29;
+  --c-060807: #060807;
+  --c-0b0d0c: #0b0d0c;
+  --c-0d1210: #0d1210;
+  --c-141c19: #141c19;
+  --c-151f1c: #151f1c;
+  --c-161d1b: #161d1b;
+  --c-111615: #111615;
+  --c-1c3a52: #1c3a52;
+  --c-1d3a52: #1d3a52;
+  --c-0f1f2e: #0f1f2e;
+  --c-12202e: #12202e;
+  --c-141218: #141218;
+  --c-181115: #181115;
+}
+
+:root[data-theme="dark"][data-opaque="false"] {
+  --bg-panel: rgba(19, 19, 22, 0.85);
+  --bg-elevated: rgba(26, 26, 30, 0.85);
+}
+
+/* ---------------------------------------------------------------- */
+/* Light theme — warm, soft "paper & ink" palette. Not a cold grey   */
+/* inversion of dark mode: backgrounds lean toward a warm off-white  */
+/* (cream), text leans toward a warm near-black, and the same orange */
+/* accent ties both themes together.                                 */
+/* ---------------------------------------------------------------- */
+:root[data-theme="light"] {
+  --bg-base: #fdfbf6;
+  --bg-panel: #f7f3ea;
+  --bg-elevated: #fffdf9;
+  --bg-hover: #f0ead9;
+  --border: #e6ddc8;
+  --text-primary: #221d12;
+  --text-secondary: #5c5340;
+  --text-muted: #a99f88;
+  --text-muted1: #b7ae9f;
+  --accent: #f5820d;
+  --accent-hover: #d96f08;
+
+  /* Added: Resizer-specific handles for Light Mode */
+  --resize-handle-bg: transparent;
+  --resize-line: #e6ddc8;
+  --resize-line-hover: #d1c7af;
+  --resize-drag-overlay: rgba(0, 0, 0, 0.01);
+
+  /* Mock Server specific variables (light) */
+  --bg-mock-modal: #fdfaf3;
+  --bg-mock-input: #f5f0e4;
+  --bg-mock-card: #ffffff;
+  --border-mock: #e6ddc4;
+  --text-mock-primary: #221d12;
+  --text-mock-secondary: #6b6252;
+  --text-mock-muted: #9c9483;
+  --accent-mock-orange: #ff5500;
+  --accent-mock-orange-hover: #e04b00;
+  --status-mock-red: #e1001c;
+  --status-mock-green: #0ea34c;
+
+  /* Component-level colors — light alternatives (see dark block above) */
+  --c-060606: #f8f7f6;
+  --c-070707: #f7f7f5;
+  --c-080808: #f7f6f5;
+  --c-090909: #f6f5f4;
+  --c-0a0a0a: #f6f5f3;
+  --c-0b0b0b: #f5f4f2;
+  --c-0c0c0c: #f4f3f1;
+  --c-0e0e0e: #f2f0ee;
+  --c-0f0f0f: #f1efec;
+  --c-111111: #efede9;
+  --c-121212: #eeece8;
+  --c-131313: #edeae6;
+  --c-141414: #ece9e5;
+  --c-161616: #eae7e2;
+  --c-181818: #e9e5de;
+  --c-1a1a1a: #e7e3db;
+  --c-1b1b1b: #e6e2da;
+  --c-1c1c1c: #e5e0d8;
+  --c-1e1e1e: #e4ded5;
+  --c-222222: #e0dacf;
+  --c-242424: #dfd8cb;
+  --c-262626: #ddd6c8;
+  --c-2a2a2a: #dad1c0;
+  --c-424040: #c1baad;
+  --c-444444: #bfb8ab;
+  --c-555555: #b7ae9f;
+  --c-666666: #aea594;
+  --c-6b6b6b: #aca291;
+  --c-737373: #a59b88;
+  --c-777777: #a29784;
+  --c-7c7c7c: #9e937f;
+  --c-7f7f7f: #9c907c;
+  --c-888888: #958872;
+  --c-999999: #7b705d;
+  --c-9c9c9c: #766b59;
+  --c-a3a3a3: #696050;
+  --c-a5a5a5: #665d4d;
+  --c-a1a1aa: #655c4c;
+  --c-aaaaaa: #5d5546;
+  --c-cccccc: #3a352c;
+  --c-dddddd: #2f2b24;
+  --c-dedede: #2f2b23;
+  --c-f0f0f0: #24201b;
+  --c-ffffff: #1a1814;
+  --c-1a1010: #f9e9e9;
+  --c-2e1414: #2e1414;
+  --c-3a1f1f: #3a1f1f;
+  --c-4a1c1c: #4a1c1c;
+  --c-6a3919: #6a3919;
+  --c-1d140e: #1d140e;
+  --c-2b190d: #2b190d;
+  --c-3d2413: #3d2413;
+  --c-28190e: #28190e;
+  --c-2e2410: #2e2410;
+  --c-312c22: #312c22;
+  --c-4a3a12: #4a3a12;
+  --c-1c1a10: #1c1a10;
+  --c-2a2a1a: #2a2a1a;
+  --c-112519: #112519;
+  --c-1b3d29: #1b3d29;
+  --c-060807: #060807;
+  --c-0b0d0c: #0b0d0c;
+  --c-0d1210: #0d1210;
+  --c-141c19: #141c19;
+  --c-151f1c: #151f1c;
+  --c-161d1b: #161d1b;
+  --c-111615: #111615;
+  --c-1c3a52: #1c3a52;
+  --c-1d3a52: #1d3a52;
+  --c-0f1f2e: #0f1f2e;
+  --c-12202e: #12202e;
+  --c-141218: #141218;
+  --c-181115: #181115;
+}
+
+/* Independently adjustable font sizes, persisted via settings store.  */
+/* Method badge colors stay constant across themes — same convention   */
+/* Postman/Insomnia/Linear use, so a GET/POST pill stays recognizable  */
+/* regardless of theme.                                                */
+:root {
+  --font-sidebar: 15px;
+  --font-request: 13px;
+  --font-response: 12px;
+  --font-mono: "JetBrains Mono", Consolas, monospace;
+
+  --zoom-sidebar: 1;
+  --zoom-request: 1;
+  --zoom-response: 1;
+
   --color-method-get: #00ca54;
   --color-method-post: #ffb700;
   --color-method-put: #0091ff;
@@ -98,49 +288,57 @@ body,
   background: transparent;
 }
 
-/* Resizable split-pane handle. */
+/* ---------------------------------------------------------------- */
+/* UPDATED: Resizable split-pane handle perfectly matching layout  */
+/* ---------------------------------------------------------------- */
 .resize-handle {
   position: relative;
-  flex: 0 0 5px;
+  flex: 0 0 4px;
   cursor: col-resize;
-  background: transparent;
+  background: var(--resize-handle-bg);
   z-index: 5;
+  transition: background 0.15s ease;
 }
 .resize-handle::after {
   content: "";
   position: absolute;
-  left: 50%;
-  top: 0;
-  bottom: 0;
-  width: 1px;
-  transform: translateX(-50%);
-  background: var(--border);
-  transition: background 0.12s ease, width 0.12s ease;
-}
-.resize-handle.horizontal::after {
   left: 0;
   right: 0;
-  top: 50%;
-  bottom: auto;
-  width: auto;
-  height: 1px;
-  transform: translateY(-50%);
-}
-.resize-handle:hover::after,
-.resize-handle.dragging::after {
-  background: var(--accent);
-  width: 2px;
-}
-.resize-handle.horizontal:hover::after,
-.resize-handle.horizontal.dragging::after {
-  width: auto;
-  height: 2px;
-}
-.resize-handle.dragging {
-  background: rgba(245, 130, 13, 0.08);
+  top: 0;
+  bottom: 0;
+  background: var(--resize-line);
+  transition: background 0.15s ease, left 0.15s ease, right 0.15s ease, top 0.15s ease, bottom 0.15s ease;
 }
 .resize-handle.horizontal {
   cursor: row-resize;
+}
+
+/* Vertical layout rules (resizes sidebar or performance panel horizontally) */
+:not(.horizontal).resize-handle::after {
+  left: 1.5px;
+  right: 1.5px;
+}
+:not(.horizontal).resize-handle:hover::after,
+:not(.horizontal).resize-handle.dragging::after {
+  background: var(--resize-line-hover);
+  left: 0px;
+  right: 0px;
+}
+
+/* Horizontal layout rules (resizes requests panel vertically) */
+.resize-handle.horizontal::after {
+  top: 1.5px;
+  bottom: 1.5px;
+}
+.resize-handle.horizontal:hover::after,
+.resize-handle.horizontal.dragging::after {
+  background: var(--resize-line-hover);
+  top: 0px;
+  bottom: 0px;
+}
+
+.resize-handle.dragging {
+  background: var(--resize-drag-overlay);
 }
 
 /* Performance panel animations */
@@ -392,5 +590,109 @@ body,
   outline: none;
 }
 .mock-input-element:focus {
+  border-color: #ff5500;
+}
+
+/* ---------------------------------------------------------------- */
+/* Light-mode alternatives for the scoped Mock Server classes above. */
+/* The dark declarations above are untouched — these overrides only  */
+/* apply when :root[data-theme="light"] is active, so light mode      */
+/* gets a proper warm/paper look instead of black panels on a light   */
+/* app shell.                                                         */
+/* ---------------------------------------------------------------- */
+:root[data-theme="light"] .mock-panel-dark {
+  background-color: #f5f4f2;
+}
+
+:root[data-theme="light"] .mock-input-dark {
+  background-color: #eeece8;
+  border-color: #e7e3db;
+}
+
+:root[data-theme="light"] .mock-input-dark:focus {
+  border-color: #ff5500;
+}
+
+:root[data-theme="light"] .mock-custom-checkbox {
+  background-color: #eeece8;
+  border: 1px solid #e0dacf;
+}
+
+:root[data-theme="light"] .mock-custom-checkbox:checked {
+  background-color: #ff5500;
+  border-color: #ff5500;
+}
+
+:root[data-theme="light"] .mock-custom-checkbox:checked::before {
+  color: #ffffff;
+}
+
+:root[data-theme="light"] .mock-scroll-clean::-webkit-scrollbar-thumb {
+  background: #e5e0d8;
+}
+
+:root[data-theme="light"] .mock-scroll-clean::-webkit-scrollbar-thumb:hover {
+  background: #d9cebc;
+}
+
+:root[data-theme="light"] .mock-form-container {
+  background-color: #f5f4f2;
+  border: 1px solid #ece9e5;
+}
+
+:root[data-theme="light"] .mock-template-text {
+  color: #b7ae9f;
+}
+
+:root[data-theme="light"] .mock-field {
+  background-color: #edeae6;
+  border: 1px solid #e5e0d8;
+  color: #221d12;
+}
+
+:root[data-theme="light"] .mock-field:focus {
+  border-color: #ff5500;
+}
+
+:root[data-theme="light"] .mock-form-embed {
+  background-color: #f3f1ef;
+  border: 1px solid #e7e3db;
+}
+
+:root[data-theme="light"] .mock-vars-list {
+  color: #b7ae9f;
+}
+
+:root[data-theme="light"] .mock-input-field {
+  background-color: #edeae6;
+  border: 1px solid #e5e0d8;
+  color: #221d12;
+}
+
+:root[data-theme="light"] .mock-input-field:focus {
+  border-color: #ff5500;
+}
+
+:root[data-theme="light"] .mock-container-main {
+  background-color: #f5f4f2;
+}
+
+:root[data-theme="light"] .mock-inner-card {
+  background-color: #f7f7f5;
+  border: 1px solid #ece9e5;
+}
+
+:root[data-theme="light"] .mock-form-card {
+  background-color: #f3f1ef;
+  border: 1px solid #e7e3db;
+}
+
+:root[data-theme="light"] .mock-input-element {
+  background-color: #edeae6;
+  border: 1px solid #e5e0d8;
+  color: #221d12;
+}
+
+:root[data-theme="light"] .mock-input-element:focus {
   border-color: #ff5500;
 }

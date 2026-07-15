@@ -35,8 +35,8 @@ export function BodyTab({ tab }: Props) {
       inherit: true,
       rules: [],
       colors: {
-        "editor.background": "#141414",
-        "editor.lineHighlightBackground": "#141414",
+        "editor.background": "var(--c-141414)",
+        "editor.lineHighlightBackground": "var(--c-141414)",
       },
     });
   };
@@ -53,7 +53,7 @@ export function BodyTab({ tab }: Props) {
               "rounded-md px-3.5 py-1 text-[11px] font-normal tracking-wide transition-all",
               body.type === bt.id
                 ? "bg-[#F54900] text-[#FDFFFF] font-semibold"
-                : "bg-[#1a1a1a] text-[#a3a3a3] border-none hover:bg-[#262626] hover:text-text-primary"
+                : "bg-[var(--c-1a1a1a)] text-[var(--c-a3a3a3)] border-none hover:bg-[var(--c-262626)] hover:text-text-primary"
             )}
           >
             {bt.label}
@@ -69,7 +69,7 @@ export function BodyTab({ tab }: Props) {
         )}
 
         {body.type === "json" && (
-          <div className="w-full h-[260px] rounded-lg border border-neutral-800/40 bg-[#141414] overflow-hidden p-2.5 transition-all">
+          <div className="w-full h-[260px] rounded-lg border border-neutral-800/40 bg-[var(--c-141414)] overflow-hidden p-2.5 transition-all">
             <Suspense fallback={<div className="p-4 text-neutral-500 text-[13px]">Loading editor…</div>}>
               <MonacoEditor
                 height="100%"
@@ -99,7 +99,7 @@ export function BodyTab({ tab }: Props) {
         )}
 
         {body.type === "raw" && (
-          <div className="w-full h-[260px] rounded-lg border border-neutral-800/40 bg-[#141414] overflow-hidden p-2.5 transition-all">
+          <div className="w-full h-[260px] rounded-lg border border-neutral-800/40 bg-[var(--c-141414)] overflow-hidden p-2.5 transition-all">
             <Suspense fallback={<div className="p-4 text-neutral-500 text-[13px]">Loading editor…</div>}>
               <MonacoEditor
                 height="100%"
@@ -177,7 +177,7 @@ export function BodyTab({ tab }: Props) {
                 />
               </label>
             ) : (
-              <div className="flex w-full max-w-md items-center justify-between rounded border border-neutral-800 bg-[#141414] px-4 py-3 shadow-md">
+              <div className="flex w-full max-w-md items-center justify-between rounded border border-neutral-800 bg-[var(--c-141414)] px-4 py-3 shadow-md">
                 <div className="flex min-w-0 items-center gap-3">
                   <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded bg-[#F54900]/10 text-[#F54900]">
                     <FileCode size={16} />

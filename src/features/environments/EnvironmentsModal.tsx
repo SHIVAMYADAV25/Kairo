@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { X, Plus, Trash2, Check, Layers } from "lucide-react";
 import { useEnvironmentStore } from "@/stores/environmentStore";
 import { KeyValueTable } from "@/components/RequestBuilder/KeyValueTable";
+import { ConfirmModal } from "@/components/common/ConfirmModal";
 import type { Environment } from "@/types";
 
 interface Props {
@@ -30,6 +31,7 @@ export function EnvironmentsModal({
   
   // Track client-side form validation error messages
   const [validationError, setValidationError] = useState<string | null>(null);
+  const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
 
   useEffect(() => {
     if (open) {
@@ -116,8 +118,12 @@ export function EnvironmentsModal({
     }).catch(() => {});
   };
 
-  const handleDelete = async (id: string) => {
-    if (!window.confirm("Delete this environment?")) return;
+  const handleDelete = (id: string) => setDeleteTargetId(id);
+
+  const confirmDelete = async () => {
+    if (!deleteTargetId) return;
+    const id = deleteTargetId;
+    setDeleteTargetId(null);
     await remove(id).catch(() => {});
     if (selectedId === id) setSelectedId(null);
   };
@@ -295,6 +301,15 @@ export function EnvironmentsModal({
           )}
         </div>
       </div>
+
+      <ConfirmModal
+        open={deleteTargetId !== null}
+        title="Delete environment"
+        message="This can't be undone."
+        confirmLabel="Delete"
+        onCancel={() => setDeleteTargetId(null)}
+        onConfirm={confirmDelete}
+      />
     </div>
   );
 }

@@ -44,7 +44,7 @@ export function ResponseViewer({ tab, onClose }: Props) {
 
   if (tab.isLoading) {
     return (
-      <div className="flex h-full flex-col items-center justify-center gap-2 text-text-muted bg-[#0b0b0b] text-[12px]">
+      <div className="flex h-full flex-col items-center justify-center gap-2 text-text-muted bg-[var(--c-0b0b0b)] text-[12px]">
         <div className="h-5 w-5 animate-spin rounded-full border border-border border-t-accent" />
         Sending request…
       </div>
@@ -57,15 +57,15 @@ export function ResponseViewer({ tab, onClose }: Props) {
 
 if (!response) {
   return (
-    <div className="flex h-full w-full flex-col items-center justify-center bg-[#080808] text-neutral-500 font-normal select-none">
+    <div className="flex h-full w-full flex-col items-center justify-center bg-[var(--c-080808)] text-neutral-500 font-normal select-none">
       <div className="flex flex-col items-center justify-center gap-4">
         {/* Circled icon container */}
-        <div className="flex h-14 w-14 items-center justify-center rounded-full border border-neutral-900 bg-[#0f0f0f]/30">
+        <div className="flex h-14 w-14 items-center justify-center rounded-full border border-neutral-900 bg-[var(--c-0f0f0f)]/30">
           <Send size={48} className="text-neutral-800 rotate-360 transform translate-x-[1px] -translate-y-[1px] pr-2 pt-1.5 pl-1.5 stroke-[1]" />
         </div>
         
         {/* Description Text */}
-        <span className="text-[14px] font-normal leading-normal tracking-wide text-[#444444]">
+        <span className="text-[14px] font-normal leading-normal tracking-wide text-[var(--c-444444)]">
           Send a request to see the response
         </span>
       </div>
@@ -83,9 +83,9 @@ if (!response) {
   ];
 
   return (
-    <div className="flex h-full min-h-0 flex-col bg-[#0b0b0b] text-[12px] font-sans selection:bg-[#ff8c00]/20 overflow-hidden">
+    <div className="flex h-full min-h-0 flex-col bg-[var(--c-0b0b0b)] text-[12px] font-sans selection:bg-[#ff8c00]/20 overflow-hidden">
       {/* Primary Navigation Tabs */}
-      <div className="flex items-center border-b border-[#141414] px-2 h-[34px] shrink-0 bg-[#0b0b0b]">
+      <div className="flex items-center border-b border-[var(--c-141414)] px-2 h-[34px] shrink-0 bg-[var(--c-0b0b0b)]">
         <div className="flex items-center h-full gap-1">
           {tabs.map((t) => (
             <button
@@ -94,13 +94,13 @@ if (!response) {
               className={clsx(
                 "relative flex items-center px-3 h-full text-[12px] transition-colors border-b-2",
                 sub === t.id 
-                  ? "text-[#ffffff] font-medium border-accent" 
-                  : "text-[#7c7c7c] hover:text-[#aaaaaa] border-transparent"
+                  ? "text-[var(--c-ffffff)] font-medium border-accent" 
+                  : "text-[var(--c-7c7c7c)] hover:text-[var(--c-aaaaaa)] border-transparent"
               )}
             >
               {t.label}
               {t.badge !== undefined && (
-                <span className="text-[10px] text-[#555555] ml-1 font-normal">
+                <span className="text-[10px] text-[var(--c-555555)] ml-1 font-normal">
                   {t.badge}
                 </span>
               )}
@@ -111,14 +111,14 @@ if (!response) {
       </div>
 
       {/* Timing Status Bar Metrics */}
-      <div className="flex items-center justify-between border-b border-[#141414] bg-[#0b0b0b] px-4 h-[36px] shrink-0 text-[#7c7c7c] text-[11px]">
+      <div className="flex items-center justify-between border-b border-[var(--c-141414)] bg-[var(--c-0b0b0b)] px-4 h-[36px] shrink-0 text-[var(--c-7c7c7c)] text-[11px]">
         <div className="flex items-center gap-3">
           <div className={clsx("flex items-center justify-center rounded px-1.5 py-0.5 text-[11px] font-bold", getStatusColorClasses(response.status).badge)}>
             {response.status} {response.statusText || "OK"}
           </div>
-          <span className="text-[#a3a3a3] font-mono">{response.timing.totalMs} ms</span>
-          <span className="text-[#a3a3a3] font-mono">{(response.sizeBytes / 1024).toFixed(2)} KB</span>
-          <span className="text-[#555555] font-mono">
+          <span className="text-[var(--c-a3a3a3)] font-mono">{response.timing.totalMs} ms</span>
+          <span className="text-[var(--c-a3a3a3)] font-mono">{(response.sizeBytes / 1024).toFixed(2)} KB</span>
+          <span className="text-[var(--c-555555)] font-mono">
             {new Date(response.receivedAt).toLocaleTimeString([], {
               hour: "2-digit",
               minute: "2-digit",
@@ -127,9 +127,9 @@ if (!response) {
             })}
           </span>
         </div>
-        <div className="flex items-center gap-3 text-[#555555]">
-          <button className="hover:text-[#888888] transition-colors"><Copy size={13} /></button>
-          <button className="hover:text-[#888888] transition-colors"><Search size={13} /></button>
+        <div className="flex items-center gap-3 text-[var(--c-555555)]">
+          <button className="hover:text-[var(--c-888888)] transition-colors"><Copy size={13} /></button>
+          <button className="hover:text-[var(--c-888888)] transition-colors"><Search size={13} /></button>
         </div>
       </div>
 
@@ -157,16 +157,16 @@ function ErrorState({ rawError }: { rawError: string }) {
   const Icon = ERROR_ICONS[friendly.icon];
 
   return (
-    <div className="flex h-full min-h-0 flex-col items-center justify-center gap-4 overflow-y-auto bg-[#0b0b0b] px-6 py-8 text-center">
-      <div className="flex h-14 w-14 items-center justify-center rounded-full border border-[#3a1f1f] bg-[#1a1010]">
+    <div className="flex h-full min-h-0 flex-col items-center justify-center gap-4 overflow-y-auto bg-[var(--c-0b0b0b)] px-6 py-8 text-center">
+      <div className="flex h-14 w-14 items-center justify-center rounded-full border border-[var(--c-3a1f1f)] bg-[var(--c-1a1010)]">
         <Icon size={26} className="text-[#f84b4b]" />
       </div>
 
       <div className="max-w-[380px] space-y-2">
-        <div className="text-[15px] font-semibold text-[#f0f0f0]">{friendly.title}</div>
-        <p className="text-[13px] leading-relaxed text-[#a3a3a3]">{friendly.message}</p>
+        <div className="text-[15px] font-semibold text-[var(--c-f0f0f0)]">{friendly.title}</div>
+        <p className="text-[13px] leading-relaxed text-[var(--c-a3a3a3)]">{friendly.message}</p>
         {friendly.tip && (
-          <p className="rounded-md border border-[#2a2a1a] bg-[#1c1a10] px-3 py-2 text-[12px] leading-relaxed text-[#e0b84a]">
+          <p className="rounded-md border border-[var(--c-2a2a1a)] bg-[var(--c-1c1a10)] px-3 py-2 text-[12px] leading-relaxed text-[#e0b84a]">
             💡 {friendly.tip}
           </p>
         )}
@@ -174,14 +174,14 @@ function ErrorState({ rawError }: { rawError: string }) {
 
       <button
         onClick={() => setShowRaw((v) => !v)}
-        className="flex items-center gap-1 text-[11px] text-[#666666] hover:text-[#999999]"
+        className="flex items-center gap-1 text-[11px] text-[var(--c-666666)] hover:text-[var(--c-999999)]"
       >
         <ChevronDown size={12} className={clsx("transition-transform", showRaw && "rotate-180")} />
         {showRaw ? "Hide technical details" : "Show technical details"}
       </button>
 
       {showRaw && (
-        <pre className="max-w-[460px] whitespace-pre-wrap break-all rounded-md border border-[#1e1e1e] bg-[#111111] px-3 py-2 text-left font-mono text-[11px] text-[#888888]">
+        <pre className="max-w-[460px] whitespace-pre-wrap break-all rounded-md border border-[var(--c-1e1e1e)] bg-[var(--c-111111)] px-3 py-2 text-left font-mono text-[11px] text-[var(--c-888888)]">
           {rawError}
         </pre>
       )}

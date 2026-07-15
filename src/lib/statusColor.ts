@@ -17,16 +17,16 @@ export interface StatusColorClasses {
 export function getStatusColorClasses(status: number | null | undefined): StatusColorClasses {
   if (!status || status <= 0) {
     return {
-      badge: "bg-[#1a1a1a] border border-[#2a2a2a] text-[#9c9c9c]",
-      text: "text-[#9c9c9c]",
-      dot: "bg-[#6b6b6b]",
+      badge: "bg-[var(--c-1a1a1a)] border border-[var(--c-2a2a2a)] text-[var(--c-9c9c9c)]",
+      text: "text-[var(--c-9c9c9c)]",
+      dot: "bg-[var(--c-6b6b6b)]",
       category: "unknown",
     };
   }
 
   if (status >= 100 && status < 200) {
     return {
-      badge: "bg-[#0f1f2e] border border-[#1c3a52] text-[#38bdf8]",
+      badge: "bg-[var(--c-0f1f2e)] border border-[var(--c-1c3a52)] text-[#38bdf8]",
       text: "text-[#38bdf8]",
       dot: "bg-[#38bdf8]",
       category: "informational",
@@ -35,7 +35,7 @@ export function getStatusColorClasses(status: number | null | undefined): Status
 
   if (status >= 200 && status < 300) {
     return {
-      badge: "bg-[#112519] border border-[#1b3d29] text-[#22c55e]",
+      badge: "bg-[var(--c-112519)] border border-[var(--c-1b3d29)] text-[#22c55e]",
       text: "text-[#22c55e]",
       dot: "bg-[#22c55e]",
       category: "success",
@@ -44,7 +44,7 @@ export function getStatusColorClasses(status: number | null | undefined): Status
 
   if (status >= 300 && status < 400) {
     return {
-      badge: "bg-[#12202e] border border-[#1d3a52] text-[#60a5fa]",
+      badge: "bg-[var(--c-12202e)] border border-[var(--c-1d3a52)] text-[#60a5fa]",
       text: "text-[#60a5fa]",
       dot: "bg-[#60a5fa]",
       category: "redirect",
@@ -53,7 +53,7 @@ export function getStatusColorClasses(status: number | null | undefined): Status
 
   if (status >= 400 && status < 500) {
     return {
-      badge: "bg-[#2e2410] border border-[#4a3a12] text-[#f59e0b]",
+      badge: "bg-[var(--c-2e2410)] border border-[var(--c-4a3a12)] text-[#f59e0b]",
       text: "text-[#f59e0b]",
       dot: "bg-[#f59e0b]",
       category: "clientError",
@@ -62,7 +62,7 @@ export function getStatusColorClasses(status: number | null | undefined): Status
 
   // 5xx and anything else unexpected
   return {
-    badge: "bg-[#2e1414] border border-[#4a1c1c] text-[#f84b4b]",
+    badge: "bg-[var(--c-2e1414)] border border-[var(--c-4a1c1c)] text-[#f84b4b]",
     text: "text-[#f84b4b]",
     dot: "bg-[#f84b4b]",
     category: "serverError",
