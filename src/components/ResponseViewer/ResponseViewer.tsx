@@ -4,7 +4,7 @@ import { X, Copy, Search, Send, WifiOff, Clock, ShieldAlert, Link2Off, PlugZap, 
 import type { RequestTab } from "@/types";
 import { ResponseBodyTab } from "./ResponseBodyTab";
 import { getStatusColorClasses } from "@/lib/statusColor";
-import { getFriendlyError } from "@/lib/errorMessages";
+import { classifyError } from "@/lib/errorMessages";
 import {
   ResponseHeadersTab,
   ResponseCookiesTab,
@@ -147,14 +147,13 @@ if (!response) {
 }
 
 /**
- * Friendly, learner-facing error screen. Explains in plain language what
- * probably went wrong and what to try next, while still keeping the raw
- * technical error available (collapsed) for anyone who wants it.
+ * Error screen matching how Postman/Bruno/Insomnia/Hoppscotch show
+ * request failures: the actual driver error, front and center — not
+ * a guessed paraphrase with the real message hidden behind a toggle.
  */
 function ErrorState({ rawError }: { rawError: string }) {
-  const [showRaw, setShowRaw] = useState(false);
-  const friendly = getFriendlyError(rawError);
-  const Icon = ERROR_ICONS[friendly.icon];
+  const icon = classifyError(rawError);
+  const Icon = ERROR_ICONS[icon];
 
   return (
     <div className="flex h-full min-h-0 flex-col items-center justify-center gap-4 overflow-y-auto bg-[var(--c-0b0b0b)] px-6 py-8 text-center">
@@ -162,29 +161,13 @@ function ErrorState({ rawError }: { rawError: string }) {
         <Icon size={26} className="text-[#f84b4b]" />
       </div>
 
-      <div className="max-w-[380px] space-y-2">
-        <div className="text-[15px] font-semibold text-[var(--c-f0f0f0)]">{friendly.title}</div>
-        <p className="text-[13px] leading-relaxed text-[var(--c-a3a3a3)]">{friendly.message}</p>
-        {friendly.tip && (
-          <p className="rounded-md border border-[var(--c-2a2a1a)] bg-[var(--c-1c1a10)] px-3 py-2 text-[12px] leading-relaxed text-[#e0b84a]">
-            💡 {friendly.tip}
-          </p>
-        )}
+      <div className="text-[15px] font-semibold text-[var(--c-f0f0f0)]">
+        Could not send request
       </div>
 
-      <button
-        onClick={() => setShowRaw((v) => !v)}
-        className="flex items-center gap-1 text-[11px] text-[var(--c-666666)] hover:text-[var(--c-999999)]"
-      >
-        <ChevronDown size={12} className={clsx("transition-transform", showRaw && "rotate-180")} />
-        {showRaw ? "Hide technical details" : "Show technical details"}
-      </button>
-
-      {showRaw && (
-        <pre className="max-w-[460px] whitespace-pre-wrap break-all rounded-md border border-[var(--c-1e1e1e)] bg-[var(--c-111111)] px-3 py-2 text-left font-mono text-[11px] text-[var(--c-888888)]">
-          {rawError}
-        </pre>
-      )}
+      <pre className="max-w-[520px] whitespace-pre-wrap break-all rounded-md border border-[var(--c-1e1e1e)] bg-[var(--c-111111)] px-3 py-2 text-left font-mono text-[12px] leading-relaxed text-[#ff8080]">
+        {rawError}
+      </pre>
     </div>
   );
 }
