@@ -1,6 +1,6 @@
 import { useState } from "react";
 import clsx from "clsx";
-import { X, Copy, Search, Send, WifiOff, Clock, ShieldAlert, Link2Off, PlugZap, AlertTriangle, ChevronDown } from "lucide-react";
+import { X, Copy, Search, Send, WifiOff, Clock, ShieldAlert, Link2Off, PlugZap, AlertTriangle } from "lucide-react";
 import type { RequestTab } from "@/types";
 import { ResponseBodyTab } from "./ResponseBodyTab";
 import { getStatusColorClasses } from "@/lib/statusColor";
