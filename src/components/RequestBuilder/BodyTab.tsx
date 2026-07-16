@@ -29,14 +29,23 @@ export function BodyTab({ tab }: Props) {
     updateRequest(tab.id, { body: { ...body, ...patch } });
 
   // Reusable theme definition logic for Monaco components
+// Reusable theme definition logic for Monaco components.
+  // Monaco's theme engine does NOT understand CSS custom properties (var(--...)) —
+  // it validates colors against a strict #RRGGBB(AA) regex internally and throws
+  // if that fails. We resolve the CSS variable to its actual computed hex value
+  // at mount time instead, so it still tracks light/dark theme changes.
   const handleEditorWillMount = (monaco: any) => {
+    const resolvedBg =
+      getComputedStyle(document.documentElement).getPropertyValue("--c-141414").trim() ||
+      "#141414";
+
     monaco.editor.defineTheme("custom-dark", {
       base: "vs-dark",
       inherit: true,
       rules: [],
       colors: {
-        "editor.background": "var(--c-141414)",
-        "editor.lineHighlightBackground": "var(--c-141414)",
+        "editor.background": resolvedBg,
+        "editor.lineHighlightBackground": resolvedBg,
       },
     });
   };

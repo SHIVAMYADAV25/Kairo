@@ -102,7 +102,7 @@ export default function App() {
       <div className="flex items-center justify-between border-b border-border bg-bg-base px-4 py-1">
         <div className="flex shrink-0 items-center gap-3">
           <span className="text-[15px] font-semibold tracking-wide">
-            Web<span className="text-accent">RequestKit</span>
+            <span className="text-accent">Kairo</span>
           </span>
           <span className="hidden text-[11px] text-text-muted sm:inline">Fast. Lightweight. Rust-powered.</span>
         </div>
