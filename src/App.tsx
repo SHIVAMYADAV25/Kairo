@@ -20,6 +20,7 @@ import { useSettingsStore } from "@/stores/settingsStore";
 import { useEnvironmentStore } from "@/stores/environmentStore";
 import { createEmptyTab, createTabFromPersisted } from "@/lib/factories";
 import { api } from "@/lib/api";
+import { UpdateModal } from "@/features/updater/UpdateModal";
 
 export default function App() {
   const [sidebarPanel, setSidebarPanel] = useState<SidebarPanel>("collections");
@@ -98,6 +99,7 @@ export default function App() {
 
   return (
     <div className="flex h-screen w-screen flex-col overflow-hidden bg-bg-base text-text-primary">
+      <UpdateModal />
       {/* Top bar */}
       <div className="flex items-center justify-between border-b border-border bg-bg-base px-4 py-1">
         <div className="flex shrink-0 items-center gap-3">

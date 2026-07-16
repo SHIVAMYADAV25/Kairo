@@ -4,15 +4,49 @@ import { AppleIcon, ChevronDownIcon, InfoIcon, LinuxIcon, WindowsIcon } from "./
 
 type Platform = "linux" | "windows" | "mac";
 
+type ReleaseAsset = { name: string; browser_download_url: string };
+type ReleaseAssets = {
+  macArm?: string;
+  macIntel?: string;
+  winExe?: string;
+  winMsi?: string;
+  linuxX64?: string;
+  linuxArm?: string;
+  version?: string;
+};
+
+const GITHUB_LATEST_RELEASE_API = "https://api.github.com/repos/SHIVAMYADAV25/Kairo/releases/latest";
+
 export default function DownloadCTA() {
   const [activeDropdown, setActiveDropdown] = useState<Platform | null>(null);
   const [showInfo, setShowInfo] = useState<Platform | null>(null);
+  const [assets, setAssets] = useState<ReleaseAssets>({});
 
   const macRef = useRef<HTMLDivElement>(null);
   const windowsRef = useRef<HTMLDivElement>(null);
   const linuxRef = useRef<HTMLDivElement>(null);
 
-  const GITHUB_RELEASE_BASE = "https://github.com/SHIVAMYADAV25/Kairo/releases/download/v1.1.0";
+  useEffect(() => {
+    fetch(GITHUB_LATEST_RELEASE_API)
+      .then((r) => r.json())
+      .then((release: { tag_name: string; assets: ReleaseAsset[] }) => {
+        const find = (pattern: RegExp) =>
+          release.assets.find((a) => pattern.test(a.name))?.browser_download_url;
+
+        setAssets({
+          macArm: find(/aarch64\.dmg$/),
+          macIntel: find(/x64\.dmg$/),
+          winExe: find(/x64-setup\.exe$/),
+          winMsi: find(/x64_en-US\.msi$/),
+          linuxX64: find(/x64\.app\.tar\.gz$/),
+          linuxArm: find(/aarch64\.app\.tar\.gz$/),
+          version: release.tag_name,
+        });
+      })
+      .catch(() => {
+        // API rate-limited or offline — dropdowns will just show no links below
+      });
+  }, []);
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -55,7 +89,7 @@ export default function DownloadCTA() {
             Download Kairo for free and start building better APIs today.
           </p>
           <div className="flex flex-wrap justify-center gap-3 mb-8">
-            
+
             {/* macOS DOWNLOAD */}
             <div ref={macRef} className="relative">
               <button
@@ -68,9 +102,10 @@ export default function DownloadCTA() {
               {activeDropdown === "mac" && (
                 <div className="absolute top-[52px] left-1/2 -translate-x-1/2 z-50 w-[310px] rounded-lg border border-[#181818] bg-[#111111] p-3 shadow-2xl text-left">
                   <div className="flex flex-col text-[12px] -mx-1 -my-1">
-                    <a 
-                      href={`${GITHUB_RELEASE_BASE}/Kairo_0.1.0_aarch64.dmg`}
-                      className="flex items-center gap-3 p-3 text-left hover:bg-[#1a1a1e] rounded transition-colors group"
+                    
+                    <a
+                      href={assets.macArm}
+                      className={`flex items-center gap-3 p-3 text-left hover:bg-[#1a1a1e] rounded transition-colors group ${!assets.macArm ? "opacity-50 pointer-events-none" : ""}`}
                     >
                       <div className="text-[#666666] group-hover:text-white"><AppleIcon /></div>
                       <div>
@@ -79,9 +114,9 @@ export default function DownloadCTA() {
                       </div>
                     </a>
                     <div className="h-px bg-[#181818]" />
-                    <a 
-                      href={`${GITHUB_RELEASE_BASE}/Kairo_0.1.0_x64.dmg`}
-                      className="flex items-center gap-3 p-3 text-left hover:bg-[#1a1a1e] rounded transition-colors group"
+                    <a
+                      href={assets.macIntel}
+                      className={`flex items-center gap-3 p-3 text-left hover:bg-[#1a1a1e] rounded transition-colors group ${!assets.macIntel ? "opacity-50 pointer-events-none" : ""}`}
                     >
                       <div className="text-[#666666] group-hover:text-white"><AppleIcon /></div>
                       <div>
@@ -106,9 +141,9 @@ export default function DownloadCTA() {
               {activeDropdown === "windows" && (
                 <div className="absolute top-[52px] left-1/2 -translate-x-1/2 z-50 w-[310px] rounded-lg border border-[#181818] bg-[#111111] p-3 shadow-2xl text-left">
                   <div className="flex flex-col text-[12px] -mx-1 -my-1">
-                    <a 
-                      href={`${GITHUB_RELEASE_BASE}/Kairo_0.1.0_x64-setup.exe`}
-                      className="flex items-center gap-3 p-3 text-left hover:bg-[#1a1a1e] rounded transition-colors group"
+                    <a
+                      href={assets.winExe}
+                      className={`flex items-center gap-3 p-3 text-left hover:bg-[#1a1a1e] rounded transition-colors group ${!assets.winExe ? "opacity-50 pointer-events-none" : ""}`}
                     >
                       <div className="text-[#666666] group-hover:text-white"><WindowsIcon /></div>
                       <div>
@@ -117,9 +152,9 @@ export default function DownloadCTA() {
                       </div>
                     </a>
                     <div className="h-px bg-[#181818]" />
-                    <a 
-                      href={`${GITHUB_RELEASE_BASE}/Kairo_0.1.0_x64_en-US.msi`}
-                      className="flex items-center gap-3 p-3 text-left hover:bg-[#1a1a1e] rounded transition-colors group"
+                    <a
+                      href={assets.winMsi}
+                      className={`flex items-center gap-3 p-3 text-left hover:bg-[#1a1a1e] rounded transition-colors group ${!assets.winMsi ? "opacity-50 pointer-events-none" : ""}`}
                     >
                       <div className="text-[#666666] group-hover:text-white"><WindowsIcon /></div>
                       <div>
@@ -158,7 +193,7 @@ export default function DownloadCTA() {
                       <div>
                         <div className="text-center font-medium text-[#aaaaaa] mb-1.5 text-[11px]">AppImage Tarball (recommended)</div>
                         <div className="bg-[#151515] p-2.5 rounded border border-[#1e1e1e] font-mono text-[#00ca54] leading-relaxed select-text text-[11px]">
-                          tar -xvf Kairo_0.1.0_x64.app.tar.gz
+                          tar -xvf Kairo_{assets.version ?? "x.x.x"}_x64.app.tar.gz
                           <br />
                           ./Kairo.AppImage
                         </div>
@@ -167,9 +202,9 @@ export default function DownloadCTA() {
                     </div>
                   ) : (
                     <div className="flex flex-col text-[12px] -mx-1 -my-1">
-                      <a 
-                        href={`${GITHUB_RELEASE_BASE}/Kairo_0.1.0_x64.app.tar.gz`}
-                        className="flex items-center gap-3 p-3 text-left hover:bg-[#1a1a1e] rounded transition-colors group"
+                      <a
+                        href={assets.linuxX64}
+                        className={`flex items-center gap-3 p-3 text-left hover:bg-[#1a1a1e] rounded transition-colors group ${!assets.linuxX64 ? "opacity-50 pointer-events-none" : ""}`}
                       >
                         <div className="text-[#666666] group-hover:text-white"><LinuxIcon /></div>
                         <div>
@@ -178,9 +213,9 @@ export default function DownloadCTA() {
                         </div>
                       </a>
                       <div className="h-px bg-[#181818]" />
-                      <a 
-                        href={`${GITHUB_RELEASE_BASE}/Kairo_0.1.0_aarch64.app.tar.gz`}
-                        className="flex items-center gap-3 p-3 text-left hover:bg-[#1a1a1e] rounded transition-colors group"
+                      <a
+                        href={assets.linuxArm}
+                        className={`flex items-center gap-3 p-3 text-left hover:bg-[#1a1a1e] rounded transition-colors group ${!assets.linuxArm ? "opacity-50 pointer-events-none" : ""}`}
                       >
                         <div className="text-[#666666] group-hover:text-white"><LinuxIcon /></div>
                         <div>
@@ -196,7 +231,7 @@ export default function DownloadCTA() {
 
           </div>
           <p className="text-sm text-neutral-600">Built with Rust. Runs on macOS, Windows, and Linux.</p>
-          <p className="text-xs text-neutral-700 mt-2">v0.4.0 Alpha</p>
+          <p className="text-xs text-neutral-700 mt-2">{assets.version ?? "Loading version…"}</p>
         </div>
       </div>
     </section>
