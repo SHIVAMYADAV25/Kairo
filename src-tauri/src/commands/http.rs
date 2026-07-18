@@ -230,10 +230,19 @@ pub async fn execute_request(
         total_ms,
     };
 
-    // 4. Run test scripts against the response.
+    // 4. Run test scripts against the response. A bug in the test script
+    // (syntax error, calling pm.response.json() on a non-JSON body, etc.)
+    // must not discard an otherwise-successful HTTP response — surface it
+    // as a single failed test instead of failing the whole request.
     let test_results = if !request.scripts.tests.trim().is_empty() {
-        run_test_script(&request.scripts.tests, status.as_u16(), &body)
-            .map_err(|e| e.to_string())?
+        match run_test_script(&request.scripts.tests, status.as_u16(), &body) {
+            Ok(results) => results,
+            Err(e) => vec![crate::models::TestResult {
+                name: "Test script error".to_string(),
+                passed: false,
+                error: Some(e.to_string()),
+            }],
+        }
     } else {
         Vec::new()
     };
