@@ -28,6 +28,16 @@ pub fn import(pool: &DbPool, root_name: &str, doc: &Value) -> anyhow::Result<Col
 
     for (path, methods) in paths {
         let Some(methods) = methods.as_object() else { continue };
+        // Parameters can be declared once on the path item and shared by
+        // every method under it (very common in real specs) — collect
+        // those separately from the per-method `methods` map below so they
+        // don't get skipped just because "parameters" isn't a real HTTP verb.
+        let path_level_params: Vec<&Value> = methods
+            .get("parameters")
+            .and_then(|p| p.as_array())
+            .map(|arr| arr.iter().collect())
+            .unwrap_or_default();
+
         for (method_str, operation) in methods {
             let Some(method) = parse_method(method_str) else { continue };
 
@@ -56,31 +66,45 @@ pub fn import(pool: &DbPool, root_name: &str, doc: &Value) -> anyhow::Result<Col
                 root.id.clone()
             };
 
-            let headers = operation.get("parameters").and_then(|p| p.as_array()).map(|arr| {
-                arr.iter()
-                    .filter(|p| p.get("in").and_then(|i| i.as_str()) == Some("header"))
-                    .map(|p| KeyValuePair {
-                        id: Uuid::new_v4().to_string(),
-                        key: p.get("name").and_then(|n| n.as_str()).unwrap_or("").to_string(),
-                        value: String::new(),
-                        description: p.get("description").and_then(|d| d.as_str()).map(String::from),
-                        enabled: true,
-                    })
+            // Operation-level params override path-level ones with the same
+            // name+location; otherwise both contribute.
+            let all_params: Vec<&Value> = {
+                let op_params: Vec<&Value> = operation.get("parameters").and_then(|p| p.as_array()).map(|arr| arr.iter().collect()).unwrap_or_default();
+                let op_keys: std::collections::HashSet<(Option<&str>, Option<&str>)> = op_params
+                    .iter()
+                    .map(|p| (p.get("name").and_then(|n| n.as_str()), p.get("in").and_then(|i| i.as_str())))
+                    .collect();
+                path_level_params
+                    .iter()
+                    .filter(|p| !op_keys.contains(&(p.get("name").and_then(|n| n.as_str()), p.get("in").and_then(|i| i.as_str()))))
+                    .chain(op_params.iter())
+                    .cloned()
                     .collect()
-            }).unwrap_or_default();
+            };
 
-            let params = operation.get("parameters").and_then(|p| p.as_array()).map(|arr| {
-                arr.iter()
-                    .filter(|p| p.get("in").and_then(|i| i.as_str()) == Some("query"))
-                    .map(|p| KeyValuePair {
-                        id: Uuid::new_v4().to_string(),
-                        key: p.get("name").and_then(|n| n.as_str()).unwrap_or("").to_string(),
-                        value: String::new(),
-                        description: p.get("description").and_then(|d| d.as_str()).map(String::from),
-                        enabled: p.get("required").and_then(|r| r.as_bool()).unwrap_or(false),
-                    })
-                    .collect()
-            }).unwrap_or_default();
+            let headers = all_params
+                .iter()
+                .filter(|p| p.get("in").and_then(|i| i.as_str()) == Some("header"))
+                .map(|p| KeyValuePair {
+                    id: Uuid::new_v4().to_string(),
+                    key: p.get("name").and_then(|n| n.as_str()).unwrap_or("").to_string(),
+                    value: String::new(),
+                    description: p.get("description").and_then(|d| d.as_str()).map(String::from),
+                    enabled: true,
+                })
+                .collect::<Vec<_>>();
+
+            let params = all_params
+                .iter()
+                .filter(|p| p.get("in").and_then(|i| i.as_str()) == Some("query"))
+                .map(|p| KeyValuePair {
+                    id: Uuid::new_v4().to_string(),
+                    key: p.get("name").and_then(|n| n.as_str()).unwrap_or("").to_string(),
+                    value: String::new(),
+                    description: p.get("description").and_then(|d| d.as_str()).map(String::from),
+                    enabled: p.get("required").and_then(|r| r.as_bool()).unwrap_or(false),
+                })
+                .collect::<Vec<_>>();
 
             let body = build_body(operation.get("requestBody"));
             let full_url = format!("{}{}", base_url, path);
