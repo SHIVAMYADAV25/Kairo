@@ -84,6 +84,12 @@ export function UrlBar({ tab }: Props) {
     }
   };
 
+  const handleCancel = () => {
+    // request.id is stable per tab/save and is what the backend registers
+    // the in-flight send() under (see execute_request in http.rs).
+    api.http.cancel(tab.request.id).catch(() => {});
+  };
+
   const handleSaveClick = () => {
     if (tab.requestId && tab.request.collectionId) {
       api.requests.save(tab.request).then(upsertRequestInCache, console.error);
@@ -242,11 +248,15 @@ export function UrlBar({ tab }: Props) {
       </div>
 
       <button
-        onClick={handleSend}
-        disabled={tab.isLoading}
-        className="flex items-center gap-1.5 rounded-md bg-accent px-4 py-2 text-[13px] font-medium text-black hover:bg-accent-hover disabled:opacity-60"
+        onClick={tab.isLoading ? handleCancel : handleSend}
+        className={clsx(
+          "flex items-center gap-1.5 rounded-md px-4 py-2 text-[13px] font-medium transition-colors",
+          tab.isLoading
+            ? "bg-bg-elevated text-status-error border border-status-error hover:bg-status-error/10"
+            : "bg-accent text-black hover:bg-accent-hover"
+        )}
       >
-        <Send size={14} /> {tab.isLoading ? "Sending..." : "Send"}
+        <Send size={14} /> {tab.isLoading ? "Cancel" : "Send"}
       </button>
 
       <SaveRequestModal

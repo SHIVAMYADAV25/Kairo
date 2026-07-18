@@ -21,6 +21,8 @@ pub fn run() {
 
             let pool = db::init_pool(app_data_dir).expect("failed to initialize database");
             app.manage(pool);
+            app.manage(commands::http::RequestRegistry::default());
+            app.manage(commands::http::ClientPool::default());
             app.manage(commands::ws::WsManager::default());
             app.manage(commands::mock::MockServerState::default());
             app.manage(commands::sse::SseManager::default());

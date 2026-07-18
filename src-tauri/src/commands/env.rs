@@ -32,9 +32,22 @@ pub fn substitute_vars_in_request(
             p.value = substitute(&p.value, vars);
         }
     }
+    if let Some(fields) = request.body.form_data.as_mut() {
+        for f in fields.iter_mut() {
+            // Only substitute text fields — a "file" field's value is a
+            // filesystem path, not something {{VAR}} substitution should touch.
+            if f.field_type == "text" {
+                f.value = substitute(&f.value, vars);
+            }
+        }
+    }
 
     if let Some(bearer) = request.auth.bearer.as_mut() {
         bearer.token = substitute(&bearer.token, vars);
+    }
+    if let Some(basic) = request.auth.basic.as_mut() {
+        basic.username = substitute(&basic.username, vars);
+        basic.password = substitute(&basic.password, vars);
     }
     if let Some(api_key) = request.auth.api_key.as_mut() {
         api_key.value = substitute(&api_key.value, vars);

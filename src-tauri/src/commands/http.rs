@@ -4,8 +4,52 @@ use crate::db::DbPool;
 use crate::models::*;
 use crate::storage;
 use std::collections::HashMap;
+use std::sync::Arc;
 use std::time::Instant;
 use tauri::State;
+use tokio::sync::{oneshot, Mutex};
+
+/// In-flight requests register a cancel sender here, keyed by the request's
+/// own `id` (already unique per-tab/save on the frontend, so it doubles as
+/// the request-id cancel_request expects — no extra plumbing needed).
+#[derive(Default)]
+pub struct RequestRegistry(Arc<Mutex<HashMap<String, oneshot::Sender<()>>>>);
+
+/// Building a fresh `reqwest::Client` per request throws away its connection
+/// pool (warm TCP/TLS sockets) and DNS cache — meaning every Send pays a
+/// fresh handshake even when hitting the same host repeatedly. Requests that
+/// share the same settings (timeout/redirects/SSL/cookies — the vast
+/// majority) share one long-lived Client instead, keyed by that config.
+#[derive(Hash, Eq, PartialEq, Clone)]
+struct ClientKey {
+    timeout_ms: u64,
+    follow_redirects: bool,
+    max_redirects: u32,
+    ssl_verification: bool,
+    save_cookies: bool,
+}
+
+#[derive(Default)]
+pub struct ClientPool(Mutex<HashMap<ClientKey, Arc<reqwest::Client>>>);
+
+impl ClientPool {
+    async fn get_or_build(&self, request: &ApiRequest) -> Result<Arc<reqwest::Client>, String> {
+        let key = ClientKey {
+            timeout_ms: request.settings.timeout_ms,
+            follow_redirects: request.settings.follow_redirects,
+            max_redirects: request.settings.max_redirects,
+            ssl_verification: request.settings.ssl_verification,
+            save_cookies: request.settings.save_cookies,
+        };
+        let mut pool = self.0.lock().await;
+        if let Some(client) = pool.get(&key) {
+            return Ok(client.clone());
+        }
+        let client = Arc::new(build_client(request)?);
+        pool.insert(key, client.clone());
+        Ok(client)
+    }
+}
 
 /// Payload shape from the frontend: `{ request, environmentId }`.
 ///
@@ -26,6 +70,8 @@ pub struct ExecuteRequestPayload {
 pub async fn execute_request(
     payload: ExecuteRequestPayload,
     db: State<'_, DbPool>,
+    registry: State<'_, RequestRegistry>,
+    client_pool: State<'_, ClientPool>,
 ) -> Result<ApiResponse, String> {
     let pool = db.inner().clone();
     let request = payload.request.clone();
@@ -66,19 +112,38 @@ pub async fn execute_request(
     // 3. Build and send the request, capturing per-phase timing.
     let overall_start = Instant::now();
 
-    let client = build_client(&request)?;
-    eprintln!("[execute_request] client built, timeout_ms={}", request.settings.timeout_ms);
+    let client = client_pool.get_or_build(&request).await?;
+    eprintln!("[execute_request] client acquired (pooled), timeout_ms={}", request.settings.timeout_ms);
     let method = request.method.as_reqwest();
     let mut url = request.url.clone();
-    let enabled_params: Vec<(&str, &str)> = request
+    let mut enabled_params: Vec<(String, String)> = request
         .params
         .iter()
         .filter(|p| p.enabled && !p.key.is_empty())
-        .map(|p| (p.key.as_str(), p.value.as_str()))
+        .map(|p| (p.key.clone(), p.value.clone()))
         .collect();
+
+    // API-key auth with location "query" needs to land in the URL itself,
+    // not as a header — do that *before* the client.request(...) call below
+    // builds off `url`, otherwise the key is silently dropped.
+    let mut cookie_header: Option<String> = None;
+    if request.auth.auth_type == "api-key" {
+        if let Some(k) = &request.auth.api_key {
+            match k.location.as_str() {
+                "query" => enabled_params.push((k.key.clone(), k.value.clone())),
+                "cookie" => cookie_header = Some(format!("{}={}", k.key, k.value)),
+                _ => {}
+            }
+        }
+    }
+
     if !enabled_params.is_empty() {
+        let pairs: Vec<(&str, &str)> = enabled_params
+            .iter()
+            .map(|(k, v)| (k.as_str(), v.as_str()))
+            .collect();
         let qs = url::form_urlencoded::Serializer::new(String::new())
-            .extend_pairs(enabled_params)
+            .extend_pairs(pairs)
             .finish();
         url = format!("{}{}{}", url, if url.contains('?') { "&" } else { "?" }, qs);
     }
@@ -88,16 +153,33 @@ pub async fn execute_request(
     for h in request.headers.iter().filter(|h| h.enabled && !h.key.is_empty()) {
         builder = builder.header(&h.key, &h.value);
     }
+    if let Some(cookie) = cookie_header {
+        builder = builder.header("Cookie", cookie);
+    }
     builder = apply_auth(builder, &request.auth);
     builder = apply_body(builder, &request.body);
 
     eprintln!("[execute_request] sending to {url} ...");
     let ttfb_start = Instant::now();
-    let response = builder.send().await.map_err(|e| {
-        let msg = format!("Request failed: {e}");
-        eprintln!("[execute_request] ERROR during send(): {msg}");
-        msg
-    })?;
+
+    let (cancel_tx, cancel_rx) = oneshot::channel::<()>();
+    registry.0.lock().await.insert(request.id.clone(), cancel_tx);
+
+    let response = tokio::select! {
+        result = builder.send() => {
+            registry.0.lock().await.remove(&request.id);
+            result.map_err(|e| {
+                let msg = format!("Request failed: {e}");
+                eprintln!("[execute_request] ERROR during send(): {msg}");
+                msg
+            })?
+        }
+        _ = cancel_rx => {
+            registry.0.lock().await.remove(&request.id);
+            eprintln!("[execute_request] cancelled by user");
+            return Err("Request cancelled".to_string());
+        }
+    };
 
     let ttfb_ms = ttfb_start.elapsed().as_millis() as u64;
     eprintln!("[execute_request] got response status={} in {ttfb_ms}ms", response.status());
@@ -178,10 +260,10 @@ pub async fn execute_request(
 }
 
 #[tauri::command]
-pub async fn cancel_request(_request_id: String) -> Result<(), String> {
-    // Placeholder for cooperative cancellation — wire to a
-    // `DashMap<String, CancellationToken>` keyed by request id once the
-    // Runner (bulk/sequential execution) feature lands.
+pub async fn cancel_request(request_id: String, registry: State<'_, RequestRegistry>) -> Result<(), String> {
+    if let Some(tx) = registry.0.lock().await.remove(&request_id) {
+        let _ = tx.send(()); // receiver may already be gone if the request just finished; that's fine
+    }
     Ok(())
 }
 
@@ -215,12 +297,12 @@ fn apply_auth(builder: reqwest::RequestBuilder, auth: &AuthConfig) -> reqwest::R
         }
         "api-key" => {
             if let Some(k) = &auth.api_key {
-                match k.location.as_str() {
-                    "header" => return builder.header(&k.key, &k.value),
-                    // query/cookie handled by caller before this point in a
-                    // fuller implementation; header covers the common case.
-                    _ => return builder,
+                if k.location.as_str() == "header" {
+                    return builder.header(&k.key, &k.value);
                 }
+                // query/cookie locations are applied earlier in
+                // execute_request (query needs to be in the URL before the
+                // request builder is created; cookie is set as a header).
             }
             builder
         }
