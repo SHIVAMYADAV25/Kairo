@@ -147,6 +147,17 @@ pub fn run_test_script(script: &str, status: u16, body: &str) -> anyhow::Result<
                         }},
                     }};
                 }};
+                // pm.response.json() / .text() — this is the single most
+                // common line in real Postman test scripts, and was
+                // previously missing entirely (pm.response only exposed the
+                // raw .status/.body values), so any imported or hand-written
+                // script that called it threw "pm.response.json is not a
+                // function" before a single assertion ever ran.
+                pm.response.json = function() {{
+                    try {{ return JSON.parse(pm.response.body); }}
+                    catch (e) {{ throw new Error("Response body is not valid JSON: " + e.message); }}
+                }};
+                pm.response.text = function() {{ return pm.response.body; }};
             }})();
             {script}
             "#
