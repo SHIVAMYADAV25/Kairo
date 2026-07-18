@@ -139,7 +139,14 @@ pub async fn sse_connect(
         }
 
         let _ = task_app.emit("sse-status", SseStatusEvent { connection_id: task_id.clone(), status: "closed", message: None });
-        task_manager.lock().await.remove(&task_id);
+        // Same reasoning as the WS fix: a reconnect under the same
+        // connection_id may have already inserted a newer SseHandle before
+        // this old stream's loop exits. Only evict if the map still points
+        // at *this* handle (compare the Arc, not just the key).
+        let mut conns = task_manager.lock().await;
+        if conns.get(&task_id).map_or(false, |h| Arc::ptr_eq(&h.cancelled, &handle.cancelled)) {
+            conns.remove(&task_id);
+        }
     });
 
     Ok(())
