@@ -82,7 +82,7 @@ pub async fn ws_connect(
 
     let (mut write, mut read) = ws_stream.split();
     let (out_tx, mut out_rx) = mpsc::unbounded_channel::<WsOutbound>();
-    manager.connections.lock().await.insert(connection_id.clone(), out_tx);
+    manager.connections.lock().await.insert(connection_id.clone(), out_tx.clone());
 
     let _ = app.emit(
         "ws-status",
@@ -129,6 +129,7 @@ pub async fn ws_connect(
     // this connection).
     let write_id = connection_id.clone();
     let write_manager = manager.connections.clone();
+    let this_tx = out_tx.clone();
     tokio::spawn(async move {
         while let Some(out) = out_rx.recv().await {
             let is_close = matches!(out, WsOutbound::Close);
@@ -143,7 +144,15 @@ pub async fn ws_connect(
         }
         let _ = write.close().await;
         reader.abort();
-        write_manager.lock().await.remove(&write_id);
+        // Reconnecting under the same connection_id inserts a *new* sender
+        // into the map before this old connection's cleanup runs. Without
+        // this check, that cleanup would blindly remove-by-key and evict
+        // the new, still-live connection's entry — leaving ws_send /
+        // ws_disconnect unable to find it even though it's open.
+        let mut conns = write_manager.lock().await;
+        if conns.get(&write_id).map_or(false, |existing| existing.same_channel(&this_tx)) {
+            conns.remove(&write_id);
+        }
     });
 
     Ok(())
