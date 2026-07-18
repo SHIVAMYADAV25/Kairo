@@ -62,6 +62,7 @@ struct MockServerInner {
     port: u16,
     routes: Arc<RwLock<Vec<MockRouteDto>>>,
     shutdown_tx: Option<oneshot::Sender<()>>,
+    stopped_rx: Option<oneshot::Receiver<()>>,
 }
 
 pub struct MockServerState {
@@ -76,6 +77,7 @@ impl Default for MockServerState {
                 port: 8765,
                 routes: Arc::new(RwLock::new(Vec::new())),
                 shutdown_tx: None,
+                stopped_rx: None,
             })),
         }
     }
@@ -103,6 +105,7 @@ pub async fn mock_start(
         .map_err(|e| format!("Failed to bind port {port}: {e}"))?;
 
     let (shutdown_tx, shutdown_rx) = oneshot::channel::<()>();
+    let (stopped_tx, stopped_rx) = oneshot::channel::<()>();
 
     tokio::spawn(async move {
         let server = axum::serve(listener, router).with_graceful_shutdown(async {
@@ -111,21 +114,36 @@ pub async fn mock_start(
         if let Err(e) = server.await {
             eprintln!("[mock] server error: {e}");
         }
+        // Signals that the TCP listener has actually been dropped and the
+        // port is free again — mock_stop awaits this so an immediate
+        // mock_start on the same port doesn't race the OS into returning
+        // "address already in use".
+        let _ = stopped_tx.send(());
     });
 
     inner.running = true;
     inner.port = port;
     inner.shutdown_tx = Some(shutdown_tx);
+    inner.stopped_rx = Some(stopped_rx);
     Ok(())
 }
 
 #[tauri::command]
 pub async fn mock_stop(state: TauriState<'_, MockServerState>) -> Result<(), String> {
     let mut inner = state.inner.lock().await;
-    if let Some(tx) = inner.shutdown_tx.take() {
-        let _ = tx.send(());
-    }
+    let Some(tx) = inner.shutdown_tx.take() else {
+        inner.running = false;
+        return Ok(());
+    };
+    let _ = tx.send(());
     inner.running = false;
+
+    if let Some(stopped_rx) = inner.stopped_rx.take() {
+        // Bounded wait — if something's gone wrong we'd rather return than
+        // hang the UI forever, but graceful axum shutdown is normally
+        // near-instant once the signal is sent.
+        let _ = tokio::time::timeout(std::time::Duration::from_secs(3), stopped_rx).await;
+    }
     Ok(())
 }
 
