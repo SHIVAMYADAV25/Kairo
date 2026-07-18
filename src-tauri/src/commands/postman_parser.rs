@@ -11,40 +11,52 @@ use uuid::Uuid;
 /// materializes it as nested Collections + saved Requests.
 pub fn import(pool: &DbPool, root_name: &str, doc: &Value) -> anyhow::Result<Collection> {
     let root = storage::collections::create(pool, root_name, None)?;
+    // Postman's most common auth pattern is "set it once on the collection,
+    // every request inherits it" — a request only overrides this if it has
+    // its own explicit non-"noauth" auth block. Track the inherited value
+    // as we descend so that pattern actually survives the import.
+    let root_auth = doc.get("auth");
     if let Some(items) = doc.get("item").and_then(|i| i.as_array()) {
         for item in items {
-            walk_item(pool, &root.id, item)?;
+            walk_item(pool, &root.id, item, root_auth)?;
         }
     }
     Ok(root)
 }
 
-fn walk_item(pool: &DbPool, parent_id: &str, item: &Value) -> anyhow::Result<()> {
+fn walk_item(pool: &DbPool, parent_id: &str, item: &Value, inherited_auth: Option<&Value>) -> anyhow::Result<()> {
     let name = item
         .get("name")
         .and_then(|n| n.as_str())
         .unwrap_or("Untitled")
         .to_string();
 
+    // A folder can set its own auth, which further overrides whatever it
+    // itself inherited from its parent/collection.
+    let folder_auth = item.get("auth").or(inherited_auth);
+
     // Folders have a nested `item[]` and no `request`; requests have
     // `request` and no `item[]`.
     if let Some(children) = item.get("item").and_then(|i| i.as_array()) {
         let folder = storage::collections::create(pool, &name, Some(parent_id))?;
         for child in children {
-            walk_item(pool, &folder.id, child)?;
+            walk_item(pool, &folder.id, child, folder_auth)?;
         }
         return Ok(());
     }
 
     if let Some(req) = item.get("request") {
-        let api_request = build_request(parent_id, &name, req)?;
+        // The request's own `auth` wins if present (including an explicit
+        // "noauth" opt-out); otherwise fall back to whatever was inherited.
+        let effective_auth = req.get("auth").or(folder_auth);
+        let api_request = build_request(parent_id, &name, req, effective_auth)?;
         storage::requests::save(pool, &api_request)?;
     }
 
     Ok(())
 }
 
-fn build_request(collection_id: &str, name: &str, req: &Value) -> anyhow::Result<ApiRequest> {
+fn build_request(collection_id: &str, name: &str, req: &Value, effective_auth: Option<&Value>) -> anyhow::Result<ApiRequest> {
     let method_str = req
         .get("method")
         .and_then(|m| m.as_str())
@@ -89,7 +101,7 @@ fn build_request(collection_id: &str, name: &str, req: &Value) -> anyhow::Result
     }
 
     let body = build_body(req.get("body"));
-    let auth = build_auth(req.get("auth"));
+    let auth = build_auth(effective_auth);
 
     Ok(ApiRequest {
         id: Uuid::new_v4().to_string(),
