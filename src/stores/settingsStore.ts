@@ -11,13 +11,13 @@ export const ZOOM_MAX = 20;
 const DEFAULT_SETTINGS: AppSettings = {
   theme: "dark",
   opaqueMode: true,
-  fontSizes: { sidebar: 15, request: 13, response: 12 },
+  fontSizes: { sidebar: 12, request: 12, response: 12 },
   zoomLevels: { sidebar: ZOOM_BASE, request: ZOOM_BASE, response: ZOOM_BASE },
   panelSizes: {
-    sidebarWidth: 220,
+    sidebarWidth: 230,
     requestEditorHeight: 480, // Gives the request builder roughly half the window by default so the response panel (which fills the rest via flex-1) doesn't dominate on first load
     responseViewerHeight: 420,
-    performancePanelWidth: 230,
+    performancePanelWidth: 240,
   },
   lastEnvironmentId: null,
   lastCollectionId: null,
