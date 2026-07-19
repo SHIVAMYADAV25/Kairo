@@ -12,7 +12,7 @@ export default function Hero() {
         <div className="text-center mb-16">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-white/[0.08] bg-white/[0.03] text-xs text-neutral-400 mb-6">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-            v0.4.0 Alpha — New theme, performance panel, cloud sync &amp; more
+            v1.1.3 New theme, performance panel, cloud sync &amp; more
           </div>
           <h1 className="text-4xl sm:text-5xl lg:text-7xl font-extrabold tracking-tight mb-6 gradient-text leading-tight">
             The API client
@@ -330,7 +330,7 @@ export default function Hero() {
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
                 Ready
               </span>
-              <span className="ml-auto font-mono">Built v0.4.0</span>
+              <span className="ml-auto font-mono">Built v1.1.3</span>
               <span>·</span>
               <span>Made with care</span>
             </div>

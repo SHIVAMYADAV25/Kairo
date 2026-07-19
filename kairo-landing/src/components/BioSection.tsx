@@ -1,6 +1,6 @@
 "use client";
 
-import { motion, Variants, AnimatePresence } from "framer-motion";
+import { motion, Variants } from "framer-motion";
 import { useRef, useState } from "react";
 import { Gochi_Hand } from "next/font/google";
 import Link from "next/link";
