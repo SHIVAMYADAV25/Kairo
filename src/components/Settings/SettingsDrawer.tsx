@@ -1,13 +1,21 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import clsx from "clsx";
-import { X, Minus, Plus, RotateCcw } from "lucide-react";
+import { X, Minus, Plus, RotateCcw, RefreshCw, CheckCircle2, Download } from "lucide-react";
+import { getVersion } from "@tauri-apps/api/app";
 import { useSettingsStore, ZOOM_MIN, ZOOM_MAX } from "@/stores/settingsStore";
 import { ConfirmModal } from "@/components/common/ConfirmModal";
 import type { HttpMethod } from "@/types";
+import type { UpdateStatus } from "@/features/updater/useAutoUpdate";
+import type { Update } from "@tauri-apps/plugin-updater";
 
 interface Props {
   open: boolean;
   onClose: () => void;
+  updateStatus: UpdateStatus;
+  updateInfo: Update | null;
+  checking: boolean;
+  justUpToDate: boolean;
+  checkForUpdates: () => Promise<Update | null | undefined>;
 }
 
 const METHODS: HttpMethod[] = ["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"];
@@ -78,13 +86,31 @@ function Toggle({ checked, onChange }: { checked: boolean; onChange: (v: boolean
   );
 }
 
-export function SettingsDrawer({ open, onClose }: Props) {
+export function SettingsDrawer({
+  open,
+  onClose,
+  updateStatus,
+  updateInfo,
+  checking,
+  justUpToDate,
+  checkForUpdates,
+}: Props) {
   const { settings, update, reset } = useSettingsStore();
   const [resetConfirmOpen, setResetConfirmOpen] = useState(false);
+  const [appVersion, setAppVersion] = useState<string | null>(null);
+
+  useEffect(() => {
+    getVersion().then(setAppVersion).catch(() => setAppVersion(null));
+  }, []);
 
   if (!open) return null;
 
   const handleReset = () => setResetConfirmOpen(true);
+
+  const handleCheckForUpdates = async () => {
+    const found = await checkForUpdates();
+    if (found) onClose();
+  };
 
   return (
     <div className="fixed inset-0 z-50 flex justify-end bg-black/50 select-none backdrop-blur-xs" onClick={onClose}>
@@ -94,7 +120,7 @@ export function SettingsDrawer({ open, onClose }: Props) {
       >
         <div className="space-y-5">
           {/* Header */}
-          <div className="flex items-center justify-between pb-2 border-b border-border">
+          <div className="flex items-center justify-between pb-2 border-b border-border/30">
             <h2 className="text-[14px] font-semibold tracking-wide text-text-primary">Settings</h2>
             <button onClick={onClose} className="text-text-muted hover:text-text-primary transition-colors">
               <X size={16} />
@@ -134,7 +160,7 @@ export function SettingsDrawer({ open, onClose }: Props) {
           {/* Typography Engine Controls */}
           <section className="space-y-1.5">
             <h3 className="text-[11px] font-bold uppercase tracking-wider text-text-muted">Font Dimension Metrics</h3>
-            <div className="divide-y divide-border/60 rounded border border-border bg-bg-base/20 px-2.5">
+            <div className="divide-y divide-border/20 rounded border border-border bg-bg-base/20 px-2.5">
               <FontStepper label="Sidebar Explorer" value={settings.fontSizes.sidebar} onChange={(v) => update({ fontSizes: { ...settings.fontSizes, sidebar: v } })} />
               <FontStepper label="Request Panel" value={settings.fontSizes.request} onChange={(v) => update({ fontSizes: { ...settings.fontSizes, request: v } })} />
               <FontStepper label="Response Viewport" value={settings.fontSizes.response} onChange={(v) => update({ fontSizes: { ...settings.fontSizes, response: v } })} />
@@ -144,7 +170,7 @@ export function SettingsDrawer({ open, onClose }: Props) {
           {/* Zoom Controls */}
           <section className="space-y-1.5">
             <h3 className="text-[11px] font-bold uppercase tracking-wider text-text-muted">Zoom Level</h3>
-            <div className="divide-y divide-border/60 rounded border border-border bg-bg-base/20 px-2.5">
+            <div className="divide-y divide-border/20 rounded border border-border bg-bg-base/20 px-2.5">
               <ZoomStepper label="Sidebar" value={settings.zoomLevels.sidebar} onChange={(v) => update({ zoomLevels: { ...settings.zoomLevels, sidebar: v } })} />
               <ZoomStepper label="Request Panel" value={settings.zoomLevels.request} onChange={(v) => update({ zoomLevels: { ...settings.zoomLevels, request: v } })} />
               <ZoomStepper label="Response Panel" value={settings.zoomLevels.response} onChange={(v) => update({ zoomLevels: { ...settings.zoomLevels, response: v } })} />
@@ -165,7 +191,7 @@ export function SettingsDrawer({ open, onClose }: Props) {
                 <Toggle checked={settings.restoreLastSession} onChange={(v) => update({ restoreLastSession: v })} />
               </div>
 
-              <div className="h-px bg-border" />
+              <div className="h-px bg-border/25" />
 
               <div className="flex items-center justify-between">
                 <span className="text-[12px] font-medium text-text-secondary">Default HTTP Method</span>
@@ -180,7 +206,7 @@ export function SettingsDrawer({ open, onClose }: Props) {
                 </select>
               </div>
 
-              <div className="h-px bg-border" />
+              <div className="h-px bg-border/25" />
 
               <div className="flex items-center justify-between">
                 <span className="text-[12px] font-medium text-text-secondary">JSON Blueprint Style</span>
@@ -200,7 +226,7 @@ export function SettingsDrawer({ open, onClose }: Props) {
                 </div>
               </div>
 
-              <div className="h-px bg-border" />
+              <div className="h-px bg-border/25" />
 
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
@@ -210,7 +236,7 @@ export function SettingsDrawer({ open, onClose }: Props) {
                 <Toggle checked={settings.responseWordWrap} onChange={(v) => update({ responseWordWrap: v })} />
               </div>
 
-              <div className="h-px bg-border" />
+              <div className="h-px bg-border/25" />
 
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
@@ -221,10 +247,55 @@ export function SettingsDrawer({ open, onClose }: Props) {
               </div>
             </div>
           </section>
+
+          {/* Updates */}
+          <section className="space-y-2">
+            <h3 className="text-[11px] font-bold uppercase tracking-wider text-text-muted">Updates</h3>
+            <div className="rounded border border-border bg-bg-base/20 p-2.5 space-y-2.5">
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <div className="text-[12px] font-medium text-text-secondary leading-none">Kairo version</div>
+                  <div className="text-[10px] text-text-muted font-mono">{appVersion ? `v${appVersion}` : "…"}</div>
+                </div>
+                <button
+                  onClick={handleCheckForUpdates}
+                  disabled={checking || updateStatus === "downloading" || updateStatus === "ready"}
+                  className="flex items-center gap-1.5 rounded border border-border bg-bg-elevated px-2.5 h-7 text-[11px] font-medium text-text-secondary hover:text-text-primary hover:bg-bg-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <RefreshCw size={12} className={checking ? "animate-spin" : ""} />
+                  {checking ? "Checking…" : "Check for Updates"}
+                </button>
+              </div>
+
+              {updateStatus === "available" && updateInfo && (
+                <div className="flex items-center gap-1.5 text-[11px] font-medium text-accent">
+                  <Download size={12} /> Version {updateInfo.version} is available
+                </div>
+              )}
+
+              {updateStatus === "downloading" && (
+                <div className="flex items-center gap-1.5 text-[11px] font-medium text-text-secondary">
+                  <RefreshCw size={12} className="animate-spin" /> Downloading update…
+                </div>
+              )}
+
+              {updateStatus === "ready" && (
+                <div className="flex items-center gap-1.5 text-[11px] font-medium text-accent">
+                  <CheckCircle2 size={12} /> Update ready — restart to install
+                </div>
+              )}
+
+              {justUpToDate && updateStatus === "idle" && (
+                <div className="flex items-center gap-1.5 text-[11px] font-medium text-status-success">
+                  <CheckCircle2 size={12} /> You're up to date
+                </div>
+              )}
+            </div>
+          </section>
         </div>
 
         {/* Global Structural Settings Wipe Operation */}
-        <section className="pt-4 mt-6 border-t border-border">
+        <section className="pt-4 mt-6 border-t border-border/30">
           <button
             onClick={handleReset}
             className="flex w-full items-center justify-center gap-1.5 rounded border border-rose-950/40 bg-rose-950/10 py-1.5 text-[11px] font-medium text-rose-400 transition-colors hover:bg-rose-950/20"

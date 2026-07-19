@@ -22,11 +22,13 @@ import { useEnvironmentStore } from "@/stores/environmentStore";
 import { createEmptyTab, createTabFromPersisted } from "@/lib/factories";
 import { api } from "@/lib/api";
 import { UpdateModal } from "@/features/updater/UpdateModal";
+import { useAutoUpdate } from "@/features/updater/useAutoUpdate";
 
 export default function App() {
   const [sidebarPanel, setSidebarPanel] = useState<SidebarPanel>("collections");
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [aboutOpen, setAboutOpen] = useState(false);
+  const updater = useAutoUpdate();
   const [socketsOpen, setSocketsOpen] = useState(false);
   const [mocksOpen, setMocksOpen] = useState(false);
   const [sseOpen, setSseOpen] = useState(false);
@@ -101,7 +103,14 @@ export default function App() {
 
   return (
     <div className="flex h-screen w-screen flex-col overflow-hidden bg-bg-base text-text-primary">
-      <UpdateModal />
+      <UpdateModal
+        status={updater.status}
+        update={updater.update}
+        progress={updater.progress}
+        error={updater.error}
+        install={updater.install}
+        dismiss={updater.dismiss}
+      />
       {/* Top bar */}
       <div className="flex items-center justify-between border-b border-border bg-bg-base px-4 py-1">
         <div className="flex shrink-0 items-center gap-3">
@@ -213,10 +222,18 @@ export default function App() {
             </button>
           )}
         </div>
-        <span>Rust · Tauri · v0.1.0</span>
+        <span>Rust · Tauri · v1.1.4</span>
       </div>
 
-      <SettingsDrawer open={settingsOpen} onClose={() => setSettingsOpen(false)} />
+      <SettingsDrawer
+        open={settingsOpen}
+        onClose={() => setSettingsOpen(false)}
+        updateStatus={updater.status}
+        updateInfo={updater.update}
+        checking={updater.checking}
+        justUpToDate={updater.justUpToDate}
+        checkForUpdates={updater.checkNow}
+      />
       <AboutDevModal open={aboutOpen} onClose={() => setAboutOpen(false)} />
       <SocketsModal open={socketsOpen} onClose={() => setSocketsOpen(false)} />
       <MockServerModal open={mocksOpen} onClose={() => setMocksOpen(false)} />

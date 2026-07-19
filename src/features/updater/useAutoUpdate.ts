@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { check, type Update } from "@tauri-apps/plugin-updater";
 
 const CHECK_INTERVAL_MS = 60 * 60 * 1000; // hourly
@@ -10,18 +10,33 @@ export function useAutoUpdate() {
   const [update, setUpdate] = useState<Update | null>(null);
   const [progress, setProgress] = useState(0);
   const [error, setError] = useState("");
+  const [checking, setChecking] = useState(false);
+  // Cleared automatically a few seconds after a manual check that found nothing new,
+  // so a "You're up to date" message can flash in Settings without lingering forever.
+  const [justUpToDate, setJustUpToDate] = useState(false);
+  const upToDateTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const runCheck = useCallback(async () => {
     // Don't interrupt an in-progress download/install with a re-check
-    if (status === "downloading" || status === "ready") return;
+    if (status === "downloading" || status === "ready") return null;
+    setChecking(true);
+    setJustUpToDate(false);
     try {
       const u = await check();
       if (u) {
         setUpdate(u);
         setStatus("available");
+      } else {
+        if (upToDateTimer.current) clearTimeout(upToDateTimer.current);
+        setJustUpToDate(true);
+        upToDateTimer.current = setTimeout(() => setJustUpToDate(false), 4000);
       }
+      return u;
     } catch (e) {
       console.error("Update check failed:", e);
+      return null;
+    } finally {
+      setChecking(false);
     }
   }, [status]);
 
@@ -35,6 +50,7 @@ export function useAutoUpdate() {
     return () => {
       clearInterval(interval);
       window.removeEventListener("focus", onFocus);
+      if (upToDateTimer.current) clearTimeout(upToDateTimer.current);
     };
   }, [runCheck]);
 
@@ -66,5 +82,5 @@ export function useAutoUpdate() {
 
   const dismiss = useCallback(() => setStatus("idle"), []);
 
-  return { status, update, progress, error, install, dismiss, checkNow: runCheck };
+  return { status, update, progress, error, checking, justUpToDate, install, dismiss, checkNow: runCheck };
 }
