@@ -1,6 +1,6 @@
 [package]
 name = "kairo"
-version = "1.1.2"
+version = "1.1.4"
 description = "Fast, lightweight, cross-platform HTTP client"
 edition = "2021"
 rust-version = "1.77"
