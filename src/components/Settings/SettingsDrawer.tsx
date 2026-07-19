@@ -16,7 +16,7 @@ function FontStepper({ label, value, onChange }: { label: string; value: number;
   return (
     <div className="flex items-center justify-between py-1.5 text-[12px]">
       <span className="text-text-secondary">{label}</span>
-      <div className="flex items-center gap-1 bg-[#121212] border border-[#222] rounded px-1 h-7">
+      <div className="flex items-center gap-1 bg-bg-elevated border border-border rounded px-1 h-7">
         <button 
           onClick={() => onChange(Math.max(10, value - 1))} 
           className="rounded p-0.5 text-text-muted hover:bg-bg-hover hover:text-text-primary transition-colors"
@@ -39,7 +39,7 @@ function ZoomStepper({ label, value, onChange }: { label: string; value: number;
   return (
     <div className="flex items-center justify-between py-1.5 text-[12px]">
       <span className="text-text-secondary">{label}</span>
-      <div className="flex items-center gap-1 bg-[#121212] border border-[#222] rounded px-1 h-7">
+      <div className="flex items-center gap-1 bg-bg-elevated border border-border rounded px-1 h-7">
         <button
           onClick={() => onChange(Math.max(ZOOM_MIN, value - 1))}
           className="rounded p-0.5 text-text-muted hover:bg-bg-hover hover:text-text-primary transition-colors"
@@ -65,7 +65,7 @@ function Toggle({ checked, onChange }: { checked: boolean; onChange: (v: boolean
       onClick={() => onChange(!checked)}
       className={clsx(
         "relative inline-flex h-4 w-8 shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out outline-none border border-transparent", 
-        checked ? "bg-accent" : "bg-[#222]"
+        checked ? "bg-accent" : "bg-bg-elevated"
       )}
     >
       <span 
@@ -89,22 +89,22 @@ export function SettingsDrawer({ open, onClose }: Props) {
   return (
     <div className="fixed inset-0 z-50 flex justify-end bg-black/50 select-none backdrop-blur-xs" onClick={onClose}>
       <div 
-        className="h-full w-[320px] overflow-y-auto border-l border-[#1a1a1a] bg-[#0c0c0c] p-4 flex flex-col justify-between" 
+        className="h-full w-[320px] overflow-y-auto border-l border-border bg-bg-panel p-4 flex flex-col justify-between" 
         onClick={(e) => e.stopPropagation()}
       >
         <div className="space-y-5">
           {/* Header */}
-          <div className="flex items-center justify-between pb-2 border-b border-[#161616]">
-            <h2 className="text-[14px] font-semibold tracking-wide text-neutral-200">Settings</h2>
-            <button onClick={onClose} className="text-neutral-500 hover:text-neutral-300 transition-colors">
+          <div className="flex items-center justify-between pb-2 border-b border-border">
+            <h2 className="text-[14px] font-semibold tracking-wide text-text-primary">Settings</h2>
+            <button onClick={onClose} className="text-text-muted hover:text-text-primary transition-colors">
               <X size={16} />
             </button>
           </div>
 
           {/* Appearance Section */}
           <section className="space-y-2">
-            <h3 className="text-[11px] font-bold uppercase tracking-wider text-neutral-500">Appearance</h3>
-            <div className="flex gap-1.5 bg-[#090909] border border-[#1a1a1a] p-1 rounded">
+            <h3 className="text-[11px] font-bold uppercase tracking-wider text-text-muted">Appearance</h3>
+            <div className="flex gap-1.5 bg-bg-base border border-border p-1 rounded">
               {(["dark", "light"] as const).map((th) => (
                 <button
                   key={th}
@@ -112,8 +112,8 @@ export function SettingsDrawer({ open, onClose }: Props) {
                   className={clsx(
                     "flex-1 rounded py-1 text-[11px] font-medium capitalize transition-all",
                     settings.theme === th 
-                      ? "bg-[#181115] text-accent border border-accent/20 shadow-inner" 
-                      : "text-neutral-400 border border-transparent hover:text-neutral-200"
+                      ? "bg-[var(--c-181115)] text-accent border border-accent/20 shadow-inner" 
+                      : "text-text-secondary border border-transparent hover:text-text-primary"
                   )}
                 >
                   {th}
@@ -123,18 +123,18 @@ export function SettingsDrawer({ open, onClose }: Props) {
           </section>
 
           {/* Layout Tweaks */}
-          <section className="flex items-center justify-between rounded border border-[#161616] bg-[#090909]/40 p-2.5">
+          <section className="flex items-center justify-between rounded border border-border bg-bg-base/40 p-2.5">
             <div className="space-y-0.5">
-              <div className="text-[12px] font-medium text-neutral-300 leading-none">Opaque Mode</div>
-              <div className="text-[10px] text-neutral-500">Solid background interface surface</div>
+              <div className="text-[12px] font-medium text-text-secondary leading-none">Opaque Mode</div>
+              <div className="text-[10px] text-text-muted">Solid background interface surface</div>
             </div>
             <Toggle checked={settings.opaqueMode} onChange={(v) => update({ opaqueMode: v })} />
           </section>
 
           {/* Typography Engine Controls */}
           <section className="space-y-1.5">
-            <h3 className="text-[11px] font-bold uppercase tracking-wider text-neutral-500">Font Dimension Metrics</h3>
-            <div className="divide-y divide-[#161616]/60 rounded border border-[#161616] bg-[#090909]/20 px-2.5">
+            <h3 className="text-[11px] font-bold uppercase tracking-wider text-text-muted">Font Dimension Metrics</h3>
+            <div className="divide-y divide-border/60 rounded border border-border bg-bg-base/20 px-2.5">
               <FontStepper label="Sidebar Explorer" value={settings.fontSizes.sidebar} onChange={(v) => update({ fontSizes: { ...settings.fontSizes, sidebar: v } })} />
               <FontStepper label="Request Panel" value={settings.fontSizes.request} onChange={(v) => update({ fontSizes: { ...settings.fontSizes, request: v } })} />
               <FontStepper label="Response Viewport" value={settings.fontSizes.response} onChange={(v) => update({ fontSizes: { ...settings.fontSizes, response: v } })} />
@@ -143,36 +143,36 @@ export function SettingsDrawer({ open, onClose }: Props) {
 
           {/* Zoom Controls */}
           <section className="space-y-1.5">
-            <h3 className="text-[11px] font-bold uppercase tracking-wider text-neutral-500">Zoom Level</h3>
-            <div className="divide-y divide-[#161616]/60 rounded border border-[#161616] bg-[#090909]/20 px-2.5">
+            <h3 className="text-[11px] font-bold uppercase tracking-wider text-text-muted">Zoom Level</h3>
+            <div className="divide-y divide-border/60 rounded border border-border bg-bg-base/20 px-2.5">
               <ZoomStepper label="Sidebar" value={settings.zoomLevels.sidebar} onChange={(v) => update({ zoomLevels: { ...settings.zoomLevels, sidebar: v } })} />
               <ZoomStepper label="Request Panel" value={settings.zoomLevels.request} onChange={(v) => update({ zoomLevels: { ...settings.zoomLevels, request: v } })} />
               <ZoomStepper label="Response Panel" value={settings.zoomLevels.response} onChange={(v) => update({ zoomLevels: { ...settings.zoomLevels, response: v } })} />
             </div>
-            <p className="text-[10px] text-neutral-600 px-0.5">13 is default (medium). Scales the whole panel — layout, icons, and text.</p>
+            <p className="text-[10px] text-text-muted px-0.5">13 is default (medium). Scales the whole panel — layout, icons, and text.</p>
           </section>
 
           {/* Core Feature Configuration Toggles */}
           <section className="space-y-3">
-            <h3 className="text-[11px] font-bold uppercase tracking-wider text-neutral-500">Preferences</h3>
+            <h3 className="text-[11px] font-bold uppercase tracking-wider text-text-muted">Preferences</h3>
 
-            <div className="space-y-2.5 rounded border border-[#161616] bg-[#090909]/20 p-2.5">
+            <div className="space-y-2.5 rounded border border-border bg-bg-base/20 p-2.5">
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
-                  <div className="text-[12px] font-medium text-neutral-300 leading-none">Restore Last Session</div>
-                  <div className="text-[10px] text-neutral-500">Reopen operational workspaces on boot</div>
+                  <div className="text-[12px] font-medium text-text-secondary leading-none">Restore Last Session</div>
+                  <div className="text-[10px] text-text-muted">Reopen operational workspaces on boot</div>
                 </div>
                 <Toggle checked={settings.restoreLastSession} onChange={(v) => update({ restoreLastSession: v })} />
               </div>
 
-              <div className="h-px bg-[#161616]" />
+              <div className="h-px bg-border" />
 
               <div className="flex items-center justify-between">
-                <span className="text-[12px] font-medium text-neutral-300">Default HTTP Method</span>
+                <span className="text-[12px] font-medium text-text-secondary">Default HTTP Method</span>
                 <select
                   value={settings.defaultMethod}
                   onChange={(e) => update({ defaultMethod: e.target.value as HttpMethod })}
-                  className="rounded border border-[#222] bg-[#121212] px-2 py-1 font-mono text-[11px] text-neutral-300 outline-none focus:border-accent/50 cursor-pointer h-7"
+                  className="rounded border border-border bg-bg-elevated px-2 py-1 font-mono text-[11px] text-text-secondary outline-none focus:border-accent/50 cursor-pointer h-7"
                 >
                   {METHODS.map((m) => (
                     <option key={m} value={m}>{m}</option>
@@ -180,18 +180,18 @@ export function SettingsDrawer({ open, onClose }: Props) {
                 </select>
               </div>
 
-              <div className="h-px bg-[#161616]" />
+              <div className="h-px bg-border" />
 
               <div className="flex items-center justify-between">
-                <span className="text-[12px] font-medium text-neutral-300">JSON Blueprint Style</span>
-                <div className="flex bg-[#121212] border border-[#222] p-0.5 rounded h-7">
+                <span className="text-[12px] font-medium text-text-secondary">JSON Blueprint Style</span>
+                <div className="flex bg-bg-elevated border border-border p-0.5 rounded h-7">
                   {(["pretty", "compact"] as const).map((f) => (
                     <button
                       key={f}
                       onClick={() => update({ defaultJsonFormat: f })}
                       className={clsx(
                         "rounded px-2 text-[10px] font-medium capitalize transition-colors",
-                        settings.defaultJsonFormat === f ? "bg-accent text-white" : "text-neutral-500 hover:text-neutral-300"
+                        settings.defaultJsonFormat === f ? "bg-accent text-white" : "text-text-muted hover:text-text-primary"
                       )}
                     >
                       {f}
@@ -200,22 +200,22 @@ export function SettingsDrawer({ open, onClose }: Props) {
                 </div>
               </div>
 
-              <div className="h-px bg-[#161616]" />
+              <div className="h-px bg-border" />
 
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
-                  <div className="text-[12px] font-medium text-neutral-300 leading-none">Response Word Wrap</div>
-                  <div className="text-[10px] text-neutral-500">Wrap trailing strings inside data stream views</div>
+                  <div className="text-[12px] font-medium text-text-secondary leading-none">Response Word Wrap</div>
+                  <div className="text-[10px] text-text-muted">Wrap trailing strings inside data stream views</div>
                 </div>
                 <Toggle checked={settings.responseWordWrap} onChange={(v) => update({ responseWordWrap: v })} />
               </div>
 
-              <div className="h-px bg-[#161616]" />
+              <div className="h-px bg-border" />
 
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
-                  <div className="text-[12px] font-medium text-neutral-300 leading-none">Confirm Before Closing</div>
-                  <div className="text-[10px] text-neutral-500">Warn on closing tabs with staging state</div>
+                  <div className="text-[12px] font-medium text-text-secondary leading-none">Confirm Before Closing</div>
+                  <div className="text-[10px] text-text-muted">Warn on closing tabs with staging state</div>
                 </div>
                 <Toggle checked={settings.confirmBeforeClosingUnsavedTabs} onChange={(v) => update({ confirmBeforeClosingUnsavedTabs: v })} />
               </div>
@@ -224,7 +224,7 @@ export function SettingsDrawer({ open, onClose }: Props) {
         </div>
 
         {/* Global Structural Settings Wipe Operation */}
-        <section className="pt-4 mt-6 border-t border-[#161616]">
+        <section className="pt-4 mt-6 border-t border-border">
           <button
             onClick={handleReset}
             className="flex w-full items-center justify-center gap-1.5 rounded border border-rose-950/40 bg-rose-950/10 py-1.5 text-[11px] font-medium text-rose-400 transition-colors hover:bg-rose-950/20"

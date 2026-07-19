@@ -12,10 +12,10 @@ interface Props {
 }
 
 const STATUS_META: Record<SocketStatus, { label: string; bg: string; text: string; dot: string; pulse?: boolean }> = {
-  disconnected: { label: "Disconnected", bg: "bg-neutral-900/60", text: "text-neutral-400", dot: "bg-neutral-500" },
+  disconnected: { label: "Disconnected", bg: "bg-bg-elevated", text: "text-text-secondary", dot: "bg-text-muted" },
   connecting: { label: "Connecting", bg: "bg-amber-500/10", text: "text-amber-400", dot: "bg-amber-500", pulse: true },
   open: { label: "Connected", bg: "bg-emerald-500/10", text: "text-emerald-400", dot: "bg-emerald-500" },
-  closed: { label: "Closed", bg: "bg-neutral-900/60", text: "text-neutral-400", dot: "bg-neutral-500" },
+  closed: { label: "Closed", bg: "bg-bg-elevated", text: "text-text-secondary", dot: "bg-text-muted" },
   error: { label: "Error", bg: "bg-rose-500/10", text: "text-rose-400", dot: "bg-rose-500" },
 };
 
@@ -63,7 +63,7 @@ export function SocketsModal({ open, onClose }: Props) {
 
   return (
     <div 
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 font-sans text-[12px] select-none text-white backdrop-blur-xs" 
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 font-sans text-[12px] select-none text-text-primary backdrop-blur-xs" 
       onClick={onClose}
     >
       <div
@@ -73,12 +73,12 @@ export function SocketsModal({ open, onClose }: Props) {
         {/* ================= LEFT SIDEBAR CONNECTIONS LIST ================= */}
         <div className="flex w-[250px] shrink-0 flex-col border-r border-[var(--c-1a1a1a)] bg-[var(--c-090909)]">
           <div className="flex h-12 items-center justify-between border-b border-[var(--c-1a1a1a)] px-4">
-            <div className="flex items-center gap-2 text-[13px] font-semibold tracking-wide text-neutral-200">
+            <div className="flex items-center gap-2 text-[13px] font-semibold tracking-wide text-text-primary">
               <Radio size={14} className="text-purple-500" /> WebSockets
             </div>
             <button 
               onClick={() => addConnection()} 
-              className="flex h-7 w-7 items-center justify-center rounded border border-[var(--c-242424)] bg-[var(--c-121212)] text-neutral-400 transition-all hover:border-purple-600 hover:text-white"
+              className="flex h-7 w-7 items-center justify-center rounded border border-[var(--c-242424)] bg-[var(--c-121212)] text-text-secondary transition-all hover:border-purple-600 hover:text-white"
               title="Create new Client Connection"
             >
               <Plus size={14} />
@@ -101,20 +101,20 @@ export function SocketsModal({ open, onClose }: Props) {
                 <div className="flex w-full items-center justify-between gap-2">
                   <div className="flex items-center gap-2 truncate">
                     <span className={clsx("h-1.5 w-1.5 shrink-0 rounded-full", STATUS_META[c.status].dot, STATUS_META[c.status].pulse && "animate-pulse")} />
-                    <span className={clsx("truncate text-[12px] font-medium", c.id === activeConnectionId ? "text-purple-400" : "text-neutral-300")}>
+                    <span className={clsx("truncate text-[12px] font-medium", c.id === activeConnectionId ? "text-purple-400" : "text-text-secondary")}>
                       {c.name || "Untitled Socket"}
                     </span>
                   </div>
                   <Trash2
                     size={13}
-                    className="shrink-0 text-neutral-600 opacity-0 hover:text-rose-500 group-hover:opacity-100 transition-opacity"
+                    className="shrink-0 text-text-muted opacity-0 hover:text-rose-500 group-hover:opacity-100 transition-opacity"
                     onClick={(e) => {
                       e.stopPropagation();
                       removeConnection(c.id);
                     }}
                   />
                 </div>
-                <div className="w-full truncate font-mono text-[10px] text-neutral-500 leading-none">
+                <div className="w-full truncate font-mono text-[10px] text-text-muted leading-none">
                   {c.url || "wss://..."}
                 </div>
               </button>
@@ -131,10 +131,10 @@ export function SocketsModal({ open, onClose }: Props) {
                 <input
                   value={active.name ?? ""}
                   onChange={(e) => updateConnection(active.id, { name: e.target.value })}
-                  className="bg-transparent text-[14px] font-medium text-neutral-200 outline-none placeholder:text-neutral-600 focus:text-white"
+                  className="bg-transparent text-[14px] font-medium text-text-primary outline-none placeholder:text-text-muted focus:text-white"
                   placeholder="Connection name..."
                 />
-                <button onClick={onClose} className="text-neutral-500 hover:text-neutral-300 transition-colors">
+                <button onClick={onClose} className="text-text-muted hover:text-text-secondary transition-colors">
                   <X size={16} />
                 </button>
               </div>
@@ -146,7 +146,7 @@ export function SocketsModal({ open, onClose }: Props) {
                   onChange={(e) => updateConnection(active.id, { url: e.target.value })}
                   disabled={active.status === "open" || active.status === "connecting"}
                   placeholder="wss://echo.websocket.org"
-                  className="flex-1 h-[32px] rounded border border-[var(--c-262626)] bg-[var(--c-121212)] px-3 font-mono text-[12px] text-neutral-200 outline-none transition-colors focus:border-purple-600/80 disabled:opacity-50"
+                  className="flex-1 h-[32px] rounded border border-[var(--c-262626)] bg-[var(--c-121212)] px-3 font-mono text-[12px] text-text-primary outline-none transition-colors focus:border-purple-600/80 disabled:opacity-50"
                 />
                 
                 {active.status === "open" || active.status === "connecting" ? (
@@ -179,14 +179,14 @@ export function SocketsModal({ open, onClose }: Props) {
                     </span>
                   )}
 
-                  <label className="flex items-center gap-2 cursor-pointer select-none text-neutral-500 hover:text-neutral-400 ml-2">
+                  <label className="flex items-center gap-2 cursor-pointer select-none text-text-muted hover:text-text-secondary ml-2">
                     <input
                       type="checkbox"
                       checked={active.autoReconnect}
                       onChange={(e) => updateConnection(active.id, { autoReconnect: e.target.checked })}
                       className="peer hidden"
                     />
-                    <div className="flex h-3.5 w-3.5 items-center justify-center rounded border border-neutral-700 bg-neutral-900 peer-checked:border-purple-500 peer-checked:bg-purple-600 text-white font-bold text-[8px]">
+                    <div className="flex h-3.5 w-3.5 items-center justify-center rounded border border-border bg-bg-elevated peer-checked:border-purple-500 peer-checked:bg-purple-600 text-white font-bold text-[8px]">
                       {active.autoReconnect && "✓"}
                     </div>
                     <span>Auto-reconnect</span>
@@ -201,7 +201,7 @@ export function SocketsModal({ open, onClose }: Props) {
                       onClick={() => setSub(tab)}
                       className={clsx(
                         "relative h-full px-4 text-[11px] font-medium tracking-wide uppercase transition-colors border-r border-[var(--c-1a1a1a)]",
-                        sub === tab ? "bg-[var(--c-111111)] text-purple-400 font-semibold" : "text-neutral-500 hover:text-neutral-300"
+                        sub === tab ? "bg-[var(--c-111111)] text-purple-400 font-semibold" : "text-text-muted hover:text-text-secondary"
                       )}
                     >
                       {tab}
@@ -224,7 +224,7 @@ export function SocketsModal({ open, onClose }: Props) {
                     {/* Log Terminal Frame */}
                     <div ref={logRef} className="flex-1 overflow-y-auto p-4 space-y-3 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-[var(--c-222222)] [&::-webkit-scrollbar-thumb]:rounded-sm">
                       {active.messages.length === 0 ? (
-                        <div className="flex h-full flex-col items-center justify-center text-neutral-600 gap-2 font-mono">
+                        <div className="flex h-full flex-col items-center justify-center text-text-muted gap-2 font-mono">
                           <FileCode size={24} className="stroke-1 opacity-40" />
                           <span>Stream open. Ready to transmit frames.</span>
                         </div>
@@ -236,24 +236,24 @@ export function SocketsModal({ open, onClose }: Props) {
                     {/* Bottom Composer Operations Tray */}
                     <div className="border-t border-[var(--c-1a1a1a)] bg-[var(--c-090909)] p-3 shrink-0">
                       <div className="mb-2 flex items-center justify-between">
-                        <label className="flex items-center gap-2 cursor-pointer text-neutral-400 hover:text-neutral-300 select-none">
+                        <label className="flex items-center gap-2 cursor-pointer text-text-secondary hover:text-text-secondary select-none">
                           <input 
                             type="checkbox" 
                             checked={composerBinary} 
                             onChange={(e) => setComposerBinary(e.target.checked)} 
                             className="peer hidden" 
                           />
-                          <div className="flex h-3.5 w-3.5 items-center justify-center rounded border border-neutral-700 bg-neutral-900 peer-checked:border-purple-500 peer-checked:bg-purple-600 text-white font-bold text-[8px]">
+                          <div className="flex h-3.5 w-3.5 items-center justify-center rounded border border-border bg-bg-elevated peer-checked:border-purple-500 peer-checked:bg-purple-600 text-white font-bold text-[8px]">
                             {composerBinary && "✓"}
                           </div>
                           <span className="flex items-center gap-1 text-[11px]">
-                            <Binary size={12} className="text-neutral-500" /> Transmit as Base64 binary
+                            <Binary size={12} className="text-text-muted" /> Transmit as Base64 binary
                           </span>
                         </label>
 
                         <button 
                           onClick={() => clearMessages(active.id)} 
-                          className="flex items-center gap-1 text-[11px] text-neutral-500 hover:text-neutral-300 transition-colors"
+                          className="flex items-center gap-1 text-[11px] text-text-muted hover:text-text-secondary transition-colors"
                         >
                           <RotateCcw size={12} /> Reset Console Log
                         </button>
@@ -272,12 +272,12 @@ export function SocketsModal({ open, onClose }: Props) {
                           placeholder={active.status === "open" ? "Enter payload here... (⏎ to send, ⇧⏎ for line break)" : "Connection offline. Connect to server to send messages."}
                           disabled={active.status !== "open"}
                           rows={2}
-                          className="flex-1 resize-none rounded border border-[var(--c-262626)] bg-[var(--c-121212)] px-3 py-2 font-mono text-[12px] text-neutral-200 outline-none placeholder:text-neutral-600 focus:border-purple-600/80 disabled:opacity-40"
+                          className="flex-1 resize-none rounded border border-[var(--c-262626)] bg-[var(--c-121212)] px-3 py-2 font-mono text-[12px] text-text-primary outline-none placeholder:text-text-muted focus:border-purple-600/80 disabled:opacity-40"
                         />
                         <button
                           onClick={handleSend}
                           disabled={active.status !== "open" || !composer.trim()}
-                          className="flex h-[48px] items-center gap-1.5 rounded bg-purple-600 px-4 text-[12px] font-semibold text-white hover:bg-purple-500 disabled:bg-neutral-900 disabled:border disabled:border-[var(--c-222222)] disabled:text-neutral-600 disabled:opacity-100 transition-colors"
+                          className="flex h-[48px] items-center gap-1.5 rounded bg-purple-600 px-4 text-[12px] font-semibold text-white hover:bg-purple-500 disabled:bg-bg-elevated disabled:border disabled:border-[var(--c-222222)] disabled:text-text-muted disabled:opacity-100 transition-colors"
                         >
                           <Send size={13} /> Send
                         </button>
@@ -288,7 +288,7 @@ export function SocketsModal({ open, onClose }: Props) {
               </div>
             </>
           ) : (
-            <div className="flex flex-1 items-center justify-center text-neutral-500 font-mono">
+            <div className="flex flex-1 items-center justify-center text-text-muted font-mono">
               Select or open a new stream terminal connection to begin.
             </div>
           )}
@@ -311,7 +311,7 @@ function HeadersEditor({ conn, onChange }: { conn: SocketConnection; onChange: (
 
   return (
     <div className="p-4 space-y-3">
-      <div className="text-[11px] font-bold uppercase tracking-wider text-neutral-500">Handshake Connection Headers</div>
+      <div className="text-[11px] font-bold uppercase tracking-wider text-text-muted">Handshake Connection Headers</div>
       <div className="space-y-1.5">
         {withBlank.map((h) => (
           <div key={h.id} className="grid grid-cols-[24px_1fr_1fr_28px] items-center gap-2">
@@ -322,7 +322,7 @@ function HeadersEditor({ conn, onChange }: { conn: SocketConnection; onChange: (
                 onChange={(e) => update(h.id, { enabled: e.target.checked })} 
                 className="peer hidden" 
               />
-              <div className="flex h-3.5 w-3.5 items-center justify-center rounded border border-neutral-700 bg-neutral-900 peer-checked:border-purple-500 peer-checked:bg-purple-600 text-white font-bold text-[8px]">
+              <div className="flex h-3.5 w-3.5 items-center justify-center rounded border border-border bg-bg-elevated peer-checked:border-purple-500 peer-checked:bg-purple-600 text-white font-bold text-[8px]">
                 {h.enabled && "✓"}
               </div>
             </label>
@@ -330,17 +330,17 @@ function HeadersEditor({ conn, onChange }: { conn: SocketConnection; onChange: (
               value={h.key} 
               onChange={(e) => update(h.id, { key: e.target.value })} 
               placeholder="Header Key (e.g. Authorization)" 
-              className="rounded border border-[var(--c-222222)] bg-[var(--c-111111)] px-3 py-1.5 font-mono text-[11px] text-neutral-200 placeholder:text-neutral-600 outline-none focus:border-purple-950 focus:bg-[var(--c-141414)]" 
+              className="rounded border border-[var(--c-222222)] bg-[var(--c-111111)] px-3 py-1.5 font-mono text-[11px] text-text-primary placeholder:text-text-muted outline-none focus:border-purple-950 focus:bg-[var(--c-141414)]" 
             />
             <input 
               value={h.value} 
               onChange={(e) => update(h.id, { value: e.target.value })} 
               placeholder="Value" 
-              className="rounded border border-[var(--c-222222)] bg-[var(--c-111111)] px-3 py-1.5 font-mono text-[11px] text-neutral-200 placeholder:text-neutral-600 outline-none focus:border-purple-950 focus:bg-[var(--c-141414)]" 
+              className="rounded border border-[var(--c-222222)] bg-[var(--c-111111)] px-3 py-1.5 font-mono text-[11px] text-text-primary placeholder:text-text-muted outline-none focus:border-purple-950 focus:bg-[var(--c-141414)]" 
             />
             <button 
               onClick={() => remove(h.id)} 
-              className="flex items-center justify-center h-7 w-7 rounded hover:bg-rose-950/20 text-neutral-600 hover:text-rose-400 transition-colors"
+              className="flex items-center justify-center h-7 w-7 rounded hover:bg-rose-950/20 text-text-muted hover:text-rose-400 transition-colors"
             >
               <Trash2 size={13} />
             </button>
@@ -382,7 +382,7 @@ function MessageBubble({ message }: { message: SocketMessage }) {
               <HardDrive size={10} /> Binary Frame (Base64)
             </span>
           )}
-          <span className="font-mono text-[10px] text-neutral-500">{time}</span>
+          <span className="font-mono text-[10px] text-text-muted">{time}</span>
         </div>
 
         {/* Copy Operations */}
@@ -392,7 +392,7 @@ function MessageBubble({ message }: { message: SocketMessage }) {
             setCopied(true);
             setTimeout(() => setCopied(false), 1500);
           }}
-          className="flex items-center gap-1 rounded px-2 py-0.5 text-[10px] text-neutral-400 hover:bg-[var(--c-1a1a1a)] hover:text-white transition-colors"
+          className="flex items-center gap-1 rounded px-2 py-0.5 text-[10px] text-text-secondary hover:bg-[var(--c-1a1a1a)] hover:text-white transition-colors"
         >
           {copied ? (
             <>
@@ -410,7 +410,7 @@ function MessageBubble({ message }: { message: SocketMessage }) {
 
       {/* Structured Code Frame Window Container */}
       <div className="p-3 bg-[var(--c-070707)]">
-        <pre className="max-h-[220px] overflow-y-auto whitespace-pre-wrap break-all font-mono text-[12px] text-neutral-300 selection:bg-purple-900/50 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-[var(--c-222222)] [&::-webkit-scrollbar-thumb]:rounded-sm">
+        <pre className="max-h-[220px] overflow-y-auto whitespace-pre-wrap break-all font-mono text-[12px] text-text-secondary selection:bg-purple-900/50 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-[var(--c-222222)] [&::-webkit-scrollbar-thumb]:rounded-sm">
           {display}
         </pre>
       </div>
