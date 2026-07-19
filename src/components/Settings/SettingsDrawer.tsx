@@ -43,6 +43,7 @@ function FontStepper({ label, value, onChange }: { label: string; value: number;
   );
 }
 
+// ... rest of the code stays exactly identical logic-wise ...
 function ZoomStepper({ label, value, onChange }: { label: string; value: number; onChange: (v: number) => void }) {
   return (
     <div className="flex items-center justify-between py-1.5 text-[12px]">
@@ -120,7 +121,7 @@ export function SettingsDrawer({
       >
         <div className="space-y-5">
           {/* Header */}
-          <div className="flex items-center justify-between pb-2 border-b border-border/30">
+          <div className="flex items-center justify-between pb-2 border-border/30">
             <h2 className="text-[14px] font-semibold tracking-wide text-text-primary">Settings</h2>
             <button onClick={onClose} className="text-text-muted hover:text-text-primary transition-colors">
               <X size={16} />
@@ -138,7 +139,7 @@ export function SettingsDrawer({
                   className={clsx(
                     "flex-1 rounded py-1 text-[11px] font-medium capitalize transition-all",
                     settings.theme === th 
-                      ? "bg-[var(--c-181115)] text-accent border border-accent/20 shadow-inner" 
+                      ? "bg-[var(--c-181115)] text-accent shadow-inner" 
                       : "text-text-secondary border border-transparent hover:text-text-primary"
                   )}
                 >
@@ -157,20 +158,20 @@ export function SettingsDrawer({
             <Toggle checked={settings.opaqueMode} onChange={(v) => update({ opaqueMode: v })} />
           </section>
 
-          {/* Typography Engine Controls */}
+          {/* Typography Engine Controls (Removed divide-y lines) */}
           <section className="space-y-1.5">
             <h3 className="text-[11px] font-bold uppercase tracking-wider text-text-muted">Font Dimension Metrics</h3>
-            <div className="divide-y divide-border/20 rounded border border-border bg-bg-base/20 px-2.5">
+            <div className="rounded border border-border bg-bg-base/20 px-2.5 py-1">
               <FontStepper label="Sidebar Explorer" value={settings.fontSizes.sidebar} onChange={(v) => update({ fontSizes: { ...settings.fontSizes, sidebar: v } })} />
               <FontStepper label="Request Panel" value={settings.fontSizes.request} onChange={(v) => update({ fontSizes: { ...settings.fontSizes, request: v } })} />
               <FontStepper label="Response Viewport" value={settings.fontSizes.response} onChange={(v) => update({ fontSizes: { ...settings.fontSizes, response: v } })} />
             </div>
           </section>
 
-          {/* Zoom Controls */}
+          {/* Zoom Controls (Removed divide-y lines) */}
           <section className="space-y-1.5">
             <h3 className="text-[11px] font-bold uppercase tracking-wider text-text-muted">Zoom Level</h3>
-            <div className="divide-y divide-border/20 rounded border border-border bg-bg-base/20 px-2.5">
+            <div className="rounded border border-border bg-bg-base/20 px-2.5 py-1">
               <ZoomStepper label="Sidebar" value={settings.zoomLevels.sidebar} onChange={(v) => update({ zoomLevels: { ...settings.zoomLevels, sidebar: v } })} />
               <ZoomStepper label="Request Panel" value={settings.zoomLevels.request} onChange={(v) => update({ zoomLevels: { ...settings.zoomLevels, request: v } })} />
               <ZoomStepper label="Response Panel" value={settings.zoomLevels.response} onChange={(v) => update({ zoomLevels: { ...settings.zoomLevels, response: v } })} />
@@ -178,11 +179,11 @@ export function SettingsDrawer({
             <p className="text-[10px] text-text-muted px-0.5">13 is default (medium). Scales the whole panel — layout, icons, and text.</p>
           </section>
 
-          {/* Core Feature Configuration Toggles */}
+          {/* Core Feature Configuration Toggles (Removed interior separator lines) */}
           <section className="space-y-3">
             <h3 className="text-[11px] font-bold uppercase tracking-wider text-text-muted">Preferences</h3>
 
-            <div className="space-y-2.5 rounded border border-border bg-bg-base/20 p-2.5">
+            <div className="space-y-3 rounded border border-border bg-bg-base/20 p-2.5">
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
                   <div className="text-[12px] font-medium text-text-secondary leading-none">Restore Last Session</div>
@@ -190,8 +191,6 @@ export function SettingsDrawer({
                 </div>
                 <Toggle checked={settings.restoreLastSession} onChange={(v) => update({ restoreLastSession: v })} />
               </div>
-
-              <div className="h-px bg-border/25" />
 
               <div className="flex items-center justify-between">
                 <span className="text-[12px] font-medium text-text-secondary">Default HTTP Method</span>
@@ -205,8 +204,6 @@ export function SettingsDrawer({
                   ))}
                 </select>
               </div>
-
-              <div className="h-px bg-border/25" />
 
               <div className="flex items-center justify-between">
                 <span className="text-[12px] font-medium text-text-secondary">JSON Blueprint Style</span>
@@ -226,8 +223,6 @@ export function SettingsDrawer({
                 </div>
               </div>
 
-              <div className="h-px bg-border/25" />
-
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
                   <div className="text-[12px] font-medium text-text-secondary leading-none">Response Word Wrap</div>
@@ -235,8 +230,6 @@ export function SettingsDrawer({
                 </div>
                 <Toggle checked={settings.responseWordWrap} onChange={(v) => update({ responseWordWrap: v })} />
               </div>
-
-              <div className="h-px bg-border/25" />
 
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
@@ -295,7 +288,7 @@ export function SettingsDrawer({
         </div>
 
         {/* Global Structural Settings Wipe Operation */}
-        <section className="pt-4 mt-6 border-t border-border/30">
+        <section className="pt-4 mt-6  border-border/30">
           <button
             onClick={handleReset}
             className="flex w-full items-center justify-center gap-1.5 rounded border border-rose-950/40 bg-rose-950/10 py-1.5 text-[11px] font-medium text-rose-400 transition-colors hover:bg-rose-950/20"
