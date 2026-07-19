@@ -30,7 +30,7 @@ const jsonLd = {
     price: "0",
     priceCurrency: "USD",
   },
-  softwareVersion: "0.4.0 Alpha",
+  softwareVersion: "1.1.3 Alpha",
   url: "https://www.kairoapp.dev",
 };
 

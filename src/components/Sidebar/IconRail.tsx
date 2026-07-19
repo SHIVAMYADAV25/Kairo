@@ -38,9 +38,10 @@ interface Props {
   active: SidebarPanel;
   onChange: (panel: SidebarPanel) => void;
   onOpenSettings: () => void;
+  onOpenAbout: () => void;
 }
 
-export function IconRail({ active, onChange, onOpenSettings }: Props) {
+export function IconRail({ active, onChange, onOpenSettings, onOpenAbout }: Props) {
   return (
     <div className="flex w-[70px] shrink-0 flex-col items-center border-r border-border bg-bg-base py-2">
       <div className="flex flex-1 flex-col gap-1 items-center w-full overflow-y-auto">
@@ -78,6 +79,7 @@ export function IconRail({ active, onChange, onOpenSettings }: Props) {
         </button>
         <button
           type="button"
+          onClick={onOpenAbout}
           className="flex w-[52px] flex-col items-center gap-1 rounded-xl py-2 text-text-muted hover:bg-bg-hover hover:text-text-secondary"
         >
           <User size={18} strokeWidth={3} />

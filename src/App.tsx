@@ -8,6 +8,7 @@ import { RequestBuilder } from "@/components/RequestBuilder/RequestBuilder";
 import { ResponseViewer } from "@/components/ResponseViewer/ResponseViewer";
 import { PerformancePanel } from "@/components/PerformancePanel/PerformancePanel";
 import { SettingsDrawer } from "@/components/Settings/SettingsDrawer";
+import { AboutDevModal } from "@/features/about/AboutDevModal";
 import { ResizeHandle } from "@/components/common/ResizeHandle";
 import { ZoomWrapper } from "@/components/common/ZoomWrapper";
 import { SocketsModal } from "@/features/sockets/SocketsModal";
@@ -25,6 +26,7 @@ import { UpdateModal } from "@/features/updater/UpdateModal";
 export default function App() {
   const [sidebarPanel, setSidebarPanel] = useState<SidebarPanel>("collections");
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [aboutOpen, setAboutOpen] = useState(false);
   const [socketsOpen, setSocketsOpen] = useState(false);
   const [mocksOpen, setMocksOpen] = useState(false);
   const [sseOpen, setSseOpen] = useState(false);
@@ -120,7 +122,12 @@ export default function App() {
 
       {/* Main workspace */}
       <div className="flex min-h-0 flex-1">
-        <IconRail active={sidebarPanel} onChange={handleIconRailChange} onOpenSettings={() => setSettingsOpen(true)} />
+        <IconRail
+          active={sidebarPanel}
+          onChange={handleIconRailChange}
+          onOpenSettings={() => setSettingsOpen(true)}
+          onOpenAbout={() => setAboutOpen(true)}
+        />
 
         <div style={{ width: settings.panelSizes.sidebarWidth }} className="shrink-0 overflow-auto border-r border-border bg-bg-panel">
           <ZoomWrapper cssVar="--zoom-sidebar">
@@ -210,6 +217,7 @@ export default function App() {
       </div>
 
       <SettingsDrawer open={settingsOpen} onClose={() => setSettingsOpen(false)} />
+      <AboutDevModal open={aboutOpen} onClose={() => setAboutOpen(false)} />
       <SocketsModal open={socketsOpen} onClose={() => setSocketsOpen(false)} />
       <MockServerModal open={mocksOpen} onClose={() => setMocksOpen(false)} />
       <SseModal open={sseOpen} onClose={() => setSseOpen(false)} />
