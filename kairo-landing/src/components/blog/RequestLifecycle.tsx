@@ -20,9 +20,9 @@ const steps = [
     code: "storage::environments::merge_variables(&pool, env_id, &env_vars)",
   },
   {
-    title: "Build the client and request",
-    detail: "Construct a reqwest client (proxy / TLS / redirect settings from the request), attach query params, headers, auth, and body.",
-    code: "let client = build_client(&request)?;",
+    title: "Get a client — pooled, not rebuilt",
+    detail: "Ask the ClientPool for a client matching this request's settings (timeout / redirects / SSL / cookies). Same settings as last time means the same warm client comes back, connection and DNS cache intact — only a genuinely new settings combo triggers a real build_client().",
+    code: "let client = client_pool.get_or_build(&request).await?;",
   },
   {
     title: "Send it, and time it",
